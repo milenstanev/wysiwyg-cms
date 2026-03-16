@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+*.md
+e2e
+playwright-report
+content
+dev.db
+prisma/dev.db
+.env
+.env*
+*.log

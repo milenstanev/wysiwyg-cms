@@ -1,0 +1,23 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Page {
+  id              String   @id
+  slug            String   @unique
+  title           String
+  layout          String?  @default("single")
+  blocks          String   // JSON: ContentBlock[]
+  leftBlocks      String?  // JSON: ContentBlock[]
+  rightBlocks     String?  // JSON: ContentBlock[]
+  positionBlocks  String?  // JSON: Record<string, ContentBlock[]> (utility-a, showcase-b, etc.)
+  updatedAt       DateTime @updatedAt
+}

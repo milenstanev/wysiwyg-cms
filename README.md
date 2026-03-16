@@ -1,36 +1,147 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CMS Experiment
+
+A decoupled CMS frontend built with Next.js, featuring a WYSIWYG-style admin panel. Content can be stored in SQLite (Prisma) or MongoDB (Node.js API server).
+
+## Design & architecture
+
+**The design and architecture are production-grade and ready to deploy.**
+
+- **Clean layering** — App (routes) → components (UI) → hooks (state) → lib (domain & layout). No circular dependencies; single source of truth for types, layout constants, and block defaults.
+- **Contract-first** — Shared types (`lib/cms/page-editor.types.ts`, `lib/cms/types.ts`) and layout constants (`lib/layout/constants.ts`) so header, main, and footer stay aligned and the renderer has a stable API.
+- **Separation of concerns** — Page state and persistence live in `usePageEditor`; UI only receives data and callbacks. Same `PageRenderer` and block semantics for both site and admin.
+- **Testability** — Unit tests (Vitest) for lib, hooks, and components; E2E (Playwright) for critical flows. See `src/ARCHITECTURE.md` for the full picture.
+
+## Features
+
+- **Public frontend** – Renders content from the CMS layer
+- **Admin with visual editing** – Edit content inline and see live preview
+- **API** – Next.js Route Handlers (`/api/content`) or standalone Node.js + MongoDB server
+- **Docker** – MongoDB, Node API, and Next.js via Docker Compose
+- **Unit tests** – Vitest + React Testing Library
+- **E2E tests** – Playwright
 
 ## Getting Started
 
-First, run the development server:
+### Option A: Local (Next.js + SQLite)
 
 ```bash
+npm install
+cp .env.example .env   # optional; edit DATABASE_URL if needed
+npx prisma migrate dev
+npm run db:seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Option B: Full Docker dev environment (recommended)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run dev:docker
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Starts MongoDB, Node API, and Next.js with hot reload. One command.
 
-## Learn More
+- **Web**: http://localhost:3000
+- **Admin**: http://localhost:3000/admin
+- **Node API**: http://localhost:4000/api/content
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run dev:docker:down     # Stop
+npm run dev:docker:logs     # View logs
+npm run dev:docker:seed     # Seed DB (after first run)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Option C: Docker production
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+docker compose up -d
+```  
 
-## Deploy on Vercel
+## Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm run start` | Run production server |
+| `npm run test` | Run unit tests (Vitest) |
+| `npm run test:e2e` | Run E2E tests (Playwright) |
+| `npm run test:watch` | Unit tests in watch mode |
+| `npm run db:seed` | Seed database from content/pages.json |
+| `npm run dev:docker` | Full dev stack (MongoDB + API + Web) with hot reload |
+| `npm run dev:docker:down` | Stop dev stack |
+| `npm run dev:docker:logs` | Tail logs |
+| `npm run dev:docker:seed` | Seed DB in running dev container |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Testing
+
+- **Unit (Vitest):** 86 tests across `lib/` (block-defaults, components, store-db, layout constants), `hooks/usePageEditor`, API routes (`GET/PUT /api/content`), and components (PageRenderer, BlocksColumn, ContentBlock, AddBlockButton, layout, not-found). Run: `npm run test`.
+- **E2E (Playwright):** Home (edit/save, cancel, layout switch, add/remove block, nav) and Admin (page switch, edit/save, layout, add block, footer links). Run: `npm run test:e2e` (starts dev server automatically).
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── layout.tsx        # Root layout
+│   ├── page.tsx          # Public home
+│   ├── [slug]/page.tsx   # Dynamic pages
+│   ├── admin/            # Admin area
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── not-found.tsx     # 404 page
+│   └── api/content/      # Content API (Next.js Route Handlers)
+├── components/
+│   ├── AddBlockButton.tsx
+│   ├── ContentBlock.tsx
+│   ├── EditableSitePage.tsx
+│   ├── PageRenderer.tsx
+│   └── layout/
+│       ├── Container.tsx
+│       └── Footer.tsx
+├── lib/
+│   ├── db.ts             # Prisma client (SQLite)
+│   └── cms/
+│       ├── types.ts
+│       ├── store-db.ts   # DB-backed content store
+│       └── store.ts      # Legacy file-based store
+└── test/setup.ts
+server/                  # Node.js + MongoDB API (can be git submodule)
+├── src/
+│   ├── config/
+│   ├── models/
+│   ├── repositories/
+│   ├── services/
+│   ├── controllers/
+│   ├── routes/
+│   └── server.ts
+├── Dockerfile
+└── package.json
+content/pages.json
+e2e/
+├── home.spec.ts
+└── admin.spec.ts
+```
+
+## Deploy checklist
+
+Before deploying, run:
+
+```bash
+npm run test          # Unit tests (Vitest)
+npm run build         # Production build
+npm run test:e2e      # E2E (optional; needs dev server or deployed URL)
+```
+
+For production (Next.js + SQLite): set `DATABASE_URL` in the environment (or use default from `.env`). Run migrations and seed if using a fresh DB:
+
+```bash
+npx prisma migrate deploy
+npm run db:seed
+```
+
+Docker production: `docker compose up -d` (see Option C above).
+
+## Content Model
+
+- **Page**: id, slug, title, blocks, updatedAt
+- **Block**: id, type (heading | text | image | banner | list | table | showcase), content

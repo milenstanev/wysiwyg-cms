@@ -1,0 +1,58 @@
+# Full dev stack: MongoDB + API + Next.js. Hot reload enabled.
+services:
+  mongodb:
+    image: mongo:8
+    container_name: cms-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    container_name: cms-api
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./server/src:/app/src
+      - ./server/package.json:/app/package.json
+      - ./server/tsconfig.json:/app/tsconfig.json
+    environment:
+      PORT: 4000
+      NODE_ENV: development
+      MONGO_URI: mongodb://mongodb:27017/cms
+      CORS_ORIGIN: http://localhost:3000
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: cms-web
+    ports:
+      - "3030:3000"
+    volumes:
+      - .:/app
+      - app_node_modules:/app/node_modules
+      - app_next:/app/.next
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      WATCHPACK_POLLING: "true"
+      DATABASE_URL: file:./dev.db
+    depends_on:
+      - api
+
+volumes:
+  mongodb_data:
+  app_node_modules:
+  app_next:

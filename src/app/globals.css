@@ -1,26 +1,194 @@
 @import "tailwindcss";
 
+/*
+  Design tokens — override these for theming. Components use these so
+  designers/HTML devs can change layout and look in one place.
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Base */
+  --background: #fafafa;
+  --foreground: #18181b;
+  --surface: #ffffff;
+  --border: #e4e4e7;
+  --muted: #71717a;
+  --accent: #2563eb;
+
+  /* Card / region styling */
+  --content-accent: #f59e0b;       /* main content left border (amber) */
+  --sidebar-left-accent: #0ea5e9;  /* left sidebar */
+  --sidebar-right-accent: #8b5cf6; /* right sidebar */
+  --card-radius: 0.75rem;
+  --card-padding: 1.5rem;          /* 24px */
+  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  --card-border: 1px solid var(--border);
+
+  /* Layout spacing (gap between regions) */
+  --layout-gap-sm: 1rem;   /* 16px */
+  --layout-gap-md: 1.5rem;
+  --layout-gap-lg: 2rem;
+  --layout-gap-xl: 2.5rem;
+  --layout-gap-2xl: 3rem;
+
+  /* Page shell */
+  --page-vertical-padding: 2rem;
+  --page-header-gap: 2rem;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Layout regions — override in your CSS or change :root tokens */
+.layout-content-card {
+  border: var(--card-border);
+  border-left: 4px solid var(--content-accent);
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+  box-shadow: var(--card-shadow);
+}
+.layout-sidebar-left {
+  border: var(--card-border);
+  border-left: 4px solid var(--sidebar-left-accent);
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+  box-shadow: var(--card-shadow);
+}
+.layout-sidebar-right {
+  border: var(--card-border);
+  border-right: 4px solid var(--sidebar-right-accent);
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+  box-shadow: var(--card-shadow);
+}
+
+/* ========== RocketTheme-style template sections ==========
+   Applies when PageRenderer uses rockettheme template (class + data-template).
+   Each row gets a distinct look: utility bar, header, nav, showcase, etc. */
+
+.layout-template-rockettheme .rockettheme-row,
+[data-template="rockettheme"] .rockettheme-row {
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+}
+
+.layout-template-rockettheme .rockettheme-utility,
+[data-template="rockettheme"] .rockettheme-utility {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  border: 1px solid #334155;
+}
+
+.layout-template-rockettheme .rockettheme-utility [data-module-position],
+[data-template="rockettheme"] .rockettheme-utility [data-module-position] {
+  min-height: 2rem;
+  display: flex;
+  align-items: center;
+}
+
+.layout-template-rockettheme .rockettheme-header,
+[data-template="rockettheme"] .rockettheme-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 1.25rem 1.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  border-left: 4px solid #64748b;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+}
+
+.layout-template-rockettheme .rockettheme-header [data-module-position],
+[data-template="rockettheme"] .rockettheme-header [data-module-position] {
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: #475569;
+}
+
+.layout-template-rockettheme .rockettheme-nav,
+[data-template="rockettheme"] .rockettheme-nav {
+  background: #334155;
+  color: #f1f5f9;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid #475569;
+}
+
+.layout-template-rockettheme .rockettheme-nav [data-module-position],
+[data-template="rockettheme"] .rockettheme-nav [data-module-position] {
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.9375rem;
+}
+
+.layout-template-rockettheme .rockettheme-showcase,
+[data-template="rockettheme"] .rockettheme-showcase {
+  padding: 0.25rem 0;
+}
+
+.layout-template-rockettheme .rockettheme-showcase [data-module-position],
+[data-template="rockettheme"] .rockettheme-showcase [data-module-position] {
+  min-height: 5rem;
+  background: linear-gradient(145deg, #fefce8 0%, #fef9c3 100%);
+  border: 1px solid #e7e5e4;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125rem;
+  color: #78716c;
+}
+
+.layout-template-rockettheme .rockettheme-mainbody,
+[data-template="rockettheme"] .rockettheme-mainbody {
+  padding: 0.5rem 0;
+}
+
+.layout-template-rockettheme .rockettheme-bottom,
+[data-template="rockettheme"] .rockettheme-bottom {
+  background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid #cbd5e1;
+  margin-top: 0.5rem;
+}
+
+.layout-template-rockettheme .rockettheme-bottom [data-module-position],
+[data-template="rockettheme"] .rockettheme-bottom [data-module-position] {
+  min-height: 3.5rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.layout-template-rockettheme .rockettheme-footer,
+[data-template="rockettheme"] .rockettheme-footer {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: #94a3b8;
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid #334155;
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.layout-template-rockettheme .rockettheme-footer [data-module-position],
+[data-template="rockettheme"] .rockettheme-footer [data-module-position] {
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
 }

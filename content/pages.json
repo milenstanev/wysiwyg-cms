@@ -1,0 +1,121 @@
+[
+  {
+    "id": "home",
+    "slug": "home",
+    "title": "Welcome",
+    "blocks": [
+      {
+        "id": "1",
+        "type": "heading",
+        "content": "Edited via E2E test"
+      },
+      {
+        "id": "2",
+        "type": "text",
+        "content": "Edit this content in the admin panel. What you see is what you get."
+      }
+    ],
+    "updatedAt": "2026-03-08T11:46:01.227Z",
+    "layout": "two-col",
+    "leftBlocks": [
+      {
+        "id": "block-1772970353965-o8k8j3u",
+        "type": "heading",
+        "content": "New heading"
+      },
+      {
+        "id": "block-1772970357001-4spgges",
+        "type": "text",
+        "content": "New paragraph..."
+      }
+    ]
+  },
+  {
+    "id": "about",
+    "slug": "about",
+    "title": "About Us",
+    "blocks": [
+      {
+        "id": "1",
+        "type": "heading",
+        "content": "Edited via Admin E2E"
+      },
+      {
+        "id": "2",
+        "type": "text",
+        "content": "We build modern web experiences. This CMS experiment shows a decoupled architecture with a WYSIWYG admin."
+      }
+    ],
+    "updatedAt": "2026-03-08T11:46:47.643Z",
+    "layout": "three-col",
+    "rightBlocks": [
+      {
+        "id": "block-1772970384252-dxduwm5",
+        "type": "heading",
+        "content": "New heading"
+      },
+      {
+        "id": "block-1772970388452-zs40xom",
+        "type": "text",
+        "content": "New paragraph..."
+      },
+      {
+        "id": "block-1772970386451-2j4gdwp",
+        "type": "text",
+        "content": "New paragraph..."
+      }
+    ],
+    "leftBlocks": [
+      {
+        "id": "block-1772970395535-zoz59ws",
+        "type": "text",
+        "content": "New paragraph..."
+      }
+    ]
+  },
+  {
+    "id": "blog",
+    "slug": "blog",
+    "title": "Blog",
+    "blocks": [
+      {
+        "id": "1",
+        "type": "heading",
+        "content": "Latest Posts"
+      },
+      {
+        "id": "2",
+        "type": "text",
+        "content": "Here you can add blog posts, articles, and updates. Edit this in the admin to add real content."
+      }
+    ],
+    "updatedAt": "2026-03-08T12:05:31.809Z",
+    "layout": "two-col",
+    "leftBlocks": [
+      {
+        "id": "block-1772971530666-o38jn77",
+        "type": "heading",
+        "content": "New heading"
+      }
+    ]
+  },
+  {
+    "id": "contact",
+    "slug": "contact",
+    "title": "Contact",
+    "blocks": [
+      {
+        "id": "1",
+        "type": "heading",
+        "content": "Get in Touch"
+      },
+      {
+        "id": "2",
+        "type": "text",
+        "content": "Email: hello@example.com | Phone: +1 234 567 8900"
+      }
+    ],
+    "updatedAt": "2026-03-08T11:59:20.260Z",
+    "layout": "single"
+  }
+]
