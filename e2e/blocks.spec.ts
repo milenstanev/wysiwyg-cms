@@ -13,7 +13,9 @@ test.describe("Blocks", () => {
     await page.getByRole("button", { name: /Save/i }).click();
     await expect(page.getByText("Saved!")).toBeVisible({ timeout: 5000 });
     await page.reload();
-    await expect(page.getByRole("heading", { name: "E2E Heading Block" })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole("heading", { name: "E2E Heading Block" })).toBeVisible({
+      timeout: 5000,
+    });
   });
 
   test("paragraph: add, type something, save, still there after reload", async ({ page }) => {

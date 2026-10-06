@@ -11,10 +11,6 @@ export function ContentCard({ children, className = "", unstyled = false }: Cont
     return <div className={`min-w-0 ${className}`}>{children}</div>;
   }
   return (
-    <div
-      className={`min-w-0 bg-[var(--surface)] layout-content-card ${className}`}
-    >
-      {children}
-    </div>
+    <div className={`min-w-0 bg-[var(--surface)] layout-content-card ${className}`}>{children}</div>
   );
 }

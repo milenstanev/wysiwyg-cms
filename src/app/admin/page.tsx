@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Page, ContentBlock, BlockType, PageLayout, PositionId } from "@/lib/cms/types";
 import { createBlock } from "@/lib/cms/block-defaults";
 import { PageRenderer } from "@/components/PageRenderer";
 import { Footer } from "@/components/layout/Footer";
 import { CONTAINER_CLASS } from "@/lib/layout/constants";
 import Link from "next/link";
+import { LayoutDropdown } from "@/components/layout/LayoutDropdown";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 function getBlocksForPosition(p: Page, positionId: PositionId): ContentBlock[] {
   if (positionId === "main") return p.blocks;
@@ -41,10 +43,14 @@ export default function AdminPage() {
     }
   }, []);
 
+  const fetchPageRequestRef = useRef(0);
+
   const fetchPage = useCallback(async (slug: string) => {
+    const requestId = ++fetchPageRequestRef.current;
     setLoading(true);
     try {
       const res = await fetch(`/api/content/${slug}`);
+      if (requestId !== fetchPageRequestRef.current) return;
       if (res.ok) {
         const data = await res.json();
         setPage(data);
@@ -52,16 +58,20 @@ export default function AdminPage() {
         setPage(null);
       }
     } catch {
+      if (requestId !== fetchPageRequestRef.current) return;
       setPage(null);
     } finally {
-      setLoading(false);
+      if (requestId === fetchPageRequestRef.current) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     const load = async () => {
       await fetchPages();
-      const slug = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("page") || "home" : "home";
+      const slug =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("page") || "home"
+          : "home";
       await fetchPage(slug);
     };
     load();
@@ -77,8 +87,14 @@ export default function AdminPage() {
   const handleBlockEdit = useCallback(
     (blockId: string, content: string) => {
       if (!page) return;
-      const map = (arr: ContentBlock[]) => arr.map((b) => (b.id === blockId ? { ...b, content } : b));
-      const next: Page = { ...page, blocks: map(page.blocks), leftBlocks: map(page.leftBlocks ?? []), rightBlocks: map(page.rightBlocks ?? []) };
+      const map = (arr: ContentBlock[]) =>
+        arr.map((b) => (b.id === blockId ? { ...b, content } : b));
+      const next: Page = {
+        ...page,
+        blocks: map(page.blocks),
+        leftBlocks: map(page.leftBlocks ?? []),
+        rightBlocks: map(page.rightBlocks ?? []),
+      };
       if (page.positionBlocks) {
         next.positionBlocks = {};
         for (const [pos, blocks] of Object.entries(page.positionBlocks))
@@ -102,7 +118,12 @@ export default function AdminPage() {
       if (!page) return;
       const updateIn = (arr: ContentBlock[]) =>
         arr.map((b) => (b.id === blockId ? { ...b, ...updates } : b));
-      const next: Page = { ...page, blocks: updateIn(page.blocks), leftBlocks: updateIn(page.leftBlocks ?? []), rightBlocks: updateIn(page.rightBlocks ?? []) };
+      const next: Page = {
+        ...page,
+        blocks: updateIn(page.blocks),
+        leftBlocks: updateIn(page.leftBlocks ?? []),
+        rightBlocks: updateIn(page.rightBlocks ?? []),
+      };
       if (page.positionBlocks) {
         next.positionBlocks = {};
         for (const [pos, blocks] of Object.entries(page.positionBlocks))
@@ -119,10 +140,12 @@ export default function AdminPage() {
       const newBlock = createBlock(type);
       const arr = getBlocksForPosition(page, positionId);
       const blocks = [...arr];
-      if (afterBlockId === null) blocks.unshift(newBlock);
-      else {
+      if (afterBlockId === null) {
+        blocks.unshift(newBlock);
+      } else {
         const idx = blocks.findIndex((b) => b.id === afterBlockId);
-        blocks.splice(idx + 1, 0, newBlock);
+        if (idx >= 0) blocks.splice(idx + 1, 0, newBlock);
+        else blocks.push(newBlock);
       }
       setPage(setBlocksForPosition(page, positionId, blocks));
     },
@@ -159,8 +182,11 @@ export default function AdminPage() {
       if (idx < 0) return;
       const newIdx = direction === "up" ? idx - 1 : idx + 1;
       if (newIdx < 0 || newIdx >= arr.length) return;
+      const a = arr[idx];
+      const b = arr[newIdx];
       const blocks = [...arr];
-      [blocks[idx], blocks[newIdx]] = [blocks[newIdx], blocks[idx]];
+      blocks[idx] = { ...b, gridItem: a.gridItem ?? b.gridItem };
+      blocks[newIdx] = { ...a, gridItem: b.gridItem ?? a.gridItem };
       setPage(setBlocksForPosition(page, positionId, blocks));
     },
     [page]
@@ -199,34 +225,50 @@ export default function AdminPage() {
 
   if (loading && !page) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-zinc-500">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
+        <p className="text-[var(--muted)]">Loading...</p>
       </div>
     );
   }
 
   if (!page) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-zinc-500">Page not found.</p>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
+        <p className="text-[var(--muted)]">Page not found.</p>
       </div>
     );
   }
 
-  const currentSlug = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("page") || "home" : page.slug;
+  const currentSlug =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("page") || "home"
+      : page.slug;
+  const selectValue =
+    page.slug && pages.some((p) => p.slug === currentSlug) ? currentSlug : page.slug;
 
   return (
-    <div className="min-h-screen bg-zinc-100 flex flex-col">
-      <header className="bg-white border-b border-zinc-200 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
+      <header
+        data-testid="admin-loaded"
+        className="bg-[var(--surface)] border-b border-[var(--border)] px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10"
+        aria-label="Admin toolbar"
+      >
         <div className="flex items-center gap-4 flex-wrap">
-          <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-700">
+          <Link
+            href="/"
+            className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
+            aria-label="View site"
+          >
             ← View site
           </Link>
-          <span className="text-zinc-400">|</span>
+          <span className="text-[var(--muted)]" aria-hidden>
+            |
+          </span>
           <select
-            value={currentSlug}
+            value={selectValue}
             onChange={(e) => handlePageChange(e.target.value)}
-            className="text-sm font-medium text-zinc-700 border border-zinc-300 rounded px-2 py-1.5"
+            className="text-sm font-medium text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1.5 bg-[var(--surface)]"
+            aria-label="Select page to edit"
           >
             {pages.map((p) => (
               <option key={p.id} value={p.slug}>
@@ -234,22 +276,25 @@ export default function AdminPage() {
               </option>
             ))}
           </select>
-          <span className="text-xs text-zinc-400">
+          <span className="text-xs text-[var(--muted)]" aria-live="polite">
             Editing: {page.title}
           </span>
+          <LayoutDropdown value={page.layout ?? "single"} onChange={handleLayoutChange} />
+          <ThemeSwitcher />
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-medium opacity-90 hover:opacity-100 disabled:opacity-50"
+          aria-label={saving ? "Saving..." : "Save changes"}
         >
           {saving ? "Saving..." : "Save"}
         </button>
         {message && (
           <span
-            className={`text-sm ${
-              message === "Saved!" ? "text-green-600" : "text-red-600"
-            }`}
+            role="status"
+            aria-live="polite"
+            className={`text-sm ${message === "Saved!" ? "text-green-600" : "text-red-600"}`}
           >
             {message}
           </span>

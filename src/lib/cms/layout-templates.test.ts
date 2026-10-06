@@ -4,6 +4,7 @@ import {
   getAllLayoutTemplates,
   getTemplateIds,
   isContentPosition,
+  getRowGridClassName,
   CONTENT_POSITIONS,
 } from "./layout-templates";
 
@@ -48,5 +49,34 @@ describe("layout-templates", () => {
 
   it("CONTENT_POSITIONS lists main, left, right", () => {
     expect(CONTENT_POSITIONS).toEqual(["main", "left", "right"]);
+  });
+
+  it("getRowGridClassName returns row class when all positions visible", () => {
+    const row = {
+      gridClassName: "grid grid-cols-1 sm:grid-cols-3 gap-2",
+      positions: ["a", "b", "c"],
+    };
+    expect(getRowGridClassName(row, 3)).toBe("grid grid-cols-1 sm:grid-cols-3 gap-2");
+  });
+
+  it("getRowGridClassName adjusts columns when fewer positions visible", () => {
+    const row = {
+      gridClassName: "grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4",
+      positions: ["a", "b", "c"],
+    };
+    expect(getRowGridClassName(row, 2)).toBe("grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4");
+    expect(getRowGridClassName(row, 1)).toContain("grid-cols-1");
+    expect(getRowGridClassName(row, 1)).not.toMatch(/sm:grid-cols/);
+  });
+
+  it("getRowGridClassName strips md: and lg: and grid-cols-[...] when one position visible", () => {
+    const row = {
+      gridClassName: "grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4",
+      positions: ["left", "main"],
+    };
+    const out = getRowGridClassName(row, 1);
+    expect(out).toContain("grid-cols-1");
+    expect(out).not.toMatch(/md:grid-cols/);
+    expect(out).toContain("gap-4");
   });
 });

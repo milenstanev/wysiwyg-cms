@@ -1,19 +1,25 @@
 "use client";
 
+import { getBlockSettingOrDefault } from "@/lib/cms/block-settings";
+import type { ContentBlock } from "@/lib/cms/types";
+
 interface ListBlockProps {
   items?: string[];
   content?: string;
+  settings?: Record<string, unknown>;
   editable?: boolean;
   onEdit?: (items: string[]) => void;
 }
 
-export function ListBlock({
-  items = [],
-  content,
-  editable,
-  onEdit,
-}: ListBlockProps) {
-  const listItems = items.length > 0 ? items : (content ? content.split("\n").filter(Boolean) : []);
+export function ListBlock({ items = [], content, settings, editable, onEdit }: ListBlockProps) {
+  const listItems = items.length > 0 ? items : content ? content.split("\n").filter(Boolean) : [];
+  const listStyle = getBlockSettingOrDefault(
+    { settings } as ContentBlock,
+    "listStyle",
+    "bullet"
+  ) as string;
+  const ordered = listStyle === "numbered";
+  const ListTag = ordered ? "ol" : "ul";
 
   const handleItemChange = (index: number, value: string) => {
     const next = [...listItems];
@@ -31,17 +37,17 @@ export function ListBlock({
 
   if (editable) {
     return (
-      <ul className="space-y-2">
+      <ListTag className={`space-y-2 ${ordered ? "list-decimal list-inside" : ""}`}>
         {listItems.map((item, i) => (
           <li key={i} className="flex items-center gap-2 group">
-            <span className="text-amber-500 mt-0.5">•</span>
+            {!ordered && <span className="text-[var(--accent)] mt-0.5">•</span>}
             <div
               contentEditable
               suppressContentEditableWarning
               onInput={(e) =>
                 handleItemChange(i, (e.currentTarget as HTMLElement).textContent || "")
               }
-              className="flex-1 text-zinc-700 outline-none empty:before:content-['List item'] empty:before:opacity-50"
+              className="flex-1 text-[var(--foreground)] outline-none empty:before:content-['List item'] empty:before:opacity-50"
             >
               {item}
             </div>
@@ -58,23 +64,23 @@ export function ListBlock({
           <button
             type="button"
             onClick={handleAddItem}
-            className="text-sm text-zinc-400 hover:text-zinc-600 flex items-center gap-2"
+            className="text-sm text-[var(--muted)] hover:text-[var(--accent)] flex items-center gap-2"
           >
             + Add item
           </button>
         </li>
-      </ul>
+      </ListTag>
     );
   }
 
   return (
-    <ul className="space-y-2">
+    <ListTag className={`space-y-2 ${ordered ? "list-decimal list-inside" : ""}`}>
       {listItems.map((item, i) => (
         <li key={i} className="flex items-start gap-2">
-          <span className="text-amber-500 mt-1">•</span>
-          <span className="text-zinc-700">{item}</span>
+          {!ordered && <span className="text-[var(--accent)] mt-1">•</span>}
+          <span className="text-[var(--foreground)]">{item}</span>
         </li>
       ))}
-    </ul>
+    </ListTag>
   );
 }

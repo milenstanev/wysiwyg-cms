@@ -14,7 +14,13 @@ export function getDefaultBlockContent(type: BlockType): Partial<ContentBlock> {
     case "list":
       return { content: "", items: ["First item", "Second item", "Third item"] };
     case "table":
-      return { content: "", rows: [["Header 1", "Header 2"], ["Cell 1", "Cell 2"]] };
+      return {
+        content: "",
+        rows: [
+          ["Header 1", "Header 2"],
+          ["Cell 1", "Cell 2"],
+        ],
+      };
     case "image":
       return { content: "" };
     case "heading":

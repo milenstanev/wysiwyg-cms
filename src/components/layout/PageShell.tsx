@@ -26,12 +26,12 @@ export function PageShell({
   return (
     <div
       data-page-shell
-      className={`min-h-screen flex flex-col bg-[var(--background)] py-[var(--page-vertical-padding)] sm:py-12 ${className}`}
+      className={`site-shell min-h-screen flex flex-col bg-[var(--background)] py-[var(--page-vertical-padding)] sm:py-8 ${className}`}
     >
       {header && (
         <header
           data-page-header
-          className={`${CONTAINER_CLASS} w-full mb-[var(--page-header-gap)] sm:mb-10 flex flex-wrap items-center justify-between gap-3 ${headerClassName}`}
+          className={`site-header sticky top-3 z-20 ${CONTAINER_CLASS} w-full mb-[var(--page-header-gap)] sm:mb-12 flex flex-wrap items-center justify-between gap-3 ${headerClassName}`}
         >
           {header}
         </header>

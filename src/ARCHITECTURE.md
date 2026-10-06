@@ -20,13 +20,13 @@ See **`docs/LAYOUT-DIAGRAM.md`** for ASCII layout diagrams (PageShell, single / 
 
 ## Key files
 
-| Purpose | Location |
-|--------|----------|
-| Page content model | `lib/cms/types.ts` |
-| New block defaults + ID | `lib/cms/block-defaults.ts` |
-| Page renderer contract | `lib/cms/page-editor.types.ts` |
-| Layout width/padding/grid | `lib/layout/constants.ts` |
-| Page state + save | `hooks/usePageEditor.ts` |
+| Purpose                         | Location                          |
+| ------------------------------- | --------------------------------- |
+| Page content model              | `lib/cms/types.ts`                |
+| New block defaults + ID         | `lib/cms/block-defaults.ts`       |
+| Page renderer contract          | `lib/cms/page-editor.types.ts`    |
+| Layout width/padding/grid       | `lib/layout/constants.ts`         |
+| Page state + save               | `hooks/usePageEditor.ts`          |
 | Page shell (header/main/footer) | `components/layout/PageShell.tsx` |
 
 ## Adding a new block type

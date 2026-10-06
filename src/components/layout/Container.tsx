@@ -10,8 +10,9 @@ interface ContainerProps {
 const NARROW_WIDTH = "max-w-2xl";
 
 export function Container({ children, className = "", variant = "default" }: ContainerProps) {
-  const base = variant === "narrow"
-    ? `mx-auto w-full ${NARROW_WIDTH} ${CONTENT_PADDING_CLASS}`
-    : CONTAINER_CLASS;
+  const base =
+    variant === "narrow"
+      ? `mx-auto w-full ${NARROW_WIDTH} ${CONTENT_PADDING_CLASS}`
+      : CONTAINER_CLASS;
   return <div className={`${base} ${className}`}>{children}</div>;
 }

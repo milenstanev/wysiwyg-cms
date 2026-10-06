@@ -14,16 +14,12 @@ describe("Container", () => {
   });
 
   it("applies narrow variant when specified", () => {
-    const { container } = render(
-      <Container variant="narrow">X</Container>
-    );
+    const { container } = render(<Container variant="narrow">X</Container>);
     expect(container.firstChild).toHaveClass("max-w-2xl");
   });
 
   it("merges custom className", () => {
-    const { container } = render(
-      <Container className="my-class">X</Container>
-    );
+    const { container } = render(<Container className="my-class">X</Container>);
     expect(container.firstChild).toHaveClass("my-class");
   });
 });

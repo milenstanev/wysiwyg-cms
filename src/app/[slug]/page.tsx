@@ -4,11 +4,7 @@ import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function PageRoute({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function PageRoute({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   if (slug === "admin" || slug === "api") notFound();
   const page = await getPageBySlug(slug);

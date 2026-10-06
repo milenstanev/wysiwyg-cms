@@ -21,6 +21,8 @@ describe("ModulePosition", () => {
 
   it("has accessible label", () => {
     render(<ModulePosition name="sidebar-left" />);
-    expect(screen.getByRole("generic", { name: "Module position: sidebar-left" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("generic", { name: "Module position: sidebar-left" })
+    ).toBeInTheDocument();
   });
 });

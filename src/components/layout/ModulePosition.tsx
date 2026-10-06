@@ -11,7 +11,12 @@ interface ModulePositionProps {
   children?: React.ReactNode;
 }
 
-export function ModulePosition({ name, className = "", placeholderLabel, children }: ModulePositionProps) {
+export function ModulePosition({
+  name,
+  className = "",
+  placeholderLabel,
+  children,
+}: ModulePositionProps) {
   const hasContent = children != null && !(Array.isArray(children) && children.length === 0);
   const showPlaceholder = !hasContent && placeholderLabel;
 

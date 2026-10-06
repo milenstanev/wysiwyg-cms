@@ -5,7 +5,13 @@ import type { Page } from "@/lib/cms/types";
 
 vi.mock("@/lib/cms/components", () => ({
   getComponentForRegion: () => "content",
-  ComponentSlot: ({ blocks, region }: { blocks: { id: string; type: string; content: string }[]; region: string }) => (
+  ComponentSlot: ({
+    blocks,
+    region,
+  }: {
+    blocks: { id: string; type: string; content: string }[];
+    region: string;
+  }) => (
     <div data-testid={`slot-${region}`}>
       {blocks.map((b) => (
         <span key={b.id} data-block-id={b.id}>
@@ -65,19 +71,10 @@ describe("PageRenderer", () => {
     expect(within(screen.getByTestId("slot-right")).getByText("Right")).toBeInTheDocument();
   });
 
-  it("shows layout selector when editable and onLayoutChange provided", () => {
+  it("does not render layout selector in content (it lives in header so content does not move)", () => {
     const onLayoutChange = vi.fn();
-    render(
-      <PageRenderer
-        page={singlePage}
-        editable
-        onLayoutChange={onLayoutChange}
-      />
-    );
-    expect(screen.getByText("Single column")).toBeInTheDocument();
-    expect(screen.getByText("Two columns")).toBeInTheDocument();
-    expect(screen.getByText("Three columns")).toBeInTheDocument();
-    expect(screen.getByText(/RocketTheme-style/)).toBeInTheDocument();
+    render(<PageRenderer page={singlePage} editable onLayoutChange={onLayoutChange} />);
+    expect(screen.queryByText("Layout:")).not.toBeInTheDocument();
   });
 
   it("renders rockettheme template with multiple rows and module positions", () => {
@@ -86,6 +83,27 @@ describe("PageRenderer", () => {
     expect(screen.getByTestId("slot-main")).toBeInTheDocument();
     expect(container.querySelectorAll("[data-module-position]").length).toBeGreaterThan(3);
     expect(container.querySelector("[data-template-row]")).toBeInTheDocument();
+  });
+
+  it("does not render empty Utility A (or other empty module positions) when not editable", () => {
+    const rocketPage: Page = { ...singlePage, layout: "rockettheme", positionBlocks: {} };
+    const { container } = render(<PageRenderer page={rocketPage} />);
+    expect(screen.getByTestId("slot-main")).toBeInTheDocument();
+    expect(container.querySelector('[data-module-position="utility-a"]')).not.toBeInTheDocument();
+    expect(screen.queryByText("Utility A")).not.toBeInTheDocument();
+  });
+
+  it("renders Utility A when it has blocks", () => {
+    const rocketPage: Page = {
+      ...singlePage,
+      layout: "rockettheme",
+      positionBlocks: {
+        "utility-a": [{ id: "u1", type: "text", content: "Utility A content" }],
+      },
+    };
+    const { container } = render(<PageRenderer page={rocketPage} />);
+    expect(container.querySelector('[data-module-position="utility-a"]')).toBeInTheDocument();
+    expect(screen.getByText("Utility A content")).toBeInTheDocument();
   });
 
   it("does not show layout selector when not editable", () => {
@@ -114,6 +132,47 @@ describe("PageRenderer", () => {
     };
     render(<PageRenderer page={pageEmptyLeft} />);
     expect(screen.getByTestId("slot-left")).toBeInTheDocument();
+    expect(screen.getByTestId("slot-main")).toBeInTheDocument();
+  });
+
+  it("renders two-col with missing leftBlocks (undefined) without crashing", () => {
+    const pageNoLeft: Partial<Page> & Pick<Page, "id" | "slug" | "title" | "updatedAt"> = {
+      ...singlePage,
+      layout: "two-col",
+      blocks: [],
+      leftBlocks: undefined,
+      rightBlocks: undefined,
+    };
+    render(<PageRenderer page={pageNoLeft as Page} />);
+    expect(screen.getByTestId("slot-left")).toBeInTheDocument();
+    expect(screen.getByTestId("slot-main")).toBeInTheDocument();
+  });
+
+  it("renders three-col with missing leftBlocks and rightBlocks without crashing", () => {
+    const pageNoSidebars: Partial<Page> & Pick<Page, "id" | "slug" | "title" | "updatedAt"> = {
+      ...singlePage,
+      layout: "three-col",
+      blocks: [{ id: "m1", type: "text", content: "Main only" }],
+      leftBlocks: undefined,
+      rightBlocks: undefined,
+    };
+    render(<PageRenderer page={pageNoSidebars as Page} />);
+    expect(screen.getByTestId("slot-left")).toBeInTheDocument();
+    expect(screen.getByTestId("slot-main")).toBeInTheDocument();
+    expect(screen.getByTestId("slot-right")).toBeInTheDocument();
+    expect(screen.getByText("Main only")).toBeInTheDocument();
+  });
+
+  it("renders when blocks is undefined (minimal page)", () => {
+    const minimalPage = {
+      id: "m1",
+      slug: "min",
+      title: "Minimal",
+      updatedAt: new Date().toISOString(),
+      blocks: undefined,
+    };
+    render(<PageRenderer page={minimalPage as Page} />);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Minimal");
     expect(screen.getByTestId("slot-main")).toBeInTheDocument();
   });
 });

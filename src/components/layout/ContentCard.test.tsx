@@ -9,9 +9,7 @@ describe("ContentCard", () => {
   });
 
   it("applies custom className", () => {
-    const { container } = render(
-      <ContentCard className="custom-class">Content</ContentCard>
-    );
+    const { container } = render(<ContentCard className="custom-class">Content</ContentCard>);
     expect(container.firstChild).toHaveClass("custom-class");
   });
 });

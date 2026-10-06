@@ -29,6 +29,18 @@ export const BLOCK_TYPES: BlockType[] = [
 ];
 export const LAYOUT_OPTIONS: PageLayout[] = ["single", "two-col", "three-col", "rockettheme"];
 
+/** Grid position/size for React Grid Layout (draggable/resizable block wrapper). */
+export interface BlockGridItem {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  minW?: number;
+  minH?: number;
+  maxW?: number;
+  maxH?: number;
+}
+
 export interface ContentBlock {
   id: string;
   type: BlockType;
@@ -36,6 +48,10 @@ export interface ContentBlock {
   title?: string;
   items?: string[];
   rows?: string[][];
+  /** Optional: position/size in grid layout (edit mode: drag/resize). */
+  gridItem?: BlockGridItem;
+  /** Type-specific options (e.g. table: headerRow, striped; heading: level). */
+  settings?: Record<string, unknown>;
 }
 
 export interface Page {

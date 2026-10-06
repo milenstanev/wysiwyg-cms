@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { PageRenderer } from "@/components/PageRenderer";
 import { Footer } from "@/components/layout/Footer";
+import { LayoutDropdown } from "@/components/layout/LayoutDropdown";
 import { PageShell } from "@/components/layout/PageShell";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { usePageEditor } from "@/hooks/usePageEditor";
 import type { Page } from "@/lib/cms/types";
 
@@ -14,30 +16,47 @@ export interface EditableSitePageProps {
 }
 
 export function EditableSitePage({ initialPage, allPages, currentSlug }: EditableSitePageProps) {
-  const { page, isEditing, setEditing, saving, message, callbacks, actions } = usePageEditor(initialPage);
+  const { page, isEditing, setEditing, saving, message, callbacks, actions } =
+    usePageEditor(initialPage);
 
   const navPages = allPages.filter((p) => p.slug !== "home");
 
   const header = (
     <>
-      <nav className="flex gap-4 text-sm" aria-label="Site navigation">
-        <Link
-          href="/"
-          className={currentSlug === "home" ? "text-zinc-900 font-medium" : "text-zinc-500 hover:text-zinc-900"}
-        >
-          Home
+      <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+        <Link href="/" className="site-brand" aria-label="CMS Experiment home">
+          CMS <span>EXPERIMENT</span>
         </Link>
-        {navPages.map((p) => (
+        <nav className="flex flex-wrap gap-x-5 gap-y-2 text-sm" aria-label="Site navigation">
           <Link
-            key={p.id}
-            href={`/${p.slug}`}
-            className={p.slug === currentSlug ? "text-zinc-900 font-medium" : "text-zinc-500 hover:text-zinc-900"}
+            href="/"
+            aria-current={currentSlug === "home" ? "page" : undefined}
+            className={`site-nav-link ${
+              currentSlug === "home"
+                ? "text-[var(--foreground)]"
+                : "text-[var(--muted)] hover:text-[var(--foreground)]"
+            }`}
           >
-            {p.title}
+            Home
           </Link>
-        ))}
-      </nav>
-      <div className="flex items-center gap-3">
+          {navPages.map((p) => (
+            <Link
+              key={p.id}
+              href={`/${p.slug}`}
+              aria-current={p.slug === currentSlug ? "page" : undefined}
+              className={`site-nav-link ${
+                p.slug === currentSlug
+                  ? "text-[var(--foreground)]"
+                  : "text-[var(--muted)] hover:text-[var(--foreground)]"
+              }`}
+            >
+              {p.title}
+            </Link>
+          ))}
+        </nav>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <ThemeSwitcher />
         {message && (
           <span
             className={`text-sm ${message === "Saved!" ? "text-green-600" : "text-red-600"}`}
@@ -48,14 +67,18 @@ export function EditableSitePage({ initialPage, allPages, currentSlug }: Editabl
         )}
         {isEditing ? (
           <>
+            {callbacks.onLayoutChange && (
+              <LayoutDropdown value={page.layout ?? "single"} onChange={callbacks.onLayoutChange} />
+            )}
             <select
               value={page.slug}
-              onChange={(e) =>
-                window.location.assign(
-                  e.target.value === "home" ? "/?edit=1" : `/${e.target.value}?edit=1`
-                )
-              }
-              className="text-sm bg-white border border-zinc-300 rounded px-2 py-1.5 text-zinc-900"
+              onChange={(e) => {
+                const next = e.target.value;
+                if (next === page.slug) return;
+                if (!window.confirm("Switch page? Unsaved changes will be lost.")) return;
+                window.location.assign(next === "home" ? "/?edit=1" : `/${next}?edit=1`);
+              }}
+              className="text-sm bg-[var(--surface)] border border-[var(--border)] rounded px-2 py-1.5 text-[var(--foreground)]"
               aria-label="Select page to edit"
             >
               {allPages.map((p) => (
@@ -67,7 +90,8 @@ export function EditableSitePage({ initialPage, allPages, currentSlug }: Editabl
             <button
               type="button"
               onClick={() => actions.cancel()}
-              className="px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-200 rounded transition-colors"
+              className="px-3 py-1.5 text-sm text-[var(--muted)] hover:bg-[var(--border)] rounded transition-colors"
+              aria-label="Cancel editing"
             >
               Cancel
             </button>
@@ -75,7 +99,8 @@ export function EditableSitePage({ initialPage, allPages, currentSlug }: Editabl
               type="button"
               onClick={() => actions.save()}
               disabled={saving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-medium opacity-90 hover:opacity-100 disabled:opacity-50 transition-colors"
+              aria-label={saving ? "Saving…" : "Save changes"}
             >
               {saving ? "Saving…" : "Save"}
             </button>
@@ -84,7 +109,9 @@ export function EditableSitePage({ initialPage, allPages, currentSlug }: Editabl
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            className="rounded-full border border-[var(--foreground)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--foreground)] transition-colors hover:bg-[var(--foreground)] hover:text-[var(--surface)]"
+            aria-label="Edit this page"
+            data-testid="edit-page-button"
           >
             Edit this page
           </button>

@@ -8,7 +8,11 @@ import type { BlockType } from "./types";
 const DEFAULT_COMPONENT: ComponentType = "content";
 
 export function getComponentForRegion(
-  page: { mainComponent?: ComponentType; leftComponent?: ComponentType; rightComponent?: ComponentType },
+  page: {
+    mainComponent?: ComponentType;
+    leftComponent?: ComponentType;
+    rightComponent?: ComponentType;
+  },
   region: Region
 ): ComponentType {
   switch (region) {

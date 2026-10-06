@@ -1,6 +1,6 @@
 # CMS Experiment
 
-A decoupled CMS frontend built with Next.js, featuring a WYSIWYG-style admin panel. Content can be stored in SQLite (Prisma) or MongoDB (Node.js API server).
+A decoupled CMS frontend built with Next.js, featuring a WYSIWYG-style admin panel. Content can be stored in Postgres (Prisma) or MongoDB (Node.js API server).
 
 ## Design & architecture
 
@@ -16,18 +16,19 @@ A decoupled CMS frontend built with Next.js, featuring a WYSIWYG-style admin pan
 - **Public frontend** – Renders content from the CMS layer
 - **Admin with visual editing** – Edit content inline and see live preview
 - **API** – Next.js Route Handlers (`/api/content`) or standalone Node.js + MongoDB server
-- **Docker** – MongoDB, Node API, and Next.js via Docker Compose
+- **Docker** – Postgres, MongoDB, Node API, and Next.js via Docker Compose
 - **Unit tests** – Vitest + React Testing Library
 - **E2E tests** – Playwright
 
 ## Getting Started
 
-### Option A: Local (Next.js + SQLite)
+### Option A: Local (Next.js + Postgres)
 
 ```bash
 npm install
-cp .env.example .env   # optional; edit DATABASE_URL if needed
-npx prisma migrate dev
+cp .env.example .env   # edit DATABASE_URL if your Postgres differs
+docker run --name cms-pg -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=cms -p 5432:5432 -d postgres:17-alpine
+npx prisma migrate deploy
 npm run db:seed
 npm run dev
 ```
@@ -54,23 +55,23 @@ npm run dev:docker:seed     # Seed DB (after first run)
 
 ```bash
 docker compose up -d
-```  
+```
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start dev server |
-| `npm run build` | Production build |
-| `npm run start` | Run production server |
-| `npm run test` | Run unit tests (Vitest) |
-| `npm run test:e2e` | Run E2E tests (Playwright) |
-| `npm run test:watch` | Unit tests in watch mode |
-| `npm run db:seed` | Seed database from content/pages.json |
-| `npm run dev:docker` | Full dev stack (MongoDB + API + Web) with hot reload |
-| `npm run dev:docker:down` | Stop dev stack |
-| `npm run dev:docker:logs` | Tail logs |
-| `npm run dev:docker:seed` | Seed DB in running dev container |
+| Command                   | Description                                          |
+| ------------------------- | ---------------------------------------------------- |
+| `npm run dev`             | Start dev server                                     |
+| `npm run build`           | Production build                                     |
+| `npm run start`           | Run production server                                |
+| `npm run test`            | Run unit tests (Vitest)                              |
+| `npm run test:e2e`        | Run E2E tests (Playwright)                           |
+| `npm run test:watch`      | Unit tests in watch mode                             |
+| `npm run db:seed`         | Seed database from content/pages.json                |
+| `npm run dev:docker`      | Full dev stack (MongoDB + API + Web) with hot reload |
+| `npm run dev:docker:down` | Stop dev stack                                       |
+| `npm run dev:docker:logs` | Tail logs                                            |
+| `npm run dev:docker:seed` | Seed DB in running dev container                     |
 
 ## Testing
 
@@ -99,7 +100,7 @@ src/
 │       ├── Container.tsx
 │       └── Footer.tsx
 ├── lib/
-│   ├── db.ts             # Prisma client (SQLite)
+│   ├── db.ts             # Prisma client (Postgres)
 │   └── cms/
 │       ├── types.ts
 │       ├── store-db.ts   # DB-backed content store
@@ -132,14 +133,15 @@ npm run build         # Production build
 npm run test:e2e      # E2E (optional; needs dev server or deployed URL)
 ```
 
-For production (Next.js + SQLite): set `DATABASE_URL` in the environment (or use default from `.env`). Run migrations and seed if using a fresh DB:
+For production: set `DATABASE_URL` (Postgres) and `ADMIN_PASSWORD` in the environment. `npm run build` applies migrations itself; seed a fresh database with:
 
 ```bash
-npx prisma migrate deploy
 npm run db:seed
 ```
 
 Docker production: `docker compose up -d` (see Option C above).
+
+Vercel: see [docs/DEPLOY-VERCEL.md](docs/DEPLOY-VERCEL.md).
 
 ## Content Model
 

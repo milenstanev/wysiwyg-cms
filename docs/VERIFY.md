@@ -12,11 +12,11 @@ Runs **unit tests** then **production build**. If both pass, the project is in a
 
 ## Full checklist (optional)
 
-| Step | Command | What it does |
-|------|---------|--------------|
-| 1 | `npm run test` | 110 unit tests (Vitest) |
-| 2 | `npm run build` | Next.js production build |
-| 3 | `npm run test:e2e` | E2E tests (Playwright; needs dev server or deploy) |
+| Step | Command            | What it does                                       |
+| ---- | ------------------ | -------------------------------------------------- |
+| 1    | `npm run test`     | 110 unit tests (Vitest)                            |
+| 2    | `npm run build`    | Next.js production build                           |
+| 3    | `npm run test:e2e` | E2E tests (Playwright; needs dev server or deploy) |
 
 ## Expected results
 

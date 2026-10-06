@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { normalizePage, parseBlocksJson, parsePositionBlocksJson } from "./normalize-page";
 import { Page } from "./types";
 
 function dbToPage(row: {
@@ -12,17 +13,18 @@ function dbToPage(row: {
   positionBlocks?: string | null;
   updatedAt: Date;
 }): Page {
-  return {
+  const raw: Parameters<typeof normalizePage>[0] = {
     id: row.id,
     slug: row.slug,
     title: row.title,
-    layout: (row.layout as Page["layout"]) ?? "single",
-    blocks: JSON.parse(row.blocks),
-    leftBlocks: row.leftBlocks ? JSON.parse(row.leftBlocks) : undefined,
-    rightBlocks: row.rightBlocks ? JSON.parse(row.rightBlocks) : undefined,
-    positionBlocks: row.positionBlocks ? JSON.parse(row.positionBlocks) : undefined,
+    layout: (row.layout as Page["layout"]) ?? undefined,
+    blocks: parseBlocksJson(row.blocks),
+    leftBlocks: parseBlocksJson(row.leftBlocks),
+    rightBlocks: parseBlocksJson(row.rightBlocks),
+    positionBlocks: parsePositionBlocksJson(row.positionBlocks),
     updatedAt: row.updatedAt.toISOString(),
   };
+  return normalizePage(raw);
 }
 
 export async function loadPages(): Promise<Page[]> {
@@ -36,19 +38,22 @@ export async function getPageBySlug(slug: string): Promise<Page | null> {
 }
 
 export async function updatePage(updated: Page): Promise<Page> {
+  const page = normalizePage(updated);
   const data = {
-    slug: updated.slug,
-    title: updated.title,
-    layout: updated.layout ?? "single",
-    blocks: JSON.stringify(updated.blocks),
-    leftBlocks: updated.leftBlocks ? JSON.stringify(updated.leftBlocks) : null,
-    rightBlocks: updated.rightBlocks ? JSON.stringify(updated.rightBlocks) : null,
-    positionBlocks: updated.positionBlocks && Object.keys(updated.positionBlocks).length > 0
-      ? JSON.stringify(updated.positionBlocks) : null,
+    slug: page.slug,
+    title: page.title,
+    layout: page.layout,
+    blocks: JSON.stringify(page.blocks),
+    leftBlocks: (page.leftBlocks ?? []).length > 0 ? JSON.stringify(page.leftBlocks) : null,
+    rightBlocks: (page.rightBlocks ?? []).length > 0 ? JSON.stringify(page.rightBlocks) : null,
+    positionBlocks:
+      Object.keys(page.positionBlocks ?? {}).length > 0
+        ? JSON.stringify(page.positionBlocks)
+        : null,
   };
   const row = await prisma.page.upsert({
-    where: { id: updated.id },
-    create: { id: updated.id, ...data },
+    where: { id: page.id },
+    create: { id: page.id, ...data },
     update: data,
   });
   return dbToPage(row);

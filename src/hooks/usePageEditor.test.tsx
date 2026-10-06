@@ -19,8 +19,8 @@ describe("usePageEditor", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
     vi.stubGlobal("window", {
-    location: { search: "" },
-  });
+      location: { search: "" },
+    });
   });
 
   it("returns initial page and not editing", () => {
@@ -64,6 +64,17 @@ describe("usePageEditor", () => {
     });
     expect(result.current.page.blocks.length).toBe(3);
     expect(result.current.page.blocks[0].type).toBe("text");
+  });
+
+  it("onAddBlock appends when afterBlockId is not found (invalid id)", () => {
+    const { result } = renderHook(() => usePageEditor(mockPage));
+    act(() => result.current.setEditing(true));
+
+    act(() => {
+      result.current.callbacks.onAddBlock?.("nonexistent-id", "text", "main");
+    });
+    expect(result.current.page.blocks.length).toBe(3);
+    expect(result.current.page.blocks[2].type).toBe("text");
   });
 
   it("onRemoveBlock removes block from main", () => {

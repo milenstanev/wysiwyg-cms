@@ -1,4 +1,22 @@
 services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: cms-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cms
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   mongodb:
     image: mongo:8
     container_name: cms-mongodb
@@ -36,11 +54,13 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      DATABASE_URL: file:/app/data/dev.db
-    volumes:
-      - web_data:/app/data
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/cms
     depends_on:
-      - api
+      api:
+        condition: service_started
+      postgres:
+        condition: service_healthy
 
 volumes:
   mongodb_data:
+  postgres_data:

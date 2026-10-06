@@ -1,5 +1,22 @@
 # Full dev stack: MongoDB + API + Next.js. Hot reload enabled.
 services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: cms-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cms
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   mongodb:
     image: mongo:8
     container_name: cms-mongodb
@@ -48,11 +65,15 @@ services:
       NODE_ENV: development
       PORT: 3000
       WATCHPACK_POLLING: "true"
-      DATABASE_URL: file:./dev.db
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/cms
     depends_on:
-      - api
+      api:
+        condition: service_started
+      postgres:
+        condition: service_healthy
 
 volumes:
   mongodb_data:
+  postgres_data:
   app_node_modules:
   app_next:

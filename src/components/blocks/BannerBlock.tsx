@@ -9,7 +9,7 @@ interface BannerBlockProps {
 
 export function BannerBlock({ title = "", content, editable, onEdit }: BannerBlockProps) {
   return (
-    <div className="rounded-xl overflow-hidden bg-gradient-to-r from-zinc-800 to-zinc-900 text-white p-8 sm:p-10 text-center">
+    <div className="rounded-xl overflow-hidden bg-[linear-gradient(135deg,var(--foreground),color-mix(in_srgb,var(--foreground)_72%,var(--accent)))] text-[var(--surface)] p-8 sm:p-10 text-center">
       {editable ? (
         <>
           <div
@@ -24,7 +24,7 @@ export function BannerBlock({ title = "", content, editable, onEdit }: BannerBlo
             contentEditable
             suppressContentEditableWarning
             onInput={(e) => onEdit?.("content", (e.currentTarget as HTMLElement).textContent || "")}
-            className="mt-2 text-zinc-300 text-lg outline-none empty:before:content-['Banner subtitle or description'] empty:before:opacity-60"
+            className="mt-2 opacity-75 text-lg outline-none empty:before:content-['Banner subtitle or description'] empty:before:opacity-60"
           >
             {content}
           </div>
@@ -32,7 +32,7 @@ export function BannerBlock({ title = "", content, editable, onEdit }: BannerBlo
       ) : (
         <>
           {title && <h2 className="text-2xl sm:text-3xl font-bold">{title}</h2>}
-          {content && <p className="mt-2 text-zinc-300 text-lg">{content}</p>}
+          {content && <p className="mt-2 opacity-75 text-lg">{content}</p>}
         </>
       )}
     </div>

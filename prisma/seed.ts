@@ -11,6 +11,7 @@ type PageFromJson = {
   blocks: unknown[];
   leftBlocks?: unknown[];
   rightBlocks?: unknown[];
+  positionBlocks?: unknown;
 };
 
 async function seed() {
@@ -29,7 +30,11 @@ async function seed() {
         layout: "single",
         blocks: [
           { id: "1", type: "heading", content: "Hello from the CMS" },
-          { id: "2", type: "text", content: "Edit this content in the admin panel. What you see is what you get." },
+          {
+            id: "2",
+            type: "text",
+            content: "Edit this content in the admin panel. What you see is what you get.",
+          },
         ],
       },
       {
@@ -76,6 +81,7 @@ async function seed() {
         blocks: JSON.stringify(p.blocks),
         leftBlocks: p.leftBlocks ? JSON.stringify(p.leftBlocks) : null,
         rightBlocks: p.rightBlocks ? JSON.stringify(p.rightBlocks) : null,
+        positionBlocks: p.positionBlocks ? JSON.stringify(p.positionBlocks) : null,
       },
       update: {
         slug: p.slug,
@@ -84,6 +90,7 @@ async function seed() {
         blocks: JSON.stringify(p.blocks),
         leftBlocks: p.leftBlocks ? JSON.stringify(p.leftBlocks) : null,
         rightBlocks: p.rightBlocks ? JSON.stringify(p.rightBlocks) : null,
+        positionBlocks: p.positionBlocks ? JSON.stringify(p.positionBlocks) : null,
       },
     });
     console.log(`Seeded page: ${p.slug}`);

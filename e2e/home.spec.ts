@@ -20,7 +20,10 @@ test.describe("Home", () => {
 
   test("click About goes to about page", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("link", { name: /About Us/i }).first().click();
+    await page
+      .getByRole("link", { name: /About Us/i })
+      .first()
+      .click();
     await expect(page).toHaveURL(/\/about/);
     await expect(page.getByRole("heading", { name: "About Us" })).toBeVisible();
   });
@@ -36,10 +39,13 @@ test.describe("Home", () => {
   test("can switch between single / two / three column in edit mode", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: /Edit this page/i }).click();
-    await expect(page.getByText("Layout:")).toBeVisible();
+    await page.getByRole("button", { name: /Choose layout/i }).click();
     await page.getByRole("button", { name: "Two columns" }).click();
+    await page.getByRole("button", { name: /Choose layout/i }).click();
     await expect(page.getByRole("button", { name: "Two columns" })).toHaveClass(/bg-zinc-900/);
+    await page.getByRole("button", { name: /Choose layout/i }).click();
     await page.getByRole("button", { name: "Three columns" }).click();
+    await page.getByRole("button", { name: /Choose layout/i }).click();
     await expect(page.getByRole("button", { name: "Three columns" })).toHaveClass(/bg-zinc-900/);
   });
 

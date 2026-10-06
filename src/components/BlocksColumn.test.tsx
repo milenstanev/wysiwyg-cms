@@ -21,14 +21,7 @@ describe("BlocksColumn", () => {
   });
 
   it("shows Add block button when editable and onAddBlock provided", () => {
-    render(
-      <BlocksColumn
-        blocks={blocks}
-        region="main"
-        editable
-        onAddBlock={vi.fn()}
-      />
-    );
+    render(<BlocksColumn blocks={blocks} region="main" editable onAddBlock={vi.fn()} />);
     expect(screen.getByText(/Add block \(main\)/)).toBeInTheDocument();
   });
 
@@ -43,7 +36,7 @@ describe("BlocksColumn", () => {
         onRemoveBlock={onRemoveBlock}
       />
     );
-    const removeButtons = screen.getAllByTitle("Remove block");
+    const removeButtons = screen.getAllByRole("button", { name: "Remove block" });
     expect(removeButtons.length).toBeGreaterThan(0);
     fireEvent.click(removeButtons[0]);
     expect(onRemoveBlock).toHaveBeenCalledWith("1");
@@ -60,20 +53,45 @@ describe("BlocksColumn", () => {
         onMoveBlock={onMoveBlock}
       />
     );
-    const moveUp = screen.getByTitle("Move up");
+    const moveUp = screen.getByRole("button", { name: "Move up" });
     fireEvent.click(moveUp);
     expect(onMoveBlock).toHaveBeenCalledWith("2", "up", "main");
   });
 
-  it("renders with empty blocks and still shows Add block when editable", () => {
+  it("calls onMoveBlock when move down clicked", () => {
+    const onMoveBlock = vi.fn();
     render(
       <BlocksColumn
-        blocks={[]}
+        blocks={blocks}
         region="main"
         editable
         onAddBlock={vi.fn()}
+        onMoveBlock={onMoveBlock}
       />
     );
+    const moveDown = screen.getByRole("button", { name: "Move down" });
+    fireEvent.click(moveDown);
+    expect(onMoveBlock).toHaveBeenCalledWith("1", "down", "main");
+  });
+
+  it("toolbar buttons are accessible by role and name (aria-label)", () => {
+    render(
+      <BlocksColumn
+        blocks={blocks}
+        region="main"
+        editable
+        onAddBlock={vi.fn()}
+        onRemoveBlock={vi.fn()}
+        onMoveBlock={vi.fn()}
+      />
+    );
+    expect(screen.getByRole("button", { name: "Move up" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Move down" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Remove block" }).length).toBe(2);
+  });
+
+  it("renders with empty blocks and still shows Add block when editable", () => {
+    render(<BlocksColumn blocks={[]} region="main" editable onAddBlock={vi.fn()} />);
     expect(screen.getByText(/Add block \(main\)/)).toBeInTheDocument();
   });
 
@@ -88,7 +106,26 @@ describe("BlocksColumn", () => {
         onMoveBlock={vi.fn()}
       />
     );
-    expect(screen.queryByTitle("Move up")).not.toBeInTheDocument();
-    expect(screen.queryByTitle("Move down")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Move up" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Move down" })).not.toBeInTheDocument();
+  });
+
+  it("Block settings button is accessible when block has settings", () => {
+    const tableBlock: ContentBlock = {
+      id: "t1",
+      type: "table",
+      content: "",
+      rows: [["A", "B"]],
+    };
+    render(
+      <BlocksColumn
+        blocks={[tableBlock]}
+        region="main"
+        editable
+        onAddBlock={vi.fn()}
+        onBlockUpdate={vi.fn()}
+      />
+    );
+    expect(screen.getByRole("button", { name: "Block settings" })).toBeInTheDocument();
   });
 });

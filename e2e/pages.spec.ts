@@ -40,7 +40,10 @@ test.describe("Pages and navigation", () => {
     await page.goto("/");
     await page.getByRole("link", { name: /Blog/i }).first().click();
     await expect(page).toHaveURL(/\/blog/);
-    await page.getByRole("link", { name: /Contact/i }).first().click();
+    await page
+      .getByRole("link", { name: /Contact/i })
+      .first()
+      .click();
     await expect(page).toHaveURL(/\/contact/);
     await page.getByRole("link", { name: "Home" }).first().click();
     await expect(page).toHaveURL("/");

@@ -1,6 +1,7 @@
 "use client";
 
 import { ContentBlock as BlockType } from "@/lib/cms/types";
+import { getBlockSettingOrDefault } from "@/lib/cms/block-settings";
 import Image from "next/image";
 import { BannerBlock } from "./blocks/BannerBlock";
 import { ShowcaseBlock } from "./blocks/ShowcaseBlock";
@@ -14,8 +15,14 @@ interface ContentBlockProps {
   onBlockUpdate?: (blockId: string, updates: Partial<BlockType>) => void;
 }
 
+function safeContent(block: BlockType): string {
+  return block.content ?? "";
+}
+
 export function ContentBlock({ block, editable, onEdit, onBlockUpdate }: ContentBlockProps) {
-  const handleInput = (e: React.FormEvent<HTMLHeadingElement | HTMLParagraphElement | HTMLDivElement>) => {
+  const handleInput = (
+    e: React.FormEvent<HTMLHeadingElement | HTMLParagraphElement | HTMLDivElement>
+  ) => {
     onEdit?.(block.id, (e.currentTarget as HTMLElement).textContent || "");
   };
 
@@ -31,16 +38,21 @@ export function ContentBlock({ block, editable, onEdit, onBlockUpdate }: Content
     onBlockUpdate?.(block.id, { rows });
   };
 
+  const content = safeContent(block);
+
   if (block.type === "heading") {
+    const level = getBlockSettingOrDefault(block, "level", "1") as string;
+    const Tag = level === "3" ? "h3" : level === "2" ? "h2" : "h1";
+    const sizeClass = level === "3" ? "text-xl" : level === "2" ? "text-2xl" : "text-3xl";
     return (
-      <h1
+      <Tag
         contentEditable={editable}
         suppressContentEditableWarning
         onInput={handleInput}
-        className="text-3xl font-bold text-zinc-900 outline-none"
+        className={`${sizeClass} font-bold text-[var(--foreground)] outline-none`}
       >
-        {block.content}
-      </h1>
+        {content}
+      </Tag>
     );
   }
 
@@ -50,21 +62,22 @@ export function ContentBlock({ block, editable, onEdit, onBlockUpdate }: Content
         contentEditable={editable}
         suppressContentEditableWarning
         onInput={handleInput}
-        className="text-lg text-zinc-600 leading-relaxed outline-none"
+        className="text-lg text-[var(--muted)] leading-relaxed outline-none"
       >
-        {block.content}
+        {content}
       </p>
     );
   }
 
   if (block.type === "image") {
+    const alt = getBlockSettingOrDefault(block, "alt", "") as string;
     return (
       <div className="space-y-2">
-        {block.content ? (
+        {content ? (
           <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-zinc-100">
             <Image
-              src={block.content}
-              alt=""
+              src={content}
+              alt={alt}
               fill
               className="object-cover"
               unoptimized
@@ -81,7 +94,7 @@ export function ContentBlock({ block, editable, onEdit, onBlockUpdate }: Content
             onInput={handleInput}
             className="text-sm text-zinc-500 outline-none min-h-[1.5rem]"
           >
-            {block.content}
+            {content}
           </div>
         ) : null}
       </div>
@@ -91,8 +104,8 @@ export function ContentBlock({ block, editable, onEdit, onBlockUpdate }: Content
   if (block.type === "banner") {
     return (
       <BannerBlock
-        title={block.title}
-        content={block.content}
+        title={block.title ?? ""}
+        content={content}
         editable={editable}
         onEdit={handleFieldEdit}
       />
@@ -102,8 +115,8 @@ export function ContentBlock({ block, editable, onEdit, onBlockUpdate }: Content
   if (block.type === "showcase") {
     return (
       <ShowcaseBlock
-        title={block.title}
-        content={block.content}
+        title={block.title ?? ""}
+        content={content}
         editable={editable}
         onEdit={handleFieldEdit}
       />
@@ -114,7 +127,8 @@ export function ContentBlock({ block, editable, onEdit, onBlockUpdate }: Content
     return (
       <ListBlock
         items={block.items}
-        content={block.content}
+        content={content}
+        settings={block.settings}
         editable={editable}
         onEdit={handleItemsEdit}
       />
@@ -125,7 +139,8 @@ export function ContentBlock({ block, editable, onEdit, onBlockUpdate }: Content
     return (
       <TableBlock
         rows={block.rows}
-        content={block.content}
+        content={content}
+        settings={block.settings}
         editable={editable}
         onEdit={handleRowsEdit}
       />

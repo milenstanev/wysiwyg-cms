@@ -5,6 +5,7 @@ To use the `server/` directory as a git submodule:
 1. **Create a new remote repository** for the server (e.g. `cms-api-server`).
 
 2. **Initialize and push the server:**
+
    ```bash
    cd server
    git init
@@ -17,6 +18,7 @@ To use the `server/` directory as a git submodule:
    ```
 
 3. **Remove server from the main repo and add as submodule:**
+
    ```bash
    rm -rf server
    git submodule add https://github.com/YOUR_USER/cms-api-server.git server

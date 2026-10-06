@@ -2,15 +2,27 @@ import type { PageRendererProps } from "@/lib/cms/page-editor.types";
 import type { ContentBlock } from "@/lib/cms/types";
 import { getComponentForRegion, ComponentSlot } from "@/lib/cms/components";
 import { ModulePosition } from "./layout/ModulePosition";
-import { LayoutSelector } from "./layout/LayoutSelector";
 import { ContentCard } from "./layout/ContentCard";
 import { SidebarCard } from "./layout/SidebarCard";
 import { BlocksColumn } from "./BlocksColumn";
 import { CONTENT_WIDTH_CLASS } from "@/lib/layout/constants";
-import { getLayoutTemplate, getPositionPlaceholderLabel } from "@/lib/cms/layout-templates";
+import {
+  getLayoutTemplate,
+  getPositionPlaceholderLabel,
+  getRowGridClassName,
+  isContentPosition,
+} from "@/lib/cms/layout-templates";
 
-function getBlocksForPosition(p: { blocks: ContentBlock[]; leftBlocks?: ContentBlock[]; rightBlocks?: ContentBlock[]; positionBlocks?: Record<string, ContentBlock[]> }, positionId: string): ContentBlock[] {
-  if (positionId === "main") return p.blocks;
+function getBlocksForPosition(
+  p: {
+    blocks?: ContentBlock[];
+    leftBlocks?: ContentBlock[];
+    rightBlocks?: ContentBlock[];
+    positionBlocks?: Record<string, ContentBlock[]>;
+  },
+  positionId: string
+): ContentBlock[] {
+  if (positionId === "main") return p.blocks ?? [];
   if (positionId === "left") return p.leftBlocks ?? [];
   if (positionId === "right") return p.rightBlocks ?? [];
   return p.positionBlocks?.[positionId] ?? [];
@@ -37,7 +49,7 @@ export function PageRenderer({
   const template = getLayoutTemplate(layout) ?? getLayoutTemplate("single")!;
   const leftBlocks = page.leftBlocks ?? [];
   const rightBlocks = page.rightBlocks ?? [];
-  const mainBlocks = page.blocks;
+  const mainBlocks = page.blocks ?? [];
   const mainComp = getComponentForRegion(page, "main");
   const leftComp = getComponentForRegion(page, "left");
   const rightComp = getComponentForRegion(page, "right");
@@ -68,12 +80,7 @@ export function PageRenderer({
     if (positionId === "main") {
       return wrap(
         <ContentCard unstyled={unstyled}>
-          <ComponentSlot
-            component={mainComp}
-            region="main"
-            blocks={mainBlocks}
-            {...slotProps}
-          />
+          <ComponentSlot component={mainComp} region="main" blocks={mainBlocks} {...slotProps} />
         </ContentCard>
       );
     }
@@ -81,12 +88,7 @@ export function PageRenderer({
       return wrap(
         <SidebarCard side="left" unstyled={unstyled}>
           <ModulePosition name="sidebar-left" />
-          <ComponentSlot
-            component={leftComp}
-            region="left"
-            blocks={leftBlocks}
-            {...slotProps}
-          />
+          <ComponentSlot component={leftComp} region="left" blocks={leftBlocks} {...slotProps} />
         </SidebarCard>
       );
     }
@@ -94,18 +96,14 @@ export function PageRenderer({
       return wrap(
         <SidebarCard side="right" unstyled={unstyled}>
           <ModulePosition name="sidebar-right" />
-          <ComponentSlot
-            component={rightComp}
-            region="right"
-            blocks={rightBlocks}
-            {...slotProps}
-          />
+          <ComponentSlot component={rightComp} region="right" blocks={rightBlocks} {...slotProps} />
         </SidebarCard>
       );
     }
-    // Any other position (utility-a, header, showcase-b, etc.): show blocks + Add block when editable
+    // Any other position (utility-a, header, etc.): only render when there are blocks or editable add-block
     const blocks = getBlocksForPosition(page, positionId);
-    const placeholderLabel = template.id === "rockettheme" ? getPositionPlaceholderLabel(positionId) : undefined;
+    const placeholderLabel =
+      template.id === "rockettheme" ? getPositionPlaceholderLabel(positionId) : undefined;
     const hasContent = blocks.length > 0 || (editable && onAddBlock);
     if (hasContent) {
       return wrap(
@@ -124,7 +122,14 @@ export function PageRenderer({
         </div>
       );
     }
-    return wrap(<ModulePosition name={positionId} placeholderLabel={placeholderLabel} />);
+    // Empty module position: return null so caller can collapse the column (do not show placeholder)
+    return null;
+  }
+
+  function isPositionVisible(positionId: string): boolean {
+    if (isContentPosition(positionId)) return true;
+    const blocks = getBlocksForPosition(page, positionId);
+    return blocks.length > 0 || !!(editable && onAddBlock);
   }
 
   const isRocketTheme = template.id === "rockettheme";
@@ -133,13 +138,9 @@ export function PageRenderer({
       data-page-renderer
       data-layout={layout}
       data-template={template.id}
-      className={`${CONTENT_WIDTH_CLASS} space-y-8 min-w-0 ${contentClassName} ${isRocketTheme ? "layout-template-rockettheme" : ""}`}
+      className={`page-content ${CONTENT_WIDTH_CLASS} space-y-8 min-w-0 ${contentClassName} ${isRocketTheme ? "layout-template-rockettheme" : ""}`}
     >
       <ModulePosition name="top" />
-
-      {editable && onLayoutChange && (
-        <LayoutSelector value={layout} onChange={onLayoutChange} />
-      )}
 
       <h1
         contentEditable={editable && !!onTitleEdit}
@@ -151,28 +152,29 @@ export function PageRenderer({
         }
         className={
           editable
-            ? "text-3xl font-bold text-zinc-900 outline outline-2 outline-dashed outline-zinc-300 outline-offset-2 rounded"
-            : "text-3xl font-bold text-zinc-900"
+            ? "page-title font-bold text-[var(--foreground)] focus:outline focus:outline-2 focus:outline-dashed focus:outline-[var(--border)] focus:outline-offset-2 focus:rounded"
+            : "page-title font-bold text-[var(--foreground)]"
         }
       >
         {page.title}
       </h1>
 
-      {template.rows.map((row, rowIndex) => (
-        <div
-          key={`${template.id}-row-${rowIndex}`}
-          className={row.gridClassName}
-          data-template-row={rowIndex}
-        >
-          {row.positions.map((positionId, posIndex) =>
-            renderPosition(
-              positionId,
-              rowIndex,
-              row.orderClassNames?.[posIndex]
-            )
-          )}
-        </div>
-      ))}
+      {template.rows.map((row, rowIndex) => {
+        const visiblePositions = row.positions.filter(isPositionVisible);
+        const gridClassName = getRowGridClassName(row, visiblePositions.length);
+        return (
+          <div
+            key={`${template.id}-row-${rowIndex}`}
+            className={gridClassName}
+            data-template-row={rowIndex}
+          >
+            {visiblePositions.map((positionId, posIndex) => {
+              const originalIndex = row.positions.indexOf(positionId);
+              return renderPosition(positionId, rowIndex, row.orderClassNames?.[originalIndex]);
+            })}
+          </div>
+        );
+      })}
 
       <ModulePosition name="bottom" />
     </article>

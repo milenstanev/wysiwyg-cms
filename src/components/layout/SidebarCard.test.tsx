@@ -9,23 +9,17 @@ describe("SidebarCard", () => {
   });
 
   it("uses aside element", () => {
-    const { container } = render(
-      <SidebarCard side="left">X</SidebarCard>
-    );
+    const { container } = render(<SidebarCard side="left">X</SidebarCard>);
     expect(container.querySelector("aside")).toBeInTheDocument();
   });
 
   it("applies left layout class for side left", () => {
-    const { container } = render(
-      <SidebarCard side="left">X</SidebarCard>
-    );
+    const { container } = render(<SidebarCard side="left">X</SidebarCard>);
     expect(container.querySelector("aside")).toHaveClass("layout-sidebar-left");
   });
 
   it("applies right layout class for side right", () => {
-    const { container } = render(
-      <SidebarCard side="right">X</SidebarCard>
-    );
+    const { container } = render(<SidebarCard side="right">X</SidebarCard>);
     expect(container.querySelector("aside")).toHaveClass("layout-sidebar-right");
   });
 });

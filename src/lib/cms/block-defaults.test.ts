@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  generateBlockId,
-  getDefaultBlockContent,
-  createBlock,
-} from "./block-defaults";
+import { generateBlockId, getDefaultBlockContent, createBlock } from "./block-defaults";
 import type { BlockType } from "./types";
 
 const BLOCK_TYPES: BlockType[] = [

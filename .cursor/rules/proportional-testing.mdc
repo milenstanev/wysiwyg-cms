@@ -1,0 +1,12 @@
+---
+description: Do not run tests, eslint, or verification commands unless explicitly requested by the user
+alwaysApply: true
+---
+
+# Testing, Linting, and Verification Policy
+
+- **DO NOT run eslint, linting checks (`npm run lint`), unit tests (`npm test`, `vitest`), E2E tests (`playwright`), builds, or test scripts unless the user explicitly requests it.**
+- Only run tests or linters when the user specifically commands you to (e.g., "run tests", "run eslint", "verify with tests").
+- Do not assume changes require running checks or writing new tests.
+- Add or modify tests ONLY when explicitly asked by the user.
+- Keep changes focused strictly on the requested task without unsolicited test runs, linting runs, or unrelated verification overhead.

@@ -46,20 +46,28 @@ export function usePageEditor(
   options: UsePageEditorOptions = {}
 ): UsePageEditorResult {
   const [page, setPage] = useState<Page>(initialPage);
-  const [isEditing, setEditing] = useState<boolean>(() =>
-    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("edit") === "1"
+  const [isEditing, setEditing] = useState<boolean>(
+    () =>
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("edit") === "1"
   );
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setPage(initialPage);
-  }, [initialPage.id]);
+  }, [initialPage.id, initialPage.updatedAt]);
 
   const onBlockEdit = useCallback((blockId: string, content: string) => {
     setPage((p) => {
-      const map = (arr: ContentBlock[]) => arr.map((b) => (b.id === blockId ? { ...b, content } : b));
-      const next = { ...p, blocks: map(p.blocks), leftBlocks: map(p.leftBlocks ?? []), rightBlocks: map(p.rightBlocks ?? []) };
+      const map = (arr: ContentBlock[]) =>
+        arr.map((b) => (b.id === blockId ? { ...b, content } : b));
+      const next = {
+        ...p,
+        blocks: map(p.blocks),
+        leftBlocks: map(p.leftBlocks ?? []),
+        rightBlocks: map(p.rightBlocks ?? []),
+      };
       if (p.positionBlocks) {
         next.positionBlocks = {};
         for (const [pos, blocks] of Object.entries(p.positionBlocks))
@@ -75,8 +83,14 @@ export function usePageEditor(
 
   const onBlockUpdate = useCallback((blockId: string, updates: Partial<ContentBlock>) => {
     setPage((p) => {
-      const map = (arr: ContentBlock[]) => arr.map((b) => (b.id === blockId ? { ...b, ...updates } : b));
-      const next = { ...p, blocks: map(p.blocks), leftBlocks: map(p.leftBlocks ?? []), rightBlocks: map(p.rightBlocks ?? []) };
+      const map = (arr: ContentBlock[]) =>
+        arr.map((b) => (b.id === blockId ? { ...b, ...updates } : b));
+      const next = {
+        ...p,
+        blocks: map(p.blocks),
+        leftBlocks: map(p.leftBlocks ?? []),
+        rightBlocks: map(p.rightBlocks ?? []),
+      };
       if (p.positionBlocks) {
         next.positionBlocks = {};
         for (const [pos, blocks] of Object.entries(p.positionBlocks))
@@ -86,19 +100,24 @@ export function usePageEditor(
     });
   }, []);
 
-  const onAddBlock = useCallback((afterBlockId: string | null, type: BlockType, positionId: PositionId) => {
-    const newBlock = createBlock(type);
-    setPage((p) => {
-      const arr = getBlocksForPosition(p, positionId);
-      const blocks = [...arr];
-      if (afterBlockId === null) blocks.unshift(newBlock);
-      else {
-        const idx = blocks.findIndex((b) => b.id === afterBlockId);
-        blocks.splice(idx + 1, 0, newBlock);
-      }
-      return setBlocksForPosition(p, positionId, blocks);
-    });
-  }, []);
+  const onAddBlock = useCallback(
+    (afterBlockId: string | null, type: BlockType, positionId: PositionId) => {
+      const newBlock = createBlock(type);
+      setPage((p) => {
+        const arr = getBlocksForPosition(p, positionId);
+        const blocks = [...arr];
+        if (afterBlockId === null) {
+          blocks.unshift(newBlock);
+        } else {
+          const idx = blocks.findIndex((b) => b.id === afterBlockId);
+          if (idx >= 0) blocks.splice(idx + 1, 0, newBlock);
+          else blocks.push(newBlock);
+        }
+        return setBlocksForPosition(p, positionId, blocks);
+      });
+    },
+    []
+  );
 
   const onRemoveBlock = useCallback((blockId: string) => {
     setPage((p) => {
@@ -120,18 +139,25 @@ export function usePageEditor(
     });
   }, []);
 
-  const onMoveBlock = useCallback((blockId: string, direction: "up" | "down", positionId: PositionId) => {
-    setPage((p) => {
-      const arr = getBlocksForPosition(p, positionId);
-      const idx = arr.findIndex((b) => b.id === blockId);
-      if (idx < 0) return p;
-      const newIdx = direction === "up" ? idx - 1 : idx + 1;
-      if (newIdx < 0 || newIdx >= arr.length) return p;
-      const blocks = [...arr];
-      [blocks[idx], blocks[newIdx]] = [blocks[newIdx], blocks[idx]];
-      return setBlocksForPosition(p, positionId, blocks);
-    });
-  }, []);
+  const onMoveBlock = useCallback(
+    (blockId: string, direction: "up" | "down", positionId: PositionId) => {
+      setPage((p) => {
+        const arr = getBlocksForPosition(p, positionId);
+        const idx = arr.findIndex((b) => b.id === blockId);
+        if (idx < 0) return p;
+        const newIdx = direction === "up" ? idx - 1 : idx + 1;
+        if (newIdx < 0 || newIdx >= arr.length) return p;
+        const blocks = arr.map((b) => ({ ...b }));
+        const a = blocks[idx];
+        const b = blocks[newIdx];
+        // Swap blocks and their gridItems so visual order matches array order
+        blocks[idx] = { ...b, gridItem: a.gridItem ?? b.gridItem };
+        blocks[newIdx] = { ...a, gridItem: b.gridItem ?? a.gridItem };
+        return setBlocksForPosition(p, positionId, blocks);
+      });
+    },
+    []
+  );
 
   const onLayoutChange = useCallback((layout: PageLayout) => {
     setPage((p) => ({ ...p, layout }));
@@ -149,8 +175,14 @@ export function usePageEditor(
       if (res.ok) {
         setMessage("Saved!");
         setEditing(false);
-        options.onSaved?.();
+        try {
+          options.onSaved?.();
+        } catch {
+          // ignore so we still show Saved! and clear editing
+        }
         setTimeout(() => setMessage(null), 1500);
+      } else if (res.status === 401) {
+        setMessage("Not signed in — open /admin first");
       } else {
         setMessage("Failed to save");
       }

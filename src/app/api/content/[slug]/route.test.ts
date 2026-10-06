@@ -25,6 +25,15 @@ describe("GET /api/content/[slug]", () => {
     const data = await res.json();
     expect(data).toHaveProperty("error");
   });
+
+  it("returns 400 for empty slug", async () => {
+    const res = await GET(new Request("http://localhost/api/content/"), {
+      params: Promise.resolve({ slug: "" }),
+    });
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toBe("Slug is required");
+  });
 });
 
 describe("PUT /api/content/[slug]", () => {
@@ -62,6 +71,40 @@ describe("PUT /api/content/[slug]", () => {
     );
   });
 
+  it("returns 400 when body is invalid JSON", async () => {
+    const res = await PUT(
+      new Request("http://localhost/api/content/home", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: "not valid json {",
+      }),
+      { params: Promise.resolve({ slug: "home" }) }
+    );
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toBe("Invalid JSON body");
+  });
+
+  it("returns 400 when id is missing or empty", async () => {
+    const res = await PUT(
+      new Request("http://localhost/api/content/home", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: "",
+          slug: "home",
+          title: "Home",
+          blocks: [],
+          updatedAt: new Date().toISOString(),
+        }),
+      }),
+      { params: Promise.resolve({ slug: "home" }) }
+    );
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data).toHaveProperty("error");
+  });
+
   it("returns 400 when slug in body does not match URL", async () => {
     const res = await PUT(
       new Request("http://localhost/api/content/home", {
@@ -80,6 +123,41 @@ describe("PUT /api/content/[slug]", () => {
     expect(res.status).toBe(400);
     const data = await res.json();
     expect(data).toHaveProperty("error");
+  });
+
+  it("PUT accepts minimal body and returns normalized page", async () => {
+    const existingRes = await GET(new Request("http://localhost/api/content/contact"), {
+      params: Promise.resolve({ slug: "contact" }),
+    });
+    const existing: Page = await existingRes.json();
+    const res = await PUT(
+      new Request("http://localhost/api/content/contact", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: existing.id,
+          slug: "contact",
+          title: "Contact Normalized",
+        }),
+      }),
+      { params: Promise.resolve({ slug: "contact" }) }
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.title).toBe("Contact Normalized");
+    expect(Array.isArray(data.blocks)).toBe(true);
+    expect(Array.isArray(data.leftBlocks)).toBe(true);
+    expect(Array.isArray(data.rightBlocks)).toBe(true);
+    expect(data.updatedAt).toBeDefined();
+
+    await PUT(
+      new Request("http://localhost/api/content/contact", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(existing),
+      }),
+      { params: Promise.resolve({ slug: "contact" }) }
+    );
   });
 
   it("PUT accepts page with empty blocks array", async () => {
