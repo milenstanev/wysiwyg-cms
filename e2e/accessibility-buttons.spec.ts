@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { TEST_ID, testIdSelector } from "../src/lib/test-ids";
 
 /**
  * E2E: Edit buttons and toolbar must be accessible. These tests FAIL if:
@@ -24,13 +25,13 @@ test.describe("Edit button is accessible", () => {
     const editBtn = getEditButton(page);
     await expect(editBtn).toBeVisible({ timeout: 10000 });
     await editBtn.focus();
-    const focusedIsEdit = await page.evaluate(() => {
+    const focusedIsEdit = await page.evaluate((editId) => {
       const el = document.activeElement;
       return (
-        el?.getAttribute("data-testid") === "edit-page-button" ||
+        el?.getAttribute("data-testid") === editId ||
         el?.textContent?.includes("Edit this page")
       );
-    });
+    }, TEST_ID.editPageButton);
     expect(focusedIsEdit, "Edit button must receive focus when focused").toBe(true);
   });
 
@@ -44,14 +45,13 @@ test.describe("Edit button is accessible", () => {
       const centerX = box.x + box.width / 2;
       const centerY = box.y + box.height / 2;
       const topElement = await page.evaluate(
-        ({ x, y }) => {
+        ({ x, y, sel }) => {
           const el = document.elementFromPoint(x, y);
           return (
-            el?.closest("[data-testid='edit-page-button']") != null ||
-            el?.textContent?.includes("Edit this page")
+            el?.closest(sel) != null || el?.textContent?.includes("Edit this page")
           );
         },
-        { x: centerX, y: centerY }
+        { x: centerX, y: centerY, sel: testIdSelector(TEST_ID.editPageButton) }
       );
       expect(topElement, "Edit button must not be covered at its center (elementFromPoint)").toBe(
         true
@@ -98,38 +98,43 @@ test.describe("Edit mode buttons are accessible", () => {
   });
 });
 
-test.describe("Block toolbar is accessible", () => {
-  test("Move down and Remove block visible after hover (mouse)", async ({ page }) => {
-    await page.goto("/?edit=1");
-    const firstBlock = page.getByTestId("content-block").first();
-    await expect(firstBlock).toBeVisible({ timeout: 10000 });
-    await firstBlock.hover();
-    await expect(firstBlock.getByRole("button", { name: "Move down" })).toBeVisible({
-      timeout: 2000,
-    });
-    await expect(firstBlock.getByRole("button", { name: "Remove block" })).toBeVisible();
-  });
+/** Block controls live in an overlay popover on the block unit, opened from the "Block actions" chip. */
+function mainBlockUnits(page: Page) {
+  return page.locator(`.layout-content-card ${testIdSelector(TEST_ID.blockEditUnit)}`);
+}
 
-  test("Block toolbar visible when block has focus (keyboard, focus-within) and Remove block clickable", async ({
+test.describe("Block toolbar is accessible", () => {
+  test("Move down and Remove block visible after hovering the block actions chip (mouse)", async ({
     page,
   }) => {
     await page.goto("/?edit=1");
-    const firstBlock = page.getByTestId("content-block").first();
-    await expect(firstBlock).toBeVisible({ timeout: 10000 });
-    await firstBlock.getByRole("heading").first().focus();
-    const removeBtn = firstBlock.getByRole("button", { name: "Remove block" });
+    const unit = mainBlockUnits(page).first();
+    await expect(unit).toBeVisible({ timeout: 10000 });
+    await unit.getByRole("button", { name: "Block actions" }).hover();
+    await expect(unit.getByRole("button", { name: "Move down" })).toBeVisible({ timeout: 2000 });
+    await expect(unit.getByRole("button", { name: "Remove block" })).toBeVisible();
+  });
+
+  test("Block toolbar opens when the chip has keyboard focus (focus-within) and Remove block is enabled", async ({
+    page,
+  }) => {
+    await page.goto("/?edit=1");
+    const unit = mainBlockUnits(page).first();
+    await expect(unit).toBeVisible({ timeout: 10000 });
+    await unit.getByRole("button", { name: "Block actions" }).focus();
+    const removeBtn = unit.getByRole("button", { name: "Remove block" });
     await expect(removeBtn).toBeVisible({ timeout: 3000 });
     await expect(removeBtn).toBeEnabled();
   });
 
-  test("Block settings findable for table block after hover", async ({ page }) => {
+  test("Block settings findable for a new table block from its chip", async ({ page }) => {
     await page.goto("/?edit=1");
     await page.getByRole("button", { name: /Add block \(main\)/i }).click();
     await page.getByRole("button", { name: "Table" }).click();
     await expect(page.getByText("Header 1")).toBeVisible({ timeout: 3000 });
-    const tableBlock = page.getByTestId("content-block").filter({ hasText: "Header 1" }).first();
-    await tableBlock.hover();
-    await expect(tableBlock.getByRole("button", { name: "Block settings" })).toBeVisible();
+    const tableUnit = mainBlockUnits(page).filter({ hasText: "Header 1" }).first();
+    await tableUnit.getByRole("button", { name: "Block actions" }).hover();
+    await expect(tableUnit.getByRole("button", { name: "Block settings" })).toBeVisible();
   });
 });
 

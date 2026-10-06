@@ -1,35 +1,41 @@
 "use client";
 
-import { useCallback, useMemo, useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { WidthProvider, ReactGridLayout } from "react-grid-layout/legacy";
+import { portalRoot } from "@/lib/portal-root";
 import type { ContentBlock } from "@/lib/cms/types";
 import { ContentBlock as ContentBlockComponent } from "./ContentBlock";
 import { AddBlockButton } from "./AddBlockButton";
 import { BlockSettingsPanel } from "./BlockSettingsPanel";
-import { BLOCK_SETTINGS } from "@/lib/cms/block-settings";
-import { usePortalPosition } from "@/hooks/usePortalPosition";
+import { getListItems } from "./blocks/ListBlock";
+import { getTableRows, withEmptyRow } from "./blocks/TableBlock";
+import { BLOCK_SETTINGS, getBlockSettingOrDefault } from "@/lib/cms/block-settings";
+import { usePortalPosition, type PortalPosition } from "@/hooks/usePortalPosition";
+import { useEditPopover } from "@/hooks/useEditPopover";
+import { useDropdownA11y } from "@/hooks/useDropdownA11y";
 import type { PositionId } from "@/lib/cms/types";
-
-/** Fine grid: ~1px per unit so resize is pixel-level. 1200 cols × 1px rows. */
-const COLS = 1200;
-const ROW_HEIGHT = 1;
-const MARGIN: [number, number] = [4, 4];
-
-const GridWithWidth = WidthProvider(ReactGridLayout);
+import { MediaPicker } from "./MediaPicker";
+import { TEST_ID } from "@/lib/test-ids";
 
 type BlockType = "heading" | "text" | "image" | "banner" | "list" | "table" | "showcase";
 
-/**
- * Block types that are resizable only by height (width locked to full column).
- * Image and showcase can be resized in both dimensions.
- */
-const RESIZE_HEIGHT_ONLY_TYPES: BlockType[] = ["heading", "text", "banner", "list", "table"];
+/** 16px gutters — must match --space-4. Kept for any future grid math / tests. */
+const GUTTER = 16;
+const ROW_HEIGHT = 1;
+const MIN_HEIGHT_UNITS = 3;
 
-/** In dev: scarcer default heights so content and behavior are easier to see. */
-const isDev = typeof process !== "undefined" && process.env.NODE_ENV === "development";
-const DEFAULT_BLOCK_HEIGHT = isDev ? 48 : 80;
-const LEGACY_ROW_HEIGHT_PX = isDev ? 28 : 40;
+/** Convert a target pixel height to grid units (exported for tests / legacy helpers). */
+export function pxToGridUnits(px: number): number {
+  return Math.max(MIN_HEIGHT_UNITS, Math.round((px + GUTTER) / (ROW_HEIGHT + GUTTER)));
+}
+
+/** Proximity: a heading sits closer to the block it introduces than to the block before it. */
+function blockUnitClassName(blocks: ContentBlock[], index: number): string {
+  if (index === 0) return "block-unit";
+  if (blocks[index - 1].type === "heading") return "block-unit block-unit-after-heading";
+  if (blocks[index].type === "heading") return "block-unit block-unit-heading";
+  return "block-unit";
+}
 
 interface BlockGridLayoutProps {
   blocks: ContentBlock[];
@@ -43,62 +49,227 @@ interface BlockGridLayoutProps {
   addBlockLabel?: string;
 }
 
-/** Scale from legacy 12/24-col layout to fine grid (1200). */
-function scaleToFineGrid(n: number, fromCols: number): number {
-  if (!Number.isFinite(n) || !Number.isFinite(fromCols) || fromCols <= 0) return 0;
-  return fromCols < COLS ? Math.round((n * COLS) / fromCols) : n;
+/**
+ * Small "⋯" button that reveals every block control in a hover / focus popover.
+ * Absolutely positioned outside `.content-block`, so edit mode never changes block layout.
+ */
+function BlockControls({
+  block,
+  blocks,
+  positionId,
+  onBlockUpdate,
+  onAddBlock,
+  onRemoveBlock,
+  onMoveBlock,
+  settingsBlockId,
+  setSettingsBlockId,
+  settingsButtonRef,
+  settingsPanelRef,
+  portalPosition,
+}: {
+  block: ContentBlock;
+  blocks: ContentBlock[];
+  positionId: PositionId;
+  onBlockUpdate?: (blockId: string, updates: Partial<ContentBlock>) => void;
+  onAddBlock?: (afterBlockId: string | null, type: BlockType, positionId: PositionId) => void;
+  onRemoveBlock?: (blockId: string) => void;
+  onMoveBlock?: (blockId: string, direction: "up" | "down", positionId: PositionId) => void;
+  settingsBlockId: string | null;
+  setSettingsBlockId: React.Dispatch<React.SetStateAction<string | null>>;
+  settingsButtonRef: React.RefObject<HTMLButtonElement | null>;
+  settingsPanelRef: React.RefObject<HTMLDivElement | null>;
+  portalPosition: PortalPosition | null;
+}) {
+  const [addOpen, setAddOpen] = useState<"above" | "below" | null>(null);
+  const hasSettings = onBlockUpdate && (BLOCK_SETTINGS[block.type]?.length ?? 0) > 0;
+  const settingsOpen = settingsBlockId === block.id;
+  const index = blocks.indexOf(block);
+  const previousId = index > 0 ? blocks[index - 1].id : null;
+  const pinned = settingsOpen || addOpen !== null;
+  useDropdownA11y({
+    open: settingsOpen,
+    setOpen: (open) => {
+      if (!open) setSettingsBlockId(null);
+    },
+    triggerRef: settingsButtonRef,
+    panelRef: settingsPanelRef,
+  });
+  const { rootProps, triggerProps } = useEditPopover({
+    pinned,
+    onDismiss: () => {
+      if (settingsOpen) setSettingsBlockId(null);
+      setAddOpen(null);
+    },
+  });
+
+  return (
+    <div
+      className="edit-popover block-controls"
+      data-testid={TEST_ID.blockToolbar}
+      data-open={pinned ? "true" : undefined}
+      {...rootProps}
+    >
+      <button
+        type="button"
+        className="edit-chip"
+        aria-label="Block actions"
+        title="Block actions"
+        data-testid={TEST_ID.blockControlsTrigger}
+        {...triggerProps}
+      >
+        <span aria-hidden>⋯</span>
+      </button>
+      <div
+        className="edit-popover-menu"
+        role="toolbar"
+        aria-label="Block controls"
+        aria-orientation="vertical"
+        data-testid={TEST_ID.blockControlsMenu}
+      >
+        {hasSettings && (
+          <button
+            ref={settingsOpen ? settingsButtonRef : undefined}
+            type="button"
+            onClick={() => setSettingsBlockId((id) => (id === block.id ? null : block.id))}
+            className="edit-menu-item"
+            aria-label="Block settings"
+            aria-expanded={settingsOpen}
+            data-testid={TEST_ID.blockSettings}
+          >
+            <span aria-hidden className="edit-menu-icon">
+              ⚙
+            </span>
+            Settings
+          </button>
+        )}
+        {block.type === "image" && onBlockUpdate && (
+          <MediaPicker
+            value={block.content ?? ""}
+            onChange={(url) => onBlockUpdate(block.id, { content: url })}
+            alt={String(getBlockSettingOrDefault(block, "alt", ""))}
+            onAltChange={(alt) =>
+              onBlockUpdate(block.id, {
+                settings: { ...(block.settings ?? {}), alt },
+              })
+            }
+          />
+        )}
+        {block.type === "list" && onBlockUpdate && (
+          <button
+            type="button"
+            className="edit-menu-item"
+            onClick={() => {
+              const items = [...getListItems(block.items, block.content), "New item"];
+              onBlockUpdate(block.id, { items, content: items.join("\n") });
+            }}
+          >
+            <span aria-hidden className="edit-menu-icon">
+              +
+            </span>
+            Add item
+          </button>
+        )}
+        {block.type === "table" && onBlockUpdate && (
+          <button
+            type="button"
+            className="edit-menu-item"
+            onClick={() =>
+              onBlockUpdate(block.id, { rows: withEmptyRow(getTableRows(block.rows, block.content)) })
+            }
+          >
+            <span aria-hidden className="edit-menu-icon">
+              +
+            </span>
+            Add row
+          </button>
+        )}
+        {onMoveBlock && index > 0 && (
+          <button
+            type="button"
+            onClick={() => onMoveBlock(block.id, "up", positionId)}
+            className="edit-menu-item"
+            aria-label="Move up"
+            data-testid={TEST_ID.moveBlockUp}
+          >
+            <span aria-hidden className="edit-menu-icon">
+              ↑
+            </span>
+            Move up
+          </button>
+        )}
+        {onMoveBlock && index < blocks.length - 1 && (
+          <button
+            type="button"
+            onClick={() => onMoveBlock(block.id, "down", positionId)}
+            className="edit-menu-item"
+            aria-label="Move down"
+            data-testid={TEST_ID.moveBlockDown}
+          >
+            <span aria-hidden className="edit-menu-icon">
+              ↓
+            </span>
+            Move down
+          </button>
+        )}
+        {onAddBlock && (
+          <>
+            <AddBlockButton
+              variant="menu"
+              label="Add block above"
+              onSelect={(type) => onAddBlock(previousId, type, positionId)}
+              onOpenChange={(open) => setAddOpen((s) => (open ? "above" : s === "above" ? null : s))}
+            />
+            <AddBlockButton
+              variant="menu"
+              label="Add block below"
+              onSelect={(type) => onAddBlock(block.id, type, positionId)}
+              onOpenChange={(open) => setAddOpen((s) => (open ? "below" : s === "below" ? null : s))}
+            />
+          </>
+        )}
+        {onRemoveBlock && (
+          <button
+            type="button"
+            onClick={() => onRemoveBlock(block.id)}
+            className="edit-menu-item edit-menu-danger"
+            aria-label="Remove block"
+            data-testid={TEST_ID.removeBlock}
+          >
+            <span aria-hidden className="edit-menu-icon">
+              ✕
+            </span>
+            Remove
+          </button>
+        )}
+      </div>
+      {settingsOpen &&
+        portalPosition &&
+        onBlockUpdate &&
+        createPortal(
+          <div
+            ref={settingsPanelRef}
+            role="group"
+            aria-label="Block settings"
+            className="fixed z-[9999] min-w-[200px] rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-lg"
+            style={portalPosition}
+          >
+            <BlockSettingsPanel
+              block={block}
+              onSettingsChange={(settings) => onBlockUpdate(block.id, { settings })}
+              onClose={() => setSettingsBlockId(null)}
+            />
+          </div>,
+          portalRoot()
+        )}
+    </div>
+  );
 }
 
-function safeNum(value: unknown, fallback: number): number {
-  const n = typeof value === "number" ? value : Number(value);
-  return Number.isFinite(n) ? n : fallback;
-}
-
-function blockToLayoutItem(
-  block: ContentBlock,
-  index: number
-): {
-  i: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  minW?: number;
-  minH?: number;
-  maxW?: number;
-  maxH?: number;
-} {
-  const g = block.gridItem;
-  const gw = g ? safeNum(g.w, COLS) : COLS;
-  const legacyCols = g && gw <= 24 ? (gw <= 12 ? 12 : 24) : null;
-  const isLegacy = legacyCols != null;
-  const w = g ? (isLegacy ? scaleToFineGrid(gw, legacyCols) : safeNum(g.w, COLS)) : COLS;
-  const heightOnly = RESIZE_HEIGHT_ONLY_TYPES.includes(block.type as BlockType);
-  const x = g ? (isLegacy ? scaleToFineGrid(safeNum(g.x, 0), legacyCols) : safeNum(g.x, 0)) : 0;
-  const y = g
-    ? isLegacy
-      ? safeNum(g.y, 0) * LEGACY_ROW_HEIGHT_PX
-      : safeNum(g.y, index * LEGACY_ROW_HEIGHT_PX)
-    : index * LEGACY_ROW_HEIGHT_PX;
-  const h = g
-    ? isLegacy
-      ? Math.max(1, safeNum(g.h, DEFAULT_BLOCK_HEIGHT) * LEGACY_ROW_HEIGHT_PX)
-      : Math.max(1, safeNum(g.h, DEFAULT_BLOCK_HEIGHT))
-    : DEFAULT_BLOCK_HEIGHT;
-  const maxH = g?.maxH != null && Number.isFinite(g.maxH) ? g.maxH : undefined;
-  return {
-    i: block.id,
-    x,
-    y,
-    w,
-    h,
-    minW: heightOnly ? w : 1,
-    minH: 1,
-    maxW: heightOnly ? w : COLS,
-    maxH,
-  };
-}
-
+/**
+ * Renders blocks in a content-sized vertical stack.
+ * View and edit share the exact same box tree; edit chrome is absolutely positioned
+ * (zero layout footprint) so content never moves when toggling edit mode.
+ */
 export function BlockGridLayout({
   blocks,
   positionId,
@@ -110,28 +281,8 @@ export function BlockGridLayout({
   onMoveBlock,
   addBlockLabel,
 }: BlockGridLayoutProps) {
-  const layout = useMemo(() => blocks.map((b, i) => blockToLayoutItem(b, i)), [blocks]);
-
-  const blockIds = useMemo(() => new Set(blocks.map((b) => b.id)), [blocks]);
-
-  const handleLayoutChange = useCallback(
-    (newLayout: ReadonlyArray<{ i: string; x: number; y: number; w: number; h: number }>) => {
-      if (!onBlockUpdate) return;
-      newLayout.forEach((item) => {
-        if (!blockIds.has(item.i)) return;
-        const block = blocks.find((b) => b.id === item.i);
-        const heightOnly = block && RESIZE_HEIGHT_ONLY_TYPES.includes(block.type as BlockType);
-        const prev = layout.find((l) => l.i === item.i);
-        const w = heightOnly && prev ? prev.w : item.w;
-        onBlockUpdate(item.i, { gridItem: { x: item.x, y: item.y, w, h: item.h } });
-      });
-    },
-    [onBlockUpdate, blocks, layout, blockIds]
-  );
-
   const label = addBlockLabel ?? positionId;
   const hasBlocks = blocks.length > 0;
-  const [gridReady, setGridReady] = useState(false);
   const [settingsBlockId, setSettingsBlockId] = useState<string | null>(null);
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const settingsPanelRef = useRef<HTMLDivElement>(null);
@@ -158,177 +309,64 @@ export function BlockGridLayout({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [settingsBlockId]);
 
-  useEffect(() => {
-    const t = requestAnimationFrame(() => setGridReady(true));
-    return () => cancelAnimationFrame(t);
-  }, []);
-
-  const addBlockTopInFlow = editable && onAddBlock && !hasBlocks;
-  const addBlockTopFloating = editable && onAddBlock && hasBlocks;
-  const addBlockBottomFloating = editable && onAddBlock && hasBlocks;
-
   return (
-    <div className={`w-full ${editable && hasBlocks ? "group/column relative" : ""}`}>
-      {/* Add block (top): in flow only when empty; when has blocks, absolute so layout never moves */}
-      {addBlockTopInFlow && (
-        <div className="py-3">
+    <div className="block-column" data-testid={editable ? TEST_ID.blockEditColumn : undefined}>
+      {editable && onAddBlock && (
+        <div className="block-region-add" data-testid={TEST_ID.blockAddSlot}>
           <AddBlockButton
-            onSelect={(type) => onAddBlock!(null, type, positionId)}
-            label={`Add block (${label})`}
-          />
-        </div>
-      )}
-      {addBlockTopFloating && (
-        <div className="absolute left-0 right-0 top-0 z-10 py-3 opacity-0 transition-opacity group-hover/column:opacity-100 pointer-events-none group-hover/column:pointer-events-auto">
-          <AddBlockButton
-            onSelect={(type) => onAddBlock!(null, type, positionId)}
+            variant="compact"
+            onSelect={(type) => onAddBlock(null, type, positionId)}
             label={`Add block (${label})`}
           />
         </div>
       )}
 
-      {!hasBlocks && !editable && (
-        <div className="py-8 text-center text-sm text-zinc-400" data-empty-blocks>
+      {!hasBlocks && (
+        <div className="py-[var(--space-6)] text-center text-sm text-[var(--muted)]" data-empty-blocks>
           No content in this area.
         </div>
       )}
 
       {hasBlocks && (
-        <GridWithWidth
-          measureBeforeMount
-          className={`block-grid-layout ${isDev ? "min-h-[80px]" : "min-h-[120px]"}${gridReady ? " block-grid-ready" : ""}`}
-          layout={layout}
-          onLayoutChange={handleLayoutChange}
-          cols={COLS}
-          rowHeight={ROW_HEIGHT}
-          margin={MARGIN}
-          containerPadding={MARGIN}
-          isDraggable={editable}
-          isResizable={editable}
-          draggableCancel=".block-toolbar"
-          compactType="vertical"
-          preventCollision={false}
-          useCSSTransforms
-        >
-          {blocks.map((block) => (
+        <div className="block-grid-layout block-stack" data-testid={TEST_ID.blockStack}>
+          {blocks.map((block, index) => (
             <div
               key={block.id}
-              className="group/block relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm transition-[border-color,box-shadow] hover:border-[var(--accent)] hover:shadow-md"
-              data-grid={blockToLayoutItem(block, blocks.indexOf(block))}
-              data-testid="content-block"
-              data-block-type={block.type}
+              className={blockUnitClassName(blocks, index)}
+              data-testid={editable ? TEST_ID.blockEditUnit : undefined}
             >
-              {/* Block toolbar: visible on hover or when any toolbar button has focus (keyboard accessible). z-20 so it stays above grid and is clickable. */}
-              {editable &&
-                (onRemoveBlock ||
-                  onMoveBlock ||
-                  (onBlockUpdate && (BLOCK_SETTINGS[block.type]?.length ?? 0) > 0)) && (
-                  <div className="block-toolbar absolute right-1 top-1 z-20 flex items-center gap-0.5 rounded bg-white shadow-sm ring-1 ring-zinc-200 transition-opacity group-hover/block:opacity-100 group-hover/block:pointer-events-auto group-focus-within/block:opacity-100 group-focus-within/block:pointer-events-auto pointer-events-none">
-                    {onBlockUpdate && (BLOCK_SETTINGS[block.type]?.length ?? 0) > 0 && (
-                      <>
-                        <button
-                          ref={settingsBlockId === block.id ? settingsButtonRef : undefined}
-                          type="button"
-                          onClick={() =>
-                            setSettingsBlockId((id) => (id === block.id ? null : block.id))
-                          }
-                          className="rounded p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700"
-                          title="Block settings"
-                          aria-label="Block settings"
-                          aria-expanded={settingsBlockId === block.id}
-                          data-testid="block-settings"
-                        >
-                          ⚙
-                        </button>
-                        {settingsBlockId === block.id &&
-                          portalPosition &&
-                          (() => {
-                            const settingsBlock = blocks.find((b) => b.id === settingsBlockId);
-                            if (!settingsBlock) return null;
-                            return createPortal(
-                              <div
-                                ref={settingsPanelRef}
-                                className="fixed z-[9999] min-w-[200px] rounded-lg border border-zinc-200 bg-white shadow-lg"
-                                style={{ top: portalPosition.top, left: portalPosition.left }}
-                              >
-                                <BlockSettingsPanel
-                                  block={settingsBlock}
-                                  onSettingsChange={(settings) =>
-                                    settingsBlockId && onBlockUpdate(settingsBlockId, { settings })
-                                  }
-                                  onClose={() => setSettingsBlockId(null)}
-                                />
-                              </div>,
-                              document.body
-                            );
-                          })()}
-                      </>
-                    )}
-                    {onMoveBlock && (
-                      <>
-                        {blocks.indexOf(block) > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => onMoveBlock(block.id, "up", positionId)}
-                            className="rounded p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700"
-                            title="Move up"
-                            aria-label="Move up"
-                            data-testid="move-block-up"
-                          >
-                            ↑
-                          </button>
-                        )}
-                        {blocks.indexOf(block) < blocks.length - 1 && (
-                          <button
-                            type="button"
-                            onClick={() => onMoveBlock(block.id, "down", positionId)}
-                            className="rounded p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700"
-                            title="Move down"
-                            aria-label="Move down"
-                            data-testid="move-block-down"
-                          >
-                            ↓
-                          </button>
-                        )}
-                      </>
-                    )}
-                    {onRemoveBlock && (
-                      <button
-                        type="button"
-                        onClick={() => onRemoveBlock(block.id)}
-                        className="rounded p-1.5 text-zinc-500 hover:bg-red-50 hover:text-red-600"
-                        title="Remove block"
-                        aria-label="Remove block"
-                        data-testid="remove-block"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                )}
-              <div className="p-3">
-                <ContentBlockComponent
+              {editable && (
+                <BlockControls
                   block={block}
-                  editable={editable}
-                  onEdit={onBlockEdit}
+                  blocks={blocks}
+                  positionId={positionId}
                   onBlockUpdate={onBlockUpdate}
+                  onAddBlock={onAddBlock}
+                  onRemoveBlock={onRemoveBlock}
+                  onMoveBlock={onMoveBlock}
+                  settingsBlockId={settingsBlockId}
+                  setSettingsBlockId={setSettingsBlockId}
+                  settingsButtonRef={settingsButtonRef}
+                  settingsPanelRef={settingsPanelRef}
+                  portalPosition={portalPosition}
                 />
+              )}
+              <div
+                className="content-block"
+                data-testid={TEST_ID.contentBlock}
+                data-block-type={block.type}
+              >
+                <div className="block-body" data-block-body={block.id}>
+                  <ContentBlockComponent
+                    block={block}
+                    editable={editable}
+                    onEdit={editable ? onBlockEdit : undefined}
+                    onBlockUpdate={editable ? onBlockUpdate : undefined}
+                  />
+                </div>
               </div>
             </div>
           ))}
-        </GridWithWidth>
-      )}
-
-      {/* Add block (bottom): absolute so it never shifts layout */}
-      {addBlockBottomFloating && (
-        <div className="absolute left-0 right-0 bottom-0 z-10 flex items-center gap-2 py-2 opacity-0 transition-opacity group-hover/column:opacity-100 pointer-events-none group-hover/column:pointer-events-auto">
-          <div className="flex-1 border-t border-dashed border-zinc-200" />
-          <AddBlockButton
-            onSelect={(type) => onAddBlock!(blocks[blocks.length - 1].id, type, positionId)}
-            label="Add block"
-            variant="compact"
-          />
-          <div className="flex-1 border-t border-dashed border-zinc-200" />
         </div>
       )}
     </div>

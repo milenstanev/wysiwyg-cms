@@ -30,11 +30,10 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │  ModulePosition "top"                                            │
 ├─────────────────────────────────────────────────────────────────┤
-│  LayoutSelector (if editable)   [ Single | Two columns | Three ] │
-├─────────────────────────────────────────────────────────────────┤
 │  h1  page.title                                                  │
 ├─────────────────────────────────────────────────────────────────┤
-│  ONE OF: single | two-col | three-col (below)                    │
+│  Template rows: single | two-col | three-col | rockettheme       │
+│  (only positions present on the template; empty modules collapse)│
 ├─────────────────────────────────────────────────────────────────┤
 │  ModulePosition "bottom"                                         │
 └─────────────────────────────────────────────────────────────────┘
@@ -118,9 +117,47 @@ Available templates:
 | single      | Single column               | main                                                                                                   |
 | two-col     | Two columns                 | left, main                                                                                             |
 | three-col   | Three columns               | left, main, right                                                                                      |
-| rockettheme | RocketTheme-style (complex) | utility-a/b/c, header, navigation, showcase-a/b/c/d, **left, main, right**, bottom-a/b, footer-a/b/c/d |
+| rockettheme | RocketTheme-style (complex) | utility-a/b/c, header, navigation, showcase-a/b/c/d, **main** (one column), bottom-a/b, footer-a/b/c/d |
 
 Inspired by [RocketTheme](https://rockettheme.com) Joomla templates (Gantry-style). Each row in the rockettheme template has a distinct CSS class (e.g. `rockettheme-utility`, `rockettheme-header`, `rockettheme-showcase`, `rockettheme-footer`) so sections look like a real template: utility bar (dark), header (light), navigation bar, showcase boxes, mainbody, bottom band, footer columns. Module positions show placeholder labels when empty (e.g. "Utility A", "Showcase B"). To add a new layout: add a template with `rows: [{ gridClassName, positions, orderClassNames? }]`.
+
+### Empty sections collapse (layout adapts)
+
+In **view mode**, positions with no blocks are omitted and the row grid reflows:
+
+1. Empty **module** cells (`utility-*`, `showcase-*`, …) are not rendered.
+2. If an entire row has no visible positions, the **row is omitted** (no empty chrome/padding).
+3. Empty **left** / **right** sidebars are omitted; two-col / three-col shrink to the remaining columns (`getRowGridClassName`).
+4. Empty **main** still renders (page content area / empty state).
+
+In **edit mode**, empty positions stay available so authors can add blocks.
+
+Helpers: `isPositionVisible` in `PageRenderer`, `getRowGridClassName` in `layout-templates.ts`.
+
+### Optional blocks (layout-scoped)
+
+Blocks are **optional per layout**. Only positions that exist on the **current** template are rendered:
+
+| Stored field | Used when layout includes… | Notes |
+| ------------ | -------------------------- | ----- |
+| `blocks` | `main` | Always for single / two-col / three-col / rockettheme mainbody |
+| `leftBlocks` | `left` | Optional; ignored on `single` and `rockettheme` |
+| `rightBlocks` | `right` | Optional; ignored on `single`, `two-col`, and `rockettheme` |
+| `positionBlocks[id]` | that module id (e.g. `showcase-a`) | Optional; empty module cells collapse (row grid adjusts) |
+
+Helpers live in **`src/lib/cms/page-blocks.ts`**: `getBlocksForPosition`, `layoutHasPosition`, `pageHasBlocksForLayout`, `shouldShowInNav`.
+
+**Demo content:** Home ships as `layout: "rockettheme"` with filled `positionBlocks` (utility, header, navigation, showcase-a–d, bottom, footer). `leftBlocks` / `rightBlocks` may still be stored so switching to two-col / three-col keeps sidebar content without requiring it for RocketTheme.
+
+### Optional Blog in navigation
+
+The **Blog** page is optional in the site header:
+
+- Listed in nav only when it has at least one block in a position that exists for **its** layout (`pageHasBlocksForLayout`).
+- If Blog has no blocks (or only blocks for positions not in its layout), it stays out of nav but remains reachable by URL / admin page switcher.
+- Other pages (About, Contact) always appear in nav when present.
+
+Seed / demo: `content/pages.json` → re-run `npx prisma db seed` after editing so the DB picks up RocketTheme content.
 
 ## Block grid layout (react-grid-layout)
 

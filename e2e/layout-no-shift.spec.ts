@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { TEST_ID } from "../src/lib/test-ids";
 
 /**
  * E2E: Layout must not move when switching between view and edit mode.
@@ -12,12 +13,12 @@ test.describe("Layout does not shift between view and edit mode", () => {
     page,
   }, testInfo) => {
     await page.goto("/");
-    await expect(page.getByText("Welcome")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible({ timeout: 10000 });
 
     const article = page.locator("[data-page-renderer]");
     await expect(article).toBeVisible();
     const articleBoxView = await article.boundingBox();
-    const titleView = article.getByRole("heading", { level: 1 });
+    const titleView = article.locator(".page-title");
     const titleBoxView = await titleView.boundingBox();
     expect(articleBoxView).toBeTruthy();
     expect(titleBoxView).toBeTruthy();
@@ -29,7 +30,7 @@ test.describe("Layout does not shift between view and edit mode", () => {
     });
 
     const articleBoxEdit = await article.boundingBox();
-    const titleEdit = article.getByRole("heading", { level: 1 });
+    const titleEdit = article.locator(".page-title");
     const titleBoxEdit = await titleEdit.boundingBox();
     expect(articleBoxEdit).toBeTruthy();
     expect(titleBoxEdit).toBeTruthy();
@@ -41,7 +42,7 @@ test.describe("Layout does not shift between view and edit mode", () => {
     ).toBeLessThanOrEqual(2);
 
     await page.getByRole("button", { name: /Choose layout/i }).click();
-    await expect(page.getByTestId("layout-dropdown")).toBeVisible({ timeout: 2000 });
+    await expect(page.getByTestId(TEST_ID.layoutDropdown)).toBeVisible({ timeout: 2000 });
     await expect(page.getByRole("button", { name: "Single column" })).toBeVisible();
 
     const headerScreenshot = await page.locator("[data-page-header]").screenshot();
@@ -54,12 +55,12 @@ test.describe("Layout does not shift between view and edit mode", () => {
     page,
   }, testInfo) => {
     await page.goto("/");
-    await expect(page.getByText("Welcome")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible({ timeout: 10000 });
 
     const grid = page.locator(".block-grid-layout").first();
     await expect(grid).toBeVisible({ timeout: 3000 });
 
-    const firstBlock = page.getByTestId("content-block").first();
+    const firstBlock = page.getByTestId(TEST_ID.contentBlock).first();
     await expect(firstBlock).toBeVisible();
 
     const gridBoxView = await grid.boundingBox();
@@ -116,13 +117,18 @@ test.describe("Layout does not shift between view and edit mode", () => {
     page,
   }, testInfo) => {
     await page.goto("/");
-    await expect(page.getByTestId("content-block").first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId(TEST_ID.contentBlock).first()).toBeVisible({ timeout: 10000 });
 
-    const contentArea = page.locator(".block-grid-layout").first();
+    const contentArea = page.locator(".layout-content-card").first();
     await expect(contentArea).toBeVisible();
+    await page.mouse.move(0, 0);
 
-    await expect(contentArea).toHaveScreenshot("content-area-baseline-view.png");
-    const viewScreenshot = await contentArea.screenshot();
+    // The sticky header overlays the card while a tall element is captured; it is not card content
+    const hideHeader = await page.addStyleTag({
+      content: "[data-page-header] { visibility: hidden !important; }",
+    });
+    const viewScreenshot = await contentArea.screenshot({ animations: "disabled" });
+    await hideHeader.evaluate((el) => el.remove());
     await testInfo.attach("content-area-view-mode.png", {
       body: viewScreenshot,
       contentType: "image/png",
@@ -132,13 +138,22 @@ test.describe("Layout does not shift between view and edit mode", () => {
     await expect(page.getByRole("button", { name: /Choose layout/i })).toBeVisible({
       timeout: 5000,
     });
+    await page.mouse.move(0, 0);
+    // Capture from the same scroll position: fixed background decoration shows through the card
+    await page.evaluate(() => window.scrollTo(0, 0));
 
-    const editScreenshot = await contentArea.screenshot();
+    // Overlay chips and the fixed editor bar sit on top of the card; hide them to compare the content pixels underneath
+    const hide = await page.addStyleTag({
+      content:
+        ".edit-popover, .block-region-add, .editor-bar, [data-page-header] { visibility: hidden !important; }",
+    });
+    const editScreenshot = await contentArea.screenshot({ animations: "disabled" });
+    await hide.evaluate((el) => el.remove());
     await testInfo.attach("content-area-edit-mode.png", {
       body: editScreenshot,
       contentType: "image/png",
     });
 
-    await expect(contentArea).toHaveScreenshot("content-area-baseline-view.png");
+    expect(Buffer.compare(viewScreenshot, editScreenshot)).toBe(0);
   });
 });

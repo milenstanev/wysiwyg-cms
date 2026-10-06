@@ -31,8 +31,9 @@ export const BLOCK_SETTINGS: Record<BlockType, BlockSettingDef[]> = {
       key: "level",
       label: "Heading level",
       type: "select",
-      default: "1",
-      options: { "1": "H1", "2": "H2", "3": "H3" },
+      // The page title is the only h1; content headings start at h2
+      default: "2",
+      options: { "2": "H2", "3": "H3", "4": "H4" },
     },
   ],
   text: [],

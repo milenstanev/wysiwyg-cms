@@ -1,0 +1,44 @@
+---
+description: Theme color harmony, contrast, and optional title/header gradients
+alwaysApply: true
+---
+
+# Theme Color Harmony
+
+Every theme is a **coherent palette**, not a pile of unrelated accent hexes. Change colors in `globals.css` theme blocks (`html[data-theme="…"]`), never as one-off component hex.
+
+## Roles (required)
+
+| Token | Job |
+|-------|-----|
+| `--background` / `--foreground` | Page canvas + primary text (≥ 4.5:1) |
+| `--surface` / `--muted` | Cards + secondary text (≥ 4.5:1 on surface) |
+| `--border` | Separation (visible on background/surface, ~3:1 for UI chrome) |
+| `--accent` | Primary action / brand (links, Save, focus accents) |
+| `--content-accent` | Content chrome (card top edge, title rule) — **same family or intentional complement** as `--accent` |
+| `--sidebar-left-accent` / `--sidebar-right-accent` | Region accents — analogous to brand, not a third unrelated hue |
+| `--title-gradient` / `--header-gradient` | Optional; `none` when unused |
+| `--on-accent` | Text/icon on solid accent fills |
+
+## Harmony rules
+
+1. **One dominant family** — ~60% neutrals (bg/surface/border/muted), ~30% brand/structure, ~10% accent highlights.
+2. **Accents must relate** — analogous, complementary, or split-complementary to the brand hue. Do **not** mix unrelated primaries (e.g. blue + amber + purple) in one theme.
+3. **Test pairs, not swatches** — every real pair (`foreground` on `background`, `muted` on `surface`, button label on `accent`) must pass WCAG AA (4.5:1 text, 3:1 large text / UI).
+4. **Dark themes remap, don’t invert** — keep semantic names; shift lightness so gold/teal accents stay readable on ink surfaces.
+5. **Gradients are opt-in** — set `--title-gradient` / `--header-gradient` only when the theme’s mood calls for it (e.g. Ink, Atelier, Harbor, Nord). Flat themes (Editorial, Pebble) keep solid color unless intentionally updated.
+6. **Gradient text still needs a solid fallback** — `.page-title` uses `color: var(--foreground)` when gradient is `none`; clipped gradient themes keep contrast via dark→accent stops.
+7. **Fonts pair with mood** — each theme sets `--theme-font-display` + `--theme-font-sans` (see `theme.ts` / `layout.tsx`). Do not use Inter, Roboto, or Arial for themed UI.
+
+## Do not
+
+- Scatter competing rainbow accents across sidebars, cards, and buttons in one theme
+- Use a bright accent as small body text on white/cream without checking contrast
+- Hardcode theme hex in components — use tokens / `color-mix` with tokens
+- Apply title gradients via Tailwind `text-[…]` utilities that override `background-clip` color
+
+## When changing themes
+
+1. Adjust the `[data-theme="…"]` token block.
+2. Spot-check header, page title, content card, sidebars, footer, and Save button.
+3. Flip through **all** themes in the switcher before considering the change done.

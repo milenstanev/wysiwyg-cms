@@ -3,26 +3,27 @@ import { render, screen } from "@testing-library/react";
 import { ModulePosition } from "./ModulePosition";
 
 describe("ModulePosition", () => {
-  it("renders with data-module-position attribute", () => {
+  it("renders nothing when empty (no children, no placeholder)", () => {
     const { container } = render(<ModulePosition name="top" />);
-    const el = container.firstChild as HTMLElement;
-    expect(el.getAttribute("data-module-position")).toBe("top");
-    expect(el.hasAttribute("data-module-placeholder")).toBe(true);
+    expect(container.firstChild).toBeNull();
   });
 
-  it("renders children when provided", () => {
-    render(
+  it("renders with data-module-position when it has children", () => {
+    const { container } = render(
       <ModulePosition name="footer">
         <span>Footer content</span>
       </ModulePosition>
     );
+    const el = container.firstChild as HTMLElement;
+    expect(el.getAttribute("data-module-position")).toBe("footer");
     expect(screen.getByText("Footer content")).toBeInTheDocument();
   });
 
-  it("has accessible label", () => {
-    render(<ModulePosition name="sidebar-left" />);
+  it("shows placeholder label when provided and empty", () => {
+    render(<ModulePosition name="utility-a" placeholderLabel="Utility A" />);
+    expect(screen.getByText("Utility A")).toBeInTheDocument();
     expect(
-      screen.getByRole("generic", { name: "Module position: sidebar-left" })
+      screen.getByRole("generic", { name: "Module position: utility-a" })
     ).toBeInTheDocument();
   });
 });

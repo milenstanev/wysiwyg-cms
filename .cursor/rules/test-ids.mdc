@@ -1,0 +1,38 @@
+---
+description: Shared TEST_ID constants for data-testid in JSX and tests — never hardcode the string twice
+alwaysApply: true
+---
+
+# Shared Test IDs
+
+All `data-testid` values live in [`src/lib/test-ids.ts`](src/lib/test-ids.ts). Use the same constant in product UI and in Vitest/Playwright so selectors never drift.
+
+## Prefer
+
+- Define new ids on `TEST_ID` in `src/lib/test-ids.ts`
+- JSX: `data-testid={TEST_ID.contentBlock}`
+- Tests: `getByTestId(TEST_ID.contentBlock)`, `getAllByTestId(TEST_ID.…)`
+- CSS attribute / `querySelector` / Playwright locators: `testIdSelector(TEST_ID.contentBlock)`
+- Slot mocks: `componentSlotTestId("main")` (keep mock `slot-${region}` in sync with that helper)
+
+## Do not
+
+- Hardcode the same string in JSX and again in a test (`data-testid="content-block"` + `getByTestId("content-block")`)
+- Invent one-off `data-testid` literals without adding them to `TEST_ID`
+- Use `data-testid` in CSS (see simple-css-selectors rule)
+
+## Playwright `evaluate` / `evaluateAll`
+
+Callbacks run in the browser and cannot close over Node imports. Pass selector strings as arguments:
+
+```ts
+await unit.evaluate(
+  (el, sel) => el.querySelector(sel),
+  testIdSelector(TEST_ID.contentBlock)
+);
+```
+
+## Imports
+
+- App / unit tests: `import { TEST_ID, testIdSelector } from "@/lib/test-ids"`
+- E2E: `import { TEST_ID, testIdSelector } from "../src/lib/test-ids"`

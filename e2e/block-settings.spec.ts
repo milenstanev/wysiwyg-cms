@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { TEST_ID } from "../src/lib/test-ids";
 
 /**
  * E2E: Block settings button must be clickable and panel must open.
@@ -26,7 +27,7 @@ test.describe("Block settings button is clickable and panel opens", () => {
     await page.getByRole("button", { name: "Table" }).click();
     await expect(page.getByText("Header 1")).toBeVisible({ timeout: 3000 });
 
-    const tableBlock = page.getByTestId("content-block").filter({ hasText: "Header 1" }).first();
+    const tableBlock = page.getByTestId(TEST_ID.contentBlock).filter({ hasText: "Header 1" }).first();
     await tableBlock.hover();
     await page.waitForTimeout(150);
     const settingsBtn = tableBlock.getByRole("button", { name: "Block settings" });
@@ -42,7 +43,7 @@ test.describe("Block settings button is clickable and panel opens", () => {
     await expect(page.getByRole("heading", { name: "New heading" })).toBeVisible({ timeout: 3000 });
 
     const headingBlock = page
-      .getByTestId("content-block")
+      .getByTestId(TEST_ID.contentBlock)
       .filter({ hasText: "New heading" })
       .first();
     await headingBlock.hover();
@@ -57,7 +58,7 @@ test.describe("Block settings button is clickable and panel opens", () => {
     await page.getByRole("button", { name: "Table" }).click();
     await expect(page.getByText("Header 1")).toBeVisible({ timeout: 3000 });
 
-    const tableBlock = page.getByTestId("content-block").filter({ hasText: "Header 1" }).first();
+    const tableBlock = page.getByTestId(TEST_ID.contentBlock).filter({ hasText: "Header 1" }).first();
     await tableBlock.hover();
     await page.waitForTimeout(150);
     await tableBlock.getByRole("button", { name: "Block settings" }).click();
@@ -82,7 +83,7 @@ test.describe("Block settings button is clickable and panel opens", () => {
     await page.getByRole("button", { name: "Table" }).click();
     await expect(page.getByText("Header 1")).toBeVisible({ timeout: 3000 });
 
-    const tableBlock = page.getByTestId("content-block").filter({ hasText: "Header 1" }).first();
+    const tableBlock = page.getByTestId(TEST_ID.contentBlock).filter({ hasText: "Header 1" }).first();
     await tableBlock.hover();
     await page.waitForTimeout(150);
     await tableBlock.getByRole("button", { name: "Block settings" }).click();
@@ -111,7 +112,7 @@ test.describe("Block settings button is clickable and panel opens", () => {
     await expect(page.getByRole("heading", { name: "New heading" })).toBeVisible({ timeout: 3000 });
 
     const headingBlock = page
-      .getByTestId("content-block")
+      .getByTestId(TEST_ID.contentBlock)
       .filter({ hasText: "New heading" })
       .first();
     await headingBlock.hover();

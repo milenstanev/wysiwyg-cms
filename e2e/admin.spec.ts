@@ -1,8 +1,9 @@
 import { test, expect } from "@playwright/test";
+import { TEST_ID } from "../src/lib/test-ids";
 
 /** Wait for admin to finish loading (toolbar and page content ready). */
 async function waitForAdminLoaded(page: import("@playwright/test").Page, timeout = 15000) {
-  await expect(page.getByTestId("admin-loaded")).toBeVisible({ timeout });
+  await expect(page.getByTestId(TEST_ID.adminLoaded)).toBeVisible({ timeout });
   await expect(page.getByRole("combobox")).toBeVisible({ timeout: 5000 });
 }
 

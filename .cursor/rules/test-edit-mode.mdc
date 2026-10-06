@@ -1,0 +1,33 @@
+---
+description: Always verify edit mode as well as view mode for layout and content
+alwaysApply: true
+---
+
+# Always Test Edit Mode Too
+
+View mode and edit mode are different render paths. Fixes that look correct in view can still break edit (grid measure, toolbars, module chrome).
+
+## Required
+
+- When changing layout, blocks, spacing, heights, or RocketTheme/module CSS, verify **both** view and edit (`?edit=1` or Edit this page).
+- Add or update tests that cover **edit mode** for the same class of bug (clipping, overlap, spacing), not view-only.
+- Prefer assertions that work in both modes: content not clipped, stacked blocks do not overlap, no empty fixed-height shells.
+
+## WYSIWYG: zero shift
+
+- Toggling edit mode must not move or resize any content box by even 1px (`e2e/wysiwyg-no-shift.spec.ts` asserts 0px).
+- All edit chrome is overlay: absolute (block "⋯" chip + hover popover, region "+", "+ Section" menu) or fixed (editor bar). Never in flow.
+- Blocks render the same tags/classes in both modes; only `contentEditable` differs. Edit-only actions (add item/row, image URL) live in the popover.
+- Empty sections stay hidden in edit too; add to them from the "+ Section" menu.
+
+## Edit-mode specifics to watch
+
+- Prefer the same content-sized stack as view mode (no fixed px heights on block shells)
+- Do not leave `overflow: hidden` on grid items / content cards
+- Module chrome (`min-height`, flex centering) must not fight block rows — especially under `.is-editing`
+- Floating Add-block / toolbars must not cover or collapse content
+
+## Do not
+
+- Ship a layout fix after checking view mode only
+- Add view-only overlap/clip tests when the bug appears in edit

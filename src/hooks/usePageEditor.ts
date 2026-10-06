@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import type { Page, ContentBlock, BlockType, PageLayout } from "@/lib/cms/types";
+import type { Page, ContentBlock, BlockType, PageLayout, PageModuleAssignment } from "@/lib/cms/types";
 import type { PositionId } from "@/lib/cms/types";
 import type { PageRendererCallbacks } from "@/lib/cms/page-editor.types";
 import { createBlock } from "@/lib/cms/block-defaults";
@@ -46,13 +46,14 @@ export function usePageEditor(
   options: UsePageEditorOptions = {}
 ): UsePageEditorResult {
   const [page, setPage] = useState<Page>(initialPage);
-  const [isEditing, setEditing] = useState<boolean>(
-    () =>
-      typeof window !== "undefined" &&
-      new URLSearchParams(window.location.search).get("edit") === "1"
-  );
+  const [isEditing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  // Read ?edit=1 after mount: the server render has no URL, so reading it in initial state breaks hydration
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("edit") === "1") setEditing(true);
+  }, []);
 
   useEffect(() => {
     setPage(initialPage);
@@ -163,6 +164,10 @@ export function usePageEditor(
     setPage((p) => ({ ...p, layout }));
   }, []);
 
+  const onModulesChange = useCallback((modules: PageModuleAssignment[]) => {
+    setPage((p) => ({ ...p, modules }));
+  }, []);
+
   const save = useCallback(async () => {
     setSaving(true);
     setMessage(null);
@@ -207,6 +212,7 @@ export function usePageEditor(
         onRemoveBlock,
         onMoveBlock,
         onLayoutChange,
+        onModulesChange,
       }
     : {};
 

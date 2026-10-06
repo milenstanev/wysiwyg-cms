@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
+import { TEST_ID } from "../src/lib/test-ids";
 
+// Empty sections stay hidden in edit mode (WYSIWYG); their add buttons live in the "+ Section" hover menu.
 test.describe("Layouts", () => {
   test("can click through all four layout options", async ({ page }) => {
     await page.goto("/");
@@ -26,8 +28,9 @@ test.describe("Layouts", () => {
     await page.getByRole("button", { name: /Save/i }).click();
     await expect(page.getByText("Saved!")).toBeVisible({ timeout: 5000 });
     await page.reload();
-    await expect(page.getByText("Welcome")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible({ timeout: 5000 });
     await page.getByRole("button", { name: /Edit this page/i }).click();
+    await page.getByTestId(TEST_ID.emptySectionsMenu).hover();
     await expect(page.getByRole("button", { name: /Add block \(left\)/i })).toBeVisible({
       timeout: 3000,
     });
@@ -42,9 +45,11 @@ test.describe("Layouts", () => {
     await expect(page.getByText("Saved!")).toBeVisible({ timeout: 5000 });
     await page.reload();
     await page.getByRole("button", { name: /Edit this page/i }).click();
+    await page.getByTestId(TEST_ID.emptySectionsMenu).hover();
     await expect(page.getByRole("button", { name: /Add block \(left\)/i })).toBeVisible({
       timeout: 3000,
     });
+    await page.getByTestId(TEST_ID.emptySectionsMenu).hover();
     await expect(page.getByRole("button", { name: /Add block \(right\)/i })).toBeVisible({
       timeout: 3000,
     });
@@ -96,6 +101,7 @@ test.describe("Layouts", () => {
     await page.getByRole("button", { name: /Edit this page/i }).click();
     await page.getByRole("button", { name: /Choose layout/i }).click();
     await page.getByRole("button", { name: "Two columns" }).click();
+    await page.getByTestId(TEST_ID.emptySectionsMenu).hover();
     await page.getByRole("button", { name: /Add block \(left\)/i }).click({ timeout: 3000 });
     await page.getByRole("button", { name: "Heading" }).click();
     await expect(page.getByText("New heading")).toBeVisible({ timeout: 3000 });
@@ -117,6 +123,7 @@ test.describe("Layouts", () => {
     await expect(page.getByText("Saved!")).toBeVisible({ timeout: 5000 });
     await page.goto("/blog");
     await page.getByRole("button", { name: /Edit this page/i }).click();
+    await page.getByTestId(TEST_ID.emptySectionsMenu).hover();
     await expect(page.getByRole("button", { name: /Add block \(left\)/i })).toBeVisible({
       timeout: 3000,
     });

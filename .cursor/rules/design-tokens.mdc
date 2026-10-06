@@ -1,0 +1,25 @@
+---
+description: Prefer design tokens over hardcoded spacing, color, and radius values
+alwaysApply: true
+---
+
+# Tokens Over Hardcoded Values
+
+When a design token exists, use it. Do not hardcode rem/px/hex that duplicate tokens.
+
+## Prefer
+
+- Spacing: `var(--space-*)`, `var(--layout-gap-*)`, `var(--page-*-gap)`, `var(--card-padding)`, `var(--section-gap)`, `var(--footer-gap)`
+- Color: `var(--background)`, `var(--foreground)`, `var(--surface)`, `var(--border)`, `var(--muted)`, `var(--accent)`, …
+- In Tailwind arbitrary values: `p-[var(--space-4)]`, `gap-[var(--space-3)]`, `text-[var(--muted)]`
+
+## Allowed hardcoded
+
+- Token **definitions** themselves in `globals.css` (`:root` / `[data-theme]`)
+- One-off values with no matching token (document why if non-obvious)
+- Third-party / library constraints (e.g. React Grid Layout numeric `margin` that must mirror `--space-4`)
+
+## Do not
+
+- Scatter `p-3`, `gap-4`, `mt-8`, `#181817`, `rgb(...)` on product UI when a token already covers that role
+- Invent new magic numbers next to an existing scale step

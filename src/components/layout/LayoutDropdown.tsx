@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
+import { portalRoot } from "@/lib/portal-root";
 import type { PageLayout } from "@/lib/cms/types";
 import { LayoutSelector } from "./LayoutSelector";
 import { usePortalPosition } from "@/hooks/usePortalPosition";
+import { useDropdownA11y } from "@/hooks/useDropdownA11y";
+import { TEST_ID } from "@/lib/test-ids";
 
 interface LayoutDropdownProps {
   value: PageLayout;
@@ -17,25 +20,12 @@ export function LayoutDropdown({ value, onChange }: LayoutDropdownProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const portalPosition = usePortalPosition(triggerRef, open, { width: 320, gap: 4 });
 
-  useEffect(() => {
-    if (!open) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        triggerRef.current &&
-        !triggerRef.current.contains(e.target as Node) &&
-        panelRef.current &&
-        !panelRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open]);
+  useDropdownA11y({ open, setOpen, triggerRef, panelRef });
 
   const handleChange = (layout: PageLayout) => {
     onChange(layout);
     setOpen(false);
+    triggerRef.current?.focus();
   };
 
   return (
@@ -47,7 +37,6 @@ export function LayoutDropdown({ value, onChange }: LayoutDropdownProps) {
         className="flex items-center gap-1 px-2.5 py-1.5 text-sm rounded-lg text-[var(--muted)] bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] transition-colors"
         aria-label="Choose layout"
         aria-expanded={open}
-        aria-haspopup="true"
       >
         Layout
         <span aria-hidden className="text-zinc-400">
@@ -59,13 +48,15 @@ export function LayoutDropdown({ value, onChange }: LayoutDropdownProps) {
         createPortal(
           <div
             ref={panelRef}
-            data-testid="layout-dropdown"
+            data-testid={TEST_ID.layoutDropdown}
+            role="group"
+            aria-label="Page layouts"
             className="fixed z-[9999] min-w-[280px] rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-lg p-3"
-            style={{ top: portalPosition.top, left: portalPosition.left }}
+            style={portalPosition}
           >
             <LayoutSelector value={value} onChange={handleChange} variant="dropdown" />
           </div>,
-          document.body
+          portalRoot()
         )}
     </>
   );

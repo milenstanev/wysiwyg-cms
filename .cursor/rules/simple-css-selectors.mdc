@@ -1,0 +1,12 @@
+---
+description: Keep CSS selectors simple; never style via data-testid; extend only when overriding
+alwaysApply: true
+---
+
+# Simple CSS Selectors
+
+- Prefer the simplest selector that works: one class (`.content-block`, `.block-body`).
+- Never use `data-testid` in CSS — those attributes are for tests only.
+- Do not nest ancestor chains unless required to override or scope.
+- To override an existing rule, extend the base with one specific qualifier only when necessary (`.block-body` → `.layout-sidebar-left .block-body`).
+- Avoid overcomplicated stacks like `.block-grid-layout [data-testid="…"] .block-body`.

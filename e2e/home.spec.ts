@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Home", () => {
   test("shows welcome and edit button", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByText("Welcome")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Edit this page/i })).toBeVisible();
   });
 
@@ -90,6 +90,6 @@ test.describe("Home", () => {
     await page.goto("/about");
     await page.getByRole("link", { name: "Home" }).first().click();
     await expect(page).toHaveURL("/");
-    await expect(page.getByText("Welcome")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible();
   });
 });

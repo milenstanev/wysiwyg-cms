@@ -8,10 +8,14 @@ export interface PageDocument {
   blocks: unknown[];
   leftBlocks?: unknown[];
   rightBlocks?: unknown[];
+  positionBlocks?: Record<string, unknown[]>;
   mainComponent?: string;
   leftComponent?: string;
   rightComponent?: string;
   modules?: unknown;
+  status?: string;
+  publishedAt?: Date | null;
+  seo?: unknown;
   updatedAt: Date;
 }
 
@@ -19,6 +23,7 @@ export interface IPageRepository {
   findAll(): Promise<PageDocument[]>;
   findBySlug(slug: string): Promise<PageDocument | null>;
   upsert(page: Omit<PageDocument, "updatedAt">): Promise<PageDocument>;
+  deleteBySlug(slug: string): Promise<boolean>;
 }
 
 export class PageRepository implements IPageRepository {
@@ -43,15 +48,24 @@ export class PageRepository implements IPageRepository {
           blocks: page.blocks,
           leftBlocks: page.leftBlocks ?? [],
           rightBlocks: page.rightBlocks ?? [],
+          positionBlocks: page.positionBlocks ?? {},
           mainComponent: page.mainComponent,
           leftComponent: page.leftComponent,
           rightComponent: page.rightComponent,
           modules: page.modules,
+          status: page.status ?? "published",
+          publishedAt: page.publishedAt ?? null,
+          seo: page.seo,
         },
       },
       { upsert: true, new: true }
     ).lean();
 
     return updated as PageDocument;
+  }
+
+  async deleteBySlug(slug: string): Promise<boolean> {
+    const result = await PageModel.deleteOne({ slug });
+    return result.deletedCount > 0;
   }
 }

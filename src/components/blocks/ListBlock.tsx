@@ -11,8 +11,13 @@ interface ListBlockProps {
   onEdit?: (items: string[]) => void;
 }
 
+export function getListItems(items: string[] = [], content?: string): string[] {
+  return items.length > 0 ? items : content ? content.split("\n").filter(Boolean) : [];
+}
+
+/** Same markup in view and edit; edit-only controls are absolutely positioned (no layout shift). */
 export function ListBlock({ items = [], content, settings, editable, onEdit }: ListBlockProps) {
-  const listItems = items.length > 0 ? items : content ? content.split("\n").filter(Boolean) : [];
+  const listItems = getListItems(items, content);
   const listStyle = getBlockSettingOrDefault(
     { settings } as ContentBlock,
     "listStyle",
@@ -27,58 +32,42 @@ export function ListBlock({ items = [], content, settings, editable, onEdit }: L
     onEdit?.(next);
   };
 
-  const handleAddItem = () => {
-    onEdit?.([...listItems, "New item"]);
-  };
-
   const handleRemoveItem = (index: number) => {
     onEdit?.(listItems.filter((_, i) => i !== index));
   };
 
-  if (editable) {
-    return (
-      <ListTag className={`space-y-2 ${ordered ? "list-decimal list-inside" : ""}`}>
-        {listItems.map((item, i) => (
-          <li key={i} className="flex items-center gap-2 group">
-            {!ordered && <span className="text-[var(--accent)] mt-0.5">•</span>}
-            <div
-              contentEditable
-              suppressContentEditableWarning
-              onInput={(e) =>
-                handleItemChange(i, (e.currentTarget as HTMLElement).textContent || "")
-              }
-              className="flex-1 text-[var(--foreground)] outline-none empty:before:content-['List item'] empty:before:opacity-50"
-            >
-              {item}
-            </div>
+  return (
+    <ListTag className={`space-y-[var(--space-2)] ${ordered ? "list-decimal list-inside" : ""}`}>
+      {listItems.map((item, i) => (
+        <li key={i} className="group relative flex items-start gap-[var(--space-2)]">
+          {!ordered && (
+            <span aria-hidden className="text-[var(--accent)] mt-[var(--space-1)]">
+              •
+            </span>
+          )}
+          <span
+            contentEditable={editable}
+            suppressContentEditableWarning
+            onInput={
+              editable
+                ? (e) => handleItemChange(i, (e.currentTarget as HTMLElement).textContent || "")
+                : undefined
+            }
+            className="text-[var(--foreground)] outline-none"
+          >
+            {item}
+          </span>
+          {editable && (
             <button
               type="button"
               onClick={() => handleRemoveItem(i)}
-              className="opacity-0 group-hover:opacity-100 p-1 text-zinc-400 hover:text-red-500 text-sm"
+              className="edit-chip edit-inline-remove"
+              aria-label={`Remove item ${i + 1}`}
+              title="Remove item"
             >
               ✕
             </button>
-          </li>
-        ))}
-        <li>
-          <button
-            type="button"
-            onClick={handleAddItem}
-            className="text-sm text-[var(--muted)] hover:text-[var(--accent)] flex items-center gap-2"
-          >
-            + Add item
-          </button>
-        </li>
-      </ListTag>
-    );
-  }
-
-  return (
-    <ListTag className={`space-y-2 ${ordered ? "list-decimal list-inside" : ""}`}>
-      {listItems.map((item, i) => (
-        <li key={i} className="flex items-start gap-2">
-          {!ordered && <span className="text-[var(--accent)] mt-1">•</span>}
-          <span className="text-[var(--foreground)]">{item}</span>
+          )}
         </li>
       ))}
     </ListTag>

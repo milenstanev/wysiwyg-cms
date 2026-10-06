@@ -28,13 +28,25 @@ function hasValidBasicAuth(req: NextRequest, password: string): boolean {
   return equals(decoded.slice(separator + 1), password);
 }
 
+function isProtectedApi(pathname: string): boolean {
+  return (
+    pathname.startsWith("/api/content") ||
+    pathname.startsWith("/api/media") ||
+    pathname.startsWith("/api/settings")
+  );
+}
+
 export function proxy(req: NextRequest) {
   const password = process.env.ADMIN_PASSWORD;
   // Unset means the gate is off, which keeps local dev and CI unauthenticated.
   if (!password) return NextResponse.next();
 
-  const isContentApi = req.nextUrl.pathname.startsWith("/api/content");
-  if (isContentApi && READ_METHODS.has(req.method)) return NextResponse.next();
+  const pathname = req.nextUrl.pathname;
+  const isApi = isProtectedApi(pathname);
+  // Media list and settings GET stay admin-only; content GET stays public.
+  if (pathname.startsWith("/api/content") && READ_METHODS.has(req.method)) {
+    return NextResponse.next();
+  }
 
   const token = sessionToken(password);
   const cookie = req.cookies.get(COOKIE_NAME)?.value;
@@ -52,7 +64,7 @@ export function proxy(req: NextRequest) {
     return res;
   }
 
-  if (isContentApi) {
+  if (isApi) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -63,5 +75,5 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/content/:path*"],
+  matcher: ["/admin/:path*", "/api/content/:path*", "/api/media/:path*", "/api/settings/:path*"],
 };

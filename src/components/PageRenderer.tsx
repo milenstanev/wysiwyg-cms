@@ -1,5 +1,4 @@
 import type { PageRendererProps } from "@/lib/cms/page-editor.types";
-import type { ContentBlock } from "@/lib/cms/types";
 import { getComponentForRegion, ComponentSlot } from "@/lib/cms/components";
 import { ModulePosition } from "./layout/ModulePosition";
 import { ContentCard } from "./layout/ContentCard";
@@ -10,23 +9,14 @@ import {
   getLayoutTemplate,
   getPositionPlaceholderLabel,
   getRowGridClassName,
-  isContentPosition,
 } from "@/lib/cms/layout-templates";
-
-function getBlocksForPosition(
-  p: {
-    blocks?: ContentBlock[];
-    leftBlocks?: ContentBlock[];
-    rightBlocks?: ContentBlock[];
-    positionBlocks?: Record<string, ContentBlock[]>;
-  },
-  positionId: string
-): ContentBlock[] {
-  if (positionId === "main") return p.blocks ?? [];
-  if (positionId === "left") return p.leftBlocks ?? [];
-  if (positionId === "right") return p.rightBlocks ?? [];
-  return p.positionBlocks?.[positionId] ?? [];
-}
+import { getBlocksForPosition, positionHasContent } from "@/lib/cms/page-blocks";
+import { EmptySectionsMenu } from "./EmptySectionsMenu";
+import {
+  MODULE_REGISTRY,
+  getModulesForPosition,
+} from "@/lib/cms/modules";
+import type { PageModuleAssignment, ModuleId } from "@/lib/cms/types";
 
 /**
  * Renders a page from a layout template (single, two-col, three-col, rockettheme).
@@ -35,6 +25,8 @@ function getBlocksForPosition(
 export function PageRenderer({
   page,
   editable = false,
+  allPages,
+  currentSlug,
   onBlockEdit,
   onTitleEdit,
   onLayoutChange,
@@ -42,6 +34,7 @@ export function PageRenderer({
   onRemoveBlock,
   onMoveBlock,
   onBlockUpdate,
+  onModulesChange,
   contentClassName = "",
   layoutOptions,
 }: PageRendererProps) {
@@ -56,6 +49,8 @@ export function PageRenderer({
 
   const slotProps = {
     editable,
+    page,
+    pages: allPages,
     onBlockEdit,
     onBlockUpdate,
     onAddBlock,
@@ -63,6 +58,50 @@ export function PageRenderer({
     onMoveBlock,
   };
   const unstyled = layoutOptions?.unstyledCards ?? false;
+
+  function updateModuleParams(assignment: PageModuleAssignment, params: Record<string, unknown>) {
+    if (!onModulesChange) return;
+    const modules = (page.modules ?? []).map((m) =>
+      m.positionId === assignment.positionId && m.moduleId === assignment.moduleId
+        ? { ...m, params }
+        : m
+    );
+    onModulesChange(modules);
+  }
+
+  function handleAddModule(positionId: string, moduleId: ModuleId) {
+    if (!onModulesChange) return;
+    const def = MODULE_REGISTRY[moduleId];
+    onModulesChange([
+      ...(page.modules ?? []),
+      { positionId, moduleId, params: { ...def.defaultParams } },
+    ]);
+  }
+
+  function renderModules(positionId: string) {
+    const assignments = getModulesForPosition(page.modules, positionId);
+    if (assignments.length === 0) return null;
+    return (
+      <div className="space-y-[var(--space-3)]" data-modules-for={positionId}>
+        {assignments.map((assignment, i) => {
+          const def = MODULE_REGISTRY[assignment.moduleId];
+          if (!def) return null;
+          return (
+            <div key={`${assignment.moduleId}-${i}`}>
+              {def.render(assignment, {
+                pages: allPages,
+                currentSlug,
+                editable,
+                onParamsChange: editable
+                  ? (params) => updateModuleParams(assignment, params)
+                  : undefined,
+              })}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
 
   function renderPosition(positionId: string, rowIndex: number, orderClassName?: string) {
     const key = `${template.id}-row-${rowIndex}-${positionId}`;
@@ -80,6 +119,7 @@ export function PageRenderer({
     if (positionId === "main") {
       return wrap(
         <ContentCard unstyled={unstyled}>
+          {renderModules("main")}
           <ComponentSlot component={mainComp} region="main" blocks={mainBlocks} {...slotProps} />
         </ContentCard>
       );
@@ -87,7 +127,7 @@ export function PageRenderer({
     if (positionId === "left") {
       return wrap(
         <SidebarCard side="left" unstyled={unstyled}>
-          <ModulePosition name="sidebar-left" />
+          <ModulePosition name="sidebar-left">{renderModules("left")}</ModulePosition>
           <ComponentSlot component={leftComp} region="left" blocks={leftBlocks} {...slotProps} />
         </SidebarCard>
       );
@@ -95,52 +135,70 @@ export function PageRenderer({
     if (positionId === "right") {
       return wrap(
         <SidebarCard side="right" unstyled={unstyled}>
-          <ModulePosition name="sidebar-right" />
+          <ModulePosition name="sidebar-right">{renderModules("right")}</ModulePosition>
           <ComponentSlot component={rightComp} region="right" blocks={rightBlocks} {...slotProps} />
         </SidebarCard>
       );
     }
-    // Any other position (utility-a, header, etc.): only render when there are blocks or editable add-block
+    // Any other position (utility-a, header, etc.)
     const blocks = getBlocksForPosition(page, positionId);
+    const modulesNode = renderModules(positionId);
     const placeholderLabel =
       template.id === "rockettheme" ? getPositionPlaceholderLabel(positionId) : undefined;
-    const hasContent = blocks.length > 0 || (editable && onAddBlock);
-    if (hasContent) {
+    if (blocks.length > 0 || modulesNode) {
       return wrap(
-        <div data-module-position={positionId} className="min-h-[2rem]">
-          <BlocksColumn
-            blocks={blocks}
-            region={positionId}
-            editable={editable}
-            onBlockEdit={onBlockEdit}
-            onBlockUpdate={onBlockUpdate}
-            onAddBlock={onAddBlock}
-            onRemoveBlock={onRemoveBlock}
-            onMoveBlock={onMoveBlock}
-            addBlockLabel={placeholderLabel ?? positionId}
-          />
-        </div>
+        <ModulePosition name={positionId} className="min-h-[2rem]">
+          {modulesNode}
+          {blocks.length > 0 && (
+            <BlocksColumn
+              blocks={blocks}
+              region={positionId}
+              editable={editable}
+              onBlockEdit={onBlockEdit}
+              onBlockUpdate={onBlockUpdate}
+              onAddBlock={onAddBlock}
+              onRemoveBlock={onRemoveBlock}
+              onMoveBlock={onMoveBlock}
+              addBlockLabel={placeholderLabel ?? positionId}
+            />
+          )}
+        </ModulePosition>
       );
     }
-    // Empty module position: return null so caller can collapse the column (do not show placeholder)
     return null;
   }
 
+  // Same answer in view and edit: WYSIWYG means edit mode never adds layout boxes.
   function isPositionVisible(positionId: string): boolean {
-    if (isContentPosition(positionId)) return true;
-    const blocks = getBlocksForPosition(page, positionId);
-    return blocks.length > 0 || !!(editable && onAddBlock);
+    if (positionHasContent(page, positionId)) return true;
+    return positionId === "main";
   }
 
   const isRocketTheme = template.id === "rockettheme";
+  const emptySections = template.rows
+    .flatMap((row) => row.positions)
+    .filter((positionId) => !isPositionVisible(positionId))
+    .map((positionId) => ({
+      positionId,
+      label: isRocketTheme ? getPositionPlaceholderLabel(positionId) : positionId,
+    }));
   return (
     <article
       data-page-renderer
       data-layout={layout}
       data-template={template.id}
-      className={`page-content ${CONTENT_WIDTH_CLASS} space-y-8 min-w-0 ${contentClassName} ${isRocketTheme ? "layout-template-rockettheme" : ""}`}
+      data-editing={editable ? "true" : undefined}
+      className={`page-content ${CONTENT_WIDTH_CLASS} min-w-0 ${contentClassName} ${isRocketTheme ? "layout-template-rockettheme" : ""}${editable ? " is-editing" : ""}`}
     >
-      <ModulePosition name="top" />
+      <ModulePosition name="top">{renderModules("top")}</ModulePosition>
+
+      {editable && onAddBlock && emptySections.length > 0 && (
+        <EmptySectionsMenu
+          sections={emptySections}
+          onAddBlock={onAddBlock}
+          onAddModule={onModulesChange ? handleAddModule : undefined}
+        />
+      )}
 
       <h1
         contentEditable={editable && !!onTitleEdit}
@@ -152,8 +210,8 @@ export function PageRenderer({
         }
         className={
           editable
-            ? "page-title font-bold text-[var(--foreground)] focus:outline focus:outline-2 focus:outline-dashed focus:outline-[var(--border)] focus:outline-offset-2 focus:rounded"
-            : "page-title font-bold text-[var(--foreground)]"
+            ? "page-title font-bold focus:outline focus:outline-2 focus:outline-dashed focus:outline-[var(--border)] focus:outline-offset-2 focus:rounded"
+            : "page-title font-bold"
         }
       >
         {page.title}
@@ -161,14 +219,17 @@ export function PageRenderer({
 
       {template.rows.map((row, rowIndex) => {
         const visiblePositions = row.positions.filter(isPositionVisible);
+        // Empty section: omit the whole row so chrome/padding disappears and layout adapts
+        if (visiblePositions.length === 0) return null;
         const gridClassName = getRowGridClassName(row, visiblePositions.length);
         return (
           <div
             key={`${template.id}-row-${rowIndex}`}
             className={gridClassName}
             data-template-row={rowIndex}
+            data-visible-count={visiblePositions.length}
           >
-            {visiblePositions.map((positionId, posIndex) => {
+            {visiblePositions.map((positionId) => {
               const originalIndex = row.positions.indexOf(positionId);
               return renderPosition(positionId, rowIndex, row.orderClassNames?.[originalIndex]);
             })}
@@ -176,7 +237,7 @@ export function PageRenderer({
         );
       })}
 
-      <ModulePosition name="bottom" />
+      <ModulePosition name="bottom">{renderModules("bottom")}</ModulePosition>
     </article>
   );
 }

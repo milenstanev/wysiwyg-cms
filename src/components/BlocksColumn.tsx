@@ -19,8 +19,8 @@ interface BlocksColumnProps {
 }
 
 /**
- * Renders blocks in a React Grid Layout: each block is draggable and resizable in edit mode.
- * Size and position are stored on each block as gridItem and persist with the page.
+ * Renders blocks in a content-sized vertical stack (view and edit).
+ * Edit mode adds toolbars and add-block controls.
  */
 export function BlocksColumn({
   blocks,

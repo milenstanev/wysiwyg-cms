@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Pages and navigation", () => {
   test("home shows Welcome", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByText("Welcome")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible();
   });
 
   test("about shows About Us heading", async ({ page }) => {

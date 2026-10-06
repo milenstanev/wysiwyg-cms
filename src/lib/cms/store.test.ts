@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { getPageBySlug, loadPages, updatePage } from "./store-db";
 import type { Page } from "./types";
 
@@ -42,22 +42,40 @@ describe("store-db", () => {
   });
 
   describe("updatePage", () => {
+    // Own throwaway page: test files run in parallel, so never mutate real content pages
+    const tempId = `store-test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const temp: Page = {
+      id: tempId,
+      slug: tempId,
+      title: "Store Test",
+      layout: "single",
+      blocks: [{ id: "t1", type: "text", content: "Original" }],
+      updatedAt: new Date().toISOString(),
+    };
+
+    beforeAll(async () => {
+      await updatePage(temp);
+    });
+
+    afterAll(async () => {
+      const { prisma } = await import("@/lib/db");
+      await prisma.page.deleteMany({ where: { id: tempId } });
+    });
+
     it("updates existing page and returns it", async () => {
-      const existing = await getPageBySlug("contact");
+      const existing = await getPageBySlug(tempId);
       expect(existing).not.toBeNull();
       const updated: Page = {
         ...existing!,
-        title: "Contact Us (Updated)",
+        title: "Store Test (Updated)",
         blocks: [...existing!.blocks, { id: "new-1", type: "text", content: "New block" }],
       };
       const result = await updatePage(updated);
-      expect(result.title).toBe("Contact Us (Updated)");
+      expect(result.title).toBe("Store Test (Updated)");
       expect(result.blocks.length).toBe(existing!.blocks.length + 1);
 
-      const refetched = await getPageBySlug("contact");
-      expect(refetched?.title).toBe("Contact Us (Updated)");
-
-      await updatePage({ ...existing!, title: "Contact" });
+      const refetched = await getPageBySlug(tempId);
+      expect(refetched?.title).toBe("Store Test (Updated)");
     });
 
     it("creates new page when id does not exist", async () => {

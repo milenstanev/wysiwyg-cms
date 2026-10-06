@@ -13,18 +13,29 @@ export interface PortalPositionOptions {
   anchorKey?: string | number;
 }
 
+export interface PortalPosition {
+  left: number;
+  /** Set when the portal opens below the anchor. */
+  top?: number;
+  /** Set when the portal opens above the anchor (not enough room below). */
+  bottom?: number;
+}
+
+/** Below this much free space under the anchor, open above it instead. */
+const MIN_SPACE_BELOW = 280;
+
 /**
- * Returns fixed position for a portal so it appears below the anchor and isn't clipped by overflow.
- * Updates on scroll/resize when open.
+ * Returns fixed position for a portal so it appears below the anchor (or above, near the viewport bottom)
+ * and isn't clipped by overflow. Updates on scroll/resize when open.
  * Uses useLayoutEffect + rAF so position is computed after the anchor ref is attached (e.g. after opening).
  */
 export function usePortalPosition(
   anchorRef: RefObject<HTMLElement | null>,
   isOpen: boolean,
   options: PortalPositionOptions = {}
-): { top: number; left: number } | null {
+): PortalPosition | null {
   const { alignRight = false, width = 220, gap = 4, anchorKey } = options;
-  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const [position, setPosition] = useState<PortalPosition | null>(null);
   const raf = useRef<number | null>(null);
 
   const update = () => {
@@ -33,11 +44,13 @@ export function usePortalPosition(
       return;
     }
     const rect = anchorRef.current.getBoundingClientRect();
-    const left = alignRight ? rect.right - width : rect.left;
-    setPosition({
-      top: rect.bottom + gap,
-      left,
-    });
+    const left = Math.max(gap, alignRight ? rect.right - width : rect.left);
+    const spaceBelow = window.innerHeight - rect.bottom;
+    if (spaceBelow < MIN_SPACE_BELOW && rect.top > spaceBelow) {
+      setPosition({ bottom: window.innerHeight - rect.top + gap, left });
+      return;
+    }
+    setPosition({ top: rect.bottom + gap, left });
   };
 
   useLayoutEffect(() => {

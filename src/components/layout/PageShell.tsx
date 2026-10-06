@@ -26,17 +26,17 @@ export function PageShell({
   return (
     <div
       data-page-shell
-      className={`site-shell min-h-screen flex flex-col bg-[var(--background)] py-[var(--page-vertical-padding)] sm:py-8 ${className}`}
+      className={`site-shell min-h-screen flex flex-col bg-[var(--background)] py-[var(--page-vertical-padding)] sm:py-[var(--space-6)] ${className}`}
     >
       {header && (
         <header
           data-page-header
-          className={`site-header sticky top-3 z-20 ${CONTAINER_CLASS} w-full mb-[var(--page-header-gap)] sm:mb-12 flex flex-wrap items-center justify-between gap-3 ${headerClassName}`}
+          className={`site-header sticky top-3 ${CONTAINER_CLASS} w-full mb-[var(--page-header-gap)] flex flex-wrap items-center justify-between gap-[var(--space-3)] ${headerClassName}`}
         >
           {header}
         </header>
       )}
-      <main data-page-main className={`flex-1 ${CONTAINER_CLASS} w-full min-w-0 ${mainClassName}`}>
+      <main id="main-content" tabIndex={-1} data-page-main className={`flex-1 ${CONTAINER_CLASS} w-full min-w-0 ${mainClassName}`}>
         {children}
       </main>
       {footer && (

@@ -1,0 +1,50 @@
+---
+description: WCAG 2.2 AA accessibility is required for every page, mode, theme and component
+alwaysApply: true
+---
+
+# Accessibility (WCAG 2.2 AA) — required everywhere
+
+Applies to site pages, edit mode, `/admin`, 404, every theme, and every new component. Gate: `npm run test:a11y` (`e2e/accessibility.spec.ts`, axe-core) + `src/lib/theme-contrast.test.ts`.
+
+## Structure
+
+- One `<h1>` per page (the page title). Content headings are h2–h4 and never skip a level.
+- Landmarks: one `header` (banner), one `main#main-content`, one `footer` (contentinfo, owned by `PageShell`). Never nest `footer`/`header` landmarks; all content sits inside a landmark.
+- Portals (dropdowns, settings) go to `portalRoot()` (inside `<main>`), never `document.body`.
+- `html[lang]` and a non-empty `<title>` on every route.
+
+## Keyboard & focus
+
+- Everything works with keyboard alone; Tab order follows visual order. First Tab = "Skip to content".
+- Never remove focus indicators. The global `:focus-visible` ring wins over `outline-none`; don't override it.
+- Focus must not be hidden by the sticky header / editor bar (`scroll-padding` handles it — keep it the same in view and edit).
+- Hover/focus popovers (`.edit-popover`): use `useEditPopover` — Escape dismisses, focus returns to the chip, `aria-expanded` is accurate.
+- Portalled dropdowns: use `useDropdownA11y` — focus moves into the panel, Escape / Tab-out / outside click closes, focus returns to the trigger.
+
+## Names, roles, states
+
+- Every control has an accessible name; visible text must be part of it (`aria-label="Save changes"` for "Save").
+- Icon-only buttons: `aria-label` + `aria-hidden` on the glyph. Toggles expose `aria-expanded`. Don't use `aria-haspopup` for disclosures.
+- Status messages go to an always-mounted `role="status"` region (mounting it with the message is not announced).
+- Images need `alt` (empty only if decorative). Inputs need a `<label>` or `aria-label`.
+
+## Color & contrast
+
+- Text ≥ 4.5:1 (large ≥ 3:1); UI component edges (inputs, selects) ≥ 3:1 → `--control-border`.
+- Never fade a solid control with `opacity` at rest (it silently drops contrast).
+- Dark sections remap tokens (`--inverse-*`); don't put `--foreground`/`--muted` text on a dark fill.
+- Color is never the only signal (add text or a symbol: "✓ Saved!").
+- New/changed theme tokens must pass `theme-contrast.test.ts`.
+
+## Adaptable
+
+- Reflow at 320px without horizontal scroll; survive WCAG text-spacing overrides.
+- Targets ≥ 24×24px (edit chips are `--space-5`).
+- Honour `prefers-reduced-motion` (global rule in `globals.css`).
+
+## When you change UI
+
+1. Check view **and** edit mode, in all 6 themes.
+2. Add/extend a case in `e2e/accessibility.spec.ts` for new overlays, pages or interactive patterns.
+3. Run `npm run test:a11y` when the user asks for verification.

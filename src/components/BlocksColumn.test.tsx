@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { BlocksColumn } from "./BlocksColumn";
 import type { ContentBlock } from "@/lib/cms/types";
+import { TEST_ID, testIdSelector } from "@/lib/test-ids";
 
 const blocks: ContentBlock[] = [
   { id: "1", type: "heading", content: "Title" },
@@ -22,7 +23,7 @@ describe("BlocksColumn", () => {
 
   it("shows Add block button when editable and onAddBlock provided", () => {
     render(<BlocksColumn blocks={blocks} region="main" editable onAddBlock={vi.fn()} />);
-    expect(screen.getByText(/Add block \(main\)/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add block (main)" })).toBeInTheDocument();
   });
 
   it("calls onRemoveBlock when remove button clicked", () => {
@@ -92,7 +93,52 @@ describe("BlocksColumn", () => {
 
   it("renders with empty blocks and still shows Add block when editable", () => {
     render(<BlocksColumn blocks={[]} region="main" editable onAddBlock={vi.fn()} />);
-    expect(screen.getByText(/Add block \(main\)/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add block (main)" })).toBeInTheDocument();
+  });
+
+  it("edit mode renders the same block box tree as view mode (chrome is extra, never wrapping)", () => {
+    const { container: view } = render(<BlocksColumn blocks={blocks} region="main" />);
+    const { container: edit } = render(
+      <BlocksColumn
+        blocks={blocks}
+        region="main"
+        editable
+        onAddBlock={vi.fn()}
+        onRemoveBlock={vi.fn()}
+        onMoveBlock={vi.fn()}
+        onBlockUpdate={vi.fn()}
+      />
+    );
+    const chain = (root: HTMLElement) =>
+      [...root.querySelectorAll(testIdSelector(TEST_ID.contentBlock))].map((card) => {
+        const path: string[] = [];
+        for (let el: Element | null = card; el && el !== root; el = el.parentElement) {
+          path.push(el.className);
+        }
+        return path.join(" < ");
+      });
+    expect(chain(edit)).toEqual(chain(view));
+  });
+
+  it("block controls are one small chip whose popover holds every action", () => {
+    render(
+      <BlocksColumn
+        blocks={blocks}
+        region="main"
+        editable
+        onAddBlock={vi.fn()}
+        onRemoveBlock={vi.fn()}
+        onMoveBlock={vi.fn()}
+        onBlockUpdate={vi.fn()}
+      />
+    );
+    const triggers = screen.getAllByTestId(TEST_ID.blockControlsTrigger);
+    expect(triggers).toHaveLength(2);
+    const menu = screen.getAllByTestId(TEST_ID.blockControlsMenu)[0];
+    expect(within(menu).getByRole("button", { name: "Move down" })).toBeInTheDocument();
+    expect(within(menu).getByRole("button", { name: "Add block above" })).toBeInTheDocument();
+    expect(within(menu).getByRole("button", { name: "Add block below" })).toBeInTheDocument();
+    expect(within(menu).getByRole("button", { name: "Remove block" })).toBeInTheDocument();
   });
 
   it("with one block and move handlers, neither move button is visible", () => {
@@ -127,5 +173,61 @@ describe("BlocksColumn", () => {
       />
     );
     expect(screen.getByRole("button", { name: "Block settings" })).toBeInTheDocument();
+  });
+
+  it("view mode stacks blocks without fixed inline height", () => {
+    render(<BlocksColumn blocks={blocks} region="main" />);
+    expect(screen.getByTestId(TEST_ID.blockStack)).toBeInTheDocument();
+    const nodes = screen.getAllByTestId(TEST_ID.contentBlock);
+    for (const node of nodes) {
+      expect(node.style.height).toBe("");
+      expect(node).not.toHaveClass("overflow-hidden");
+    }
+  });
+
+  it("edit mode uses the same content-sized stack as view (no fixed RGL heights)", () => {
+    render(
+      <BlocksColumn
+        blocks={blocks}
+        region="main"
+        editable
+        onAddBlock={vi.fn()}
+        onBlockUpdate={vi.fn()}
+      />
+    );
+    expect(screen.getByTestId(TEST_ID.blockStack)).toBeInTheDocument();
+    const nodes = screen.getAllByTestId(TEST_ID.contentBlock);
+    expect(nodes).toHaveLength(2);
+    for (const node of nodes) {
+      expect(node.style.height).toBe("");
+    }
+  });
+
+  it("edit toolbars and add controls sit outside the content-block wrapper", () => {
+    render(
+      <BlocksColumn
+        blocks={blocks}
+        region="main"
+        editable
+        onAddBlock={vi.fn()}
+        onRemoveBlock={vi.fn()}
+        onMoveBlock={vi.fn()}
+        onBlockUpdate={vi.fn()}
+      />
+    );
+    const units = screen.getAllByTestId(TEST_ID.blockEditUnit);
+    expect(units.length).toBe(2);
+    for (const unit of units) {
+      const toolbar = unit.querySelector(testIdSelector(TEST_ID.blockToolbar));
+      const content = unit.querySelector(testIdSelector(TEST_ID.contentBlock));
+      expect(toolbar).toBeTruthy();
+      expect(content).toBeTruthy();
+      expect(content!.contains(toolbar)).toBe(false);
+      expect(toolbar!.compareDocumentPosition(content!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+    expect(screen.getAllByTestId(TEST_ID.blockAddSlot).length).toBeGreaterThan(0);
+    for (const slot of screen.getAllByTestId(TEST_ID.blockAddSlot)) {
+      expect(slot.closest(testIdSelector(TEST_ID.contentBlock))).toBeNull();
+    }
   });
 });

@@ -1,4 +1,4 @@
-# CMS Experiment
+# WYSIWYG CMS
 
 A decoupled CMS frontend built with Next.js, featuring a WYSIWYG-style admin panel. Content can be stored in Postgres (Prisma) or MongoDB (Node.js API server).
 
@@ -10,6 +10,7 @@ A decoupled CMS frontend built with Next.js, featuring a WYSIWYG-style admin pan
 - **Contract-first** — Shared types (`lib/cms/page-editor.types.ts`, `lib/cms/types.ts`) and layout constants (`lib/layout/constants.ts`) so header, main, and footer stay aligned and the renderer has a stable API.
 - **Separation of concerns** — Page state and persistence live in `usePageEditor`; UI only receives data and callbacks. Same `PageRenderer` and block semantics for both site and admin.
 - **Testability** — Unit tests (Vitest) for lib, hooks, and components; E2E (Playwright) for critical flows. See `src/ARCHITECTURE.md` for the full picture.
+- **What changed recently** — Fonts, zero-shift editing, starter pages, spacing, and WCAG 2.2 AA: [docs/WHAT-WE-DID.md](docs/WHAT-WE-DID.md).
 
 ## Features
 
@@ -66,8 +67,10 @@ docker compose up -d
 | `npm run start`           | Run production server                                |
 | `npm run test`            | Run unit tests (Vitest)                              |
 | `npm run test:e2e`        | Run E2E tests (Playwright)                           |
+| `npm run test:a11y`       | Theme contrast + WCAG 2.2 AA browser suite           |
+| `npm run db:reset-content`| Restore starter pages in the database                |
 | `npm run test:watch`      | Unit tests in watch mode                             |
-| `npm run db:seed`         | Seed database from content/pages.json                |
+| `npm run db:seed`         | Insert any missing starter pages                     |
 | `npm run dev:docker`      | Full dev stack (MongoDB + API + Web) with hot reload |
 | `npm run dev:docker:down` | Stop dev stack                                       |
 | `npm run dev:docker:logs` | Tail logs                                            |

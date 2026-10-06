@@ -1,7 +1,6 @@
 /**
  * Placeholder for future module injection (Joomla-style module positions).
- * When placeholderLabel is set and there are no children, shows a visible
- * label so the layout reads like a real RocketTheme/Gantry template.
+ * Renders nothing when empty (no children and no placeholder) so layout sections collapse.
  */
 interface ModulePositionProps {
   name: string;
@@ -18,7 +17,9 @@ export function ModulePosition({
   children,
 }: ModulePositionProps) {
   const hasContent = children != null && !(Array.isArray(children) && children.length === 0);
-  const showPlaceholder = !hasContent && placeholderLabel;
+  const showPlaceholder = !hasContent && !!placeholderLabel;
+
+  if (!hasContent && !showPlaceholder) return null;
 
   return (
     <div

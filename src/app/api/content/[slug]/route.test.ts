@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { GET, PUT } from "./route";
+import { deletePage, updatePage } from "@/lib/cms/store-db";
 import type { Page } from "@/lib/cms/types";
 
 describe("GET /api/content/[slug]", () => {
@@ -37,38 +38,44 @@ describe("GET /api/content/[slug]", () => {
 });
 
 describe("PUT /api/content/[slug]", () => {
-  it("updates page and returns it", async () => {
-    const existingRes = await GET(new Request("http://localhost/api/content/contact"), {
-      params: Promise.resolve({ slug: "contact" }),
-    });
-    const existing: Page = await existingRes.json();
-    const updated: Page = {
-      ...existing,
-      title: "Contact (API Test)",
-      blocks: [...existing.blocks, { id: "api-test-block", type: "text", content: "API test" }],
-    };
-
-    const putRes = await PUT(
-      new Request("http://localhost/api/content/contact", {
+  // Own throwaway page: test files run in parallel, so never mutate real content pages
+  const tempSlug = `api-test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const temp: Page = {
+    id: tempSlug,
+    slug: tempSlug,
+    title: "API Test",
+    layout: "single",
+    blocks: [{ id: "t1", type: "text", content: "Original" }],
+    updatedAt: new Date().toISOString(),
+  };
+  const put = (body: unknown, slug = tempSlug) =>
+    PUT(
+      new Request(`http://localhost/api/content/${slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updated),
+        body: JSON.stringify(body),
       }),
-      { params: Promise.resolve({ slug: "contact" }) }
+      { params: Promise.resolve({ slug }) }
     );
+
+  beforeAll(async () => {
+    await updatePage(temp);
+  });
+
+  afterAll(async () => {
+    await deletePage(tempSlug);
+  });
+
+  it("updates page and returns it", async () => {
+    const putRes = await put({
+      ...temp,
+      title: "API Test (Updated)",
+      blocks: [...temp.blocks, { id: "api-test-block", type: "text", content: "API test" }],
+    });
     expect(putRes.status).toBe(200);
     const result = await putRes.json();
-    expect(result.title).toBe("Contact (API Test)");
+    expect(result.title).toBe("API Test (Updated)");
     expect(result.blocks.some((b: { id: string }) => b.id === "api-test-block")).toBe(true);
-
-    await PUT(
-      new Request("http://localhost/api/content/contact", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...existing, title: "Contact" }),
-      }),
-      { params: Promise.resolve({ slug: "contact" }) }
-    );
   });
 
   it("returns 400 when body is invalid JSON", async () => {
@@ -105,13 +112,14 @@ describe("PUT /api/content/[slug]", () => {
     expect(data).toHaveProperty("error");
   });
 
-  it("returns 400 when slug in body does not match URL", async () => {
+  it("returns 400 when body slug differs from URL and id is not that page (no rename)", async () => {
+    // A matching id would be a valid rename and mutate the real home page
     const res = await PUT(
       new Request("http://localhost/api/content/home", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: "home",
+          id: "not-the-home-page",
           slug: "other",
           title: "Wrong",
           blocks: [],
@@ -126,69 +134,20 @@ describe("PUT /api/content/[slug]", () => {
   });
 
   it("PUT accepts minimal body and returns normalized page", async () => {
-    const existingRes = await GET(new Request("http://localhost/api/content/contact"), {
-      params: Promise.resolve({ slug: "contact" }),
-    });
-    const existing: Page = await existingRes.json();
-    const res = await PUT(
-      new Request("http://localhost/api/content/contact", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: existing.id,
-          slug: "contact",
-          title: "Contact Normalized",
-        }),
-      }),
-      { params: Promise.resolve({ slug: "contact" }) }
-    );
+    const res = await put({ id: tempSlug, slug: tempSlug, title: "API Normalized" });
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(data.title).toBe("Contact Normalized");
+    expect(data.title).toBe("API Normalized");
     expect(Array.isArray(data.blocks)).toBe(true);
     expect(Array.isArray(data.leftBlocks)).toBe(true);
     expect(Array.isArray(data.rightBlocks)).toBe(true);
     expect(data.updatedAt).toBeDefined();
-
-    await PUT(
-      new Request("http://localhost/api/content/contact", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(existing),
-      }),
-      { params: Promise.resolve({ slug: "contact" }) }
-    );
   });
 
   it("PUT accepts page with empty blocks array", async () => {
-    const existingRes = await GET(new Request("http://localhost/api/content/contact"), {
-      params: Promise.resolve({ slug: "contact" }),
-    });
-    const existing: Page = await existingRes.json();
-    const emptyBlocksPage: Page = {
-      ...existing,
-      blocks: [],
-    };
-
-    const res = await PUT(
-      new Request("http://localhost/api/content/contact", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(emptyBlocksPage),
-      }),
-      { params: Promise.resolve({ slug: "contact" }) }
-    );
+    const res = await put({ ...temp, blocks: [] });
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.blocks).toEqual([]);
-
-    await PUT(
-      new Request("http://localhost/api/content/contact", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(existing),
-      }),
-      { params: Promise.resolve({ slug: "contact" }) }
-    );
   });
 });

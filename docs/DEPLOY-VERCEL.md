@@ -107,14 +107,14 @@ Covered by [src/proxy.test.ts](../src/proxy.test.ts).
 
 ## Phase 3 — Push to GitHub
 
-The repo currently has **no remote** and is on branch `experiment`.
+The repo currently has **no remote** and is on branch `main`.
 
 ```bash
-# Create the repo on github.com (or: gh repo create cms-experiment --private --source=. --push)
-git remote add origin https://github.com/YOUR_USER/cms-experiment.git
+# Create the repo on github.com (or: gh repo create wysiwyg-cms --private --source=. --push)
+git remote add origin https://github.com/YOUR_USER/wysiwyg-cms.git
 git add -A
 git commit -m "Deploy prep: Postgres adapter, admin auth"
-git push -u origin experiment
+git push -u origin main
 ```
 
 Notes:
@@ -136,7 +136,7 @@ Notes:
    the project. This injects `DATABASE_URL` automatically for all environments.
 3. Add the remaining environment variable under **Settings → Environment Variables**:
    - `ADMIN_PASSWORD` — any strong value (Production + Preview).
-4. Set the production branch to `experiment` under **Settings → Git**, or merge to `main` first.
+4. The production branch is `main`, which is Vercel's default — no change needed.
 5. Deploy. `prisma migrate deploy` in the build step creates the `Page` table on first run.
 
 ---

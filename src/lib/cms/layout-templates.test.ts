@@ -34,9 +34,12 @@ describe("layout-templates", () => {
     expect(positions).toContain("navigation");
     expect(positions).toContain("showcase-a");
     expect(positions).toContain("main");
-    expect(positions).toContain("left");
-    expect(positions).toContain("right");
+    expect(positions).not.toContain("left");
+    expect(positions).not.toContain("right");
     expect(positions).toContain("footer-a");
+    const mainbody = t.rows.find((r) => r.positions.includes("main"));
+    expect(mainbody?.positions).toEqual(["main"]);
+    expect(mainbody?.gridClassName).toContain("grid-cols-1");
   });
 
   it("isContentPosition identifies main, left, right", () => {
@@ -49,6 +52,14 @@ describe("layout-templates", () => {
 
   it("CONTENT_POSITIONS lists main, left, right", () => {
     expect(CONTENT_POSITIONS).toEqual(["main", "left", "right"]);
+  });
+
+  it("getRowGridClassName returns empty string when no positions visible", () => {
+    const row = {
+      gridClassName: "grid grid-cols-1 sm:grid-cols-3 gap-2",
+      positions: ["a", "b", "c"],
+    };
+    expect(getRowGridClassName(row, 0)).toBe("");
   });
 
   it("getRowGridClassName returns row class when all positions visible", () => {

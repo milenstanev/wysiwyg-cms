@@ -11,13 +11,20 @@ datasource db {
 }
 
 model Page {
-  id              String   @id
-  slug            String   @unique
+  id              String    @id
+  slug            String    @unique
   title           String
-  layout          String?  @default("single")
-  blocks          String   // JSON: ContentBlock[]
-  leftBlocks      String?  // JSON: ContentBlock[]
-  rightBlocks     String?  // JSON: ContentBlock[]
-  positionBlocks  String?  // JSON: Record<string, ContentBlock[]> (utility-a, showcase-b, etc.)
-  updatedAt       DateTime @updatedAt
+  layout          String?   @default("single")
+  blocks          String // JSON: ContentBlock[]
+  leftBlocks      String? // JSON: ContentBlock[]
+  rightBlocks     String? // JSON: ContentBlock[]
+  positionBlocks  String? // JSON: Record<string, ContentBlock[]> (utility-a, showcase-b, etc.)
+  mainComponent   String?   @default("content")
+  leftComponent   String?   @default("content")
+  rightComponent  String?   @default("content")
+  modules         String? // JSON: PageModuleAssignment[]
+  status          String?   @default("published")
+  publishedAt     DateTime?
+  seo             String? // JSON: PageSeo
+  updatedAt       DateTime  @updatedAt
 }

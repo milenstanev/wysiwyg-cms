@@ -41,9 +41,10 @@ export function ContentBlock({ block, editable, onEdit, onBlockUpdate }: Content
   const content = safeContent(block);
 
   if (block.type === "heading") {
-    const level = getBlockSettingOrDefault(block, "level", "1") as string;
-    const Tag = level === "3" ? "h3" : level === "2" ? "h2" : "h1";
-    const sizeClass = level === "3" ? "text-xl" : level === "2" ? "text-2xl" : "text-3xl";
+    // Legacy level "1" renders as h2: the page title is the page's only h1
+    const level = getBlockSettingOrDefault(block, "level", "2") as string;
+    const Tag = level === "4" ? "h4" : level === "3" ? "h3" : "h2";
+    const sizeClass = level === "4" ? "text-lg" : level === "3" ? "text-xl" : "text-2xl";
     return (
       <Tag
         contentEditable={editable}
@@ -71,8 +72,9 @@ export function ContentBlock({ block, editable, onEdit, onBlockUpdate }: Content
 
   if (block.type === "image") {
     const alt = getBlockSettingOrDefault(block, "alt", "") as string;
+    // Image URL is edited from the block popover so the card keeps its view-mode size.
     return (
-      <div className="space-y-2">
+      <div className="space-y-[var(--space-2)]">
         {content ? (
           <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-zinc-100">
             <Image
@@ -85,16 +87,6 @@ export function ContentBlock({ block, editable, onEdit, onBlockUpdate }: Content
                 (e.target as HTMLImageElement).style.display = "none";
               }}
             />
-          </div>
-        ) : null}
-        {editable ? (
-          <div
-            contentEditable
-            suppressContentEditableWarning
-            onInput={handleInput}
-            className="text-sm text-zinc-500 outline-none min-h-[1.5rem]"
-          >
-            {content}
           </div>
         ) : null}
       </div>

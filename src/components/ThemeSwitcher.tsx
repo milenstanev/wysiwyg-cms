@@ -10,7 +10,7 @@ export function ThemeSwitcher() {
   });
 
   return (
-    <label className="inline-flex items-center gap-2 text-sm text-[var(--muted)]">
+    <label className="inline-flex items-center gap-[var(--space-2)] text-sm text-[var(--muted)]">
       <span className="sr-only">Theme</span>
       <span
         className="size-2 rounded-full bg-[var(--accent)] ring-2 ring-[var(--surface)]"
@@ -24,7 +24,7 @@ export function ThemeSwitcher() {
           applyTheme(next);
         }}
         aria-label="Choose theme"
-        className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--foreground)]"
+        className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-[var(--space-3)] py-[var(--space-2)] text-xs font-semibold uppercase tracking-[0.1em] text-[var(--foreground)]"
       >
         {THEMES.map((t) => (
           <option key={t.id} value={t.id} title={t.note}>

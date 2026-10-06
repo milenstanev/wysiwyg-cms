@@ -1,5 +1,5 @@
 {
-  "name": "cms-experiment",
+  "name": "wysiwyg-cms",
   "version": "0.1.0",
   "private": true,
   "prisma": {
@@ -12,6 +12,7 @@
     "dev:docker:logs": "docker compose -f docker-compose.dev.yml logs -f",
     "dev:docker:seed": "docker compose -f docker-compose.dev.yml exec web npm run db:seed",
     "db:seed": "npx prisma db seed",
+    "db:reset-content": "npx tsx prisma/seed.ts --reset",
     "build": "prisma migrate deploy && prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
@@ -20,6 +21,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:a11y": "vitest run src/lib/theme-contrast.test.ts && playwright test e2e/accessibility.spec.ts",
     "test:e2e:ui": "playwright test --ui",
     "verify": "npm run test && npm run build"
   },
@@ -35,6 +37,7 @@
     "react-grid-layout": "^2.2.2"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",

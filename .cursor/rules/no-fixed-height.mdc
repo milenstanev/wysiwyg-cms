@@ -1,0 +1,34 @@
+---
+description: Avoid fixed heights unless necessary; content must size naturally and not clip
+alwaysApply: true
+---
+
+# No Fixed Height (Unless Necessary)
+
+Prefer content-sized layout. Do not set a fixed `height` on containers that wrap variable content.
+
+## Prefer
+
+- Auto / content height (normal document flow, flex stack, `height: auto`) — **view and edit**
+- `min-height` only for empty states or minimum touch targets
+- Do not use absolute grid libraries that assign fixed px heights unless measure is proven stable
+
+## Do not
+
+- Hardcode block/card/section `height` or `h-*` that clips children
+- Use `overflow: hidden` + fixed height on content wrappers (causes overlap/clipping)
+- Default every block to the same fixed grid height
+- Ship edit mode with a different height model than view without edit-mode tests
+
+## Necessary exceptions
+
+- Media with intrinsic ratio (`aspect-video`)
+- Explicit user resize in the block editor
+- Decorative chrome (1px rules, fixed icon boxes)
+- Library APIs that require numeric row units (keep them content-driven)
+
+## Tests
+
+- View mode: blocks must not use fixed inline height; content must not clip
+- Edit mode: after layout settles, block height must fit `.block-body` (no clip / overlap)
+- Stacked blocks must not overlap in **both** view and edit

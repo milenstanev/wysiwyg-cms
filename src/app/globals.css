@@ -12,6 +12,7 @@
 /* Transitions only after mount so blocks don't "resize" on refresh */
 .block-grid-layout .react-grid-item {
   transition: none;
+  overflow: visible;
 }
 .block-grid-layout.block-grid-ready .react-grid-item.cssTransforms {
   transition-property: transform, width, height;
@@ -20,99 +21,184 @@
 }
 
 /*
-  Design tokens — switch via html[data-theme]. Palettes:
-  pebble  — original studio gray
-  atelier — terracotta / sage (warm paper, Coolors-style “earth”)
-  harbor  — sand + teal coastal landing
-  nord    — Nord Theme (MIT, https://www.nordtheme.com)
-  ink     — charcoal + gold night
+  Design tokens — switch via html[data-theme]. Palettes follow theme-color-harmony:
+  editorial — monochrome studio (flat)
+  pebble    — cool gray + single blue family (flat)
+  atelier   — earth terracotta/sage + title/header gradients
+  harbor    — teal coast, coral complement + gradients
+  nord      — Nord frost/aurora + gradients
+  ink       — charcoal + gold night + gradients
+  gallery   — white canvas + cream mat + charcoal (flat, Lattice-like)
 */
+/*
+  Spacing scale (8pt). Use these tokens everywhere — do not invent one-off rem values.
+  1=4px 2=8px 3=12px 4=16px 5=24px 6=32px 7=48px 8=64px 9=96px
+*/
+:root {
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+
+  --layout-gap-sm: var(--space-4);
+  --layout-gap-md: var(--space-5);
+  --layout-gap-lg: var(--space-6);
+  --layout-gap-xl: var(--space-7);
+  --layout-gap-2xl: var(--space-8);
+
+  /* Proximity ladder: heading → its content < block → block < section → section ≤ title → content */
+  --page-vertical-padding: var(--space-5);
+  --page-header-gap: var(--space-6);
+  --page-title-gap: var(--space-6);
+  --section-gap: var(--space-6);
+  --block-gap: var(--space-5);
+  --heading-gap: var(--space-3);
+  --card-padding: var(--space-5);
+  --footer-gap: var(--space-7);
+  /* Comfortable reading line length (45–75 characters) */
+  --measure: 68ch;
+  /* Inverse surfaces (dark utility / nav / footer rows). Resolved here so every theme gets its own
+     pair; rows remap --foreground / --muted / --border to these so nested blocks keep AA contrast. */
+  --inverse-bg: color-mix(in srgb, var(--foreground) 90%, var(--surface));
+  --inverse-fg: var(--surface);
+  --inverse-muted: color-mix(in srgb, var(--surface) 78%, var(--foreground));
+  --inverse-border: color-mix(in srgb, var(--surface) 22%, var(--foreground));
+  /* Form-field edges must reach 3:1 (WCAG 1.4.11); --border is decorative and much lighter */
+  --control-border: color-mix(in srgb, var(--foreground) 55%, var(--surface));
+}
+
 html[data-theme="editorial"] {
   --background: #f4f1eb;
   --foreground: #181817;
   --surface: #fffefb;
   --border: #d6d0c7;
-  --muted: #6f6a63;
+  --muted: #5c574f;
   --accent: #181817;
-  --content-accent: #181817;
-  --sidebar-left-accent: #a59d91;
+  --on-accent: #fffefb;
+  --content-accent: #3f3c38;
+  --sidebar-left-accent: #8a8278;
   --sidebar-right-accent: #181817;
+  --title-gradient: none;
+  --header-gradient: none;
+  --theme-font-sans: var(--font-editorial-sans), "Source Sans 3", ui-sans-serif, sans-serif;
+  --theme-font-display: var(--font-editorial-display), Literata, Georgia, serif;
   --card-radius: 0.25rem;
-  --card-padding: clamp(1.5rem, 4vw, 3rem);
   --card-shadow: 0 12px 40px rgb(24 24 23 / 0.06);
   --card-border: 1px solid var(--border);
-  --layout-gap-sm: 1rem;
-  --layout-gap-md: 1.5rem;
-  --layout-gap-lg: 2rem;
-  --layout-gap-xl: 2.5rem;
-  --layout-gap-2xl: 3rem;
-  --page-vertical-padding: 1.5rem;
-  --page-header-gap: 5rem;
+  --page-header-gap: var(--space-7);
+  --page-title-gap: var(--space-7);
 }
 
 :root,
 [data-theme="pebble"] {
-  --background: #fafafa;
+  /* Cool graphite + single blue family (no amber/purple clash) */
+  --background: #f4f4f5;
   --foreground: #18181b;
   --surface: #ffffff;
   --border: #e4e4e7;
-  --muted: #71717a;
+  --muted: #52525b;
   --accent: #2563eb;
-  --content-accent: #f59e0b;
-  --sidebar-left-accent: #0ea5e9;
-  --sidebar-right-accent: #8b5cf6;
+  --on-accent: #ffffff;
+  --content-accent: #1d4ed8;
+  --sidebar-left-accent: #3b82f6;
+  --sidebar-right-accent: #1e3a8a;
+  --title-gradient: none;
+  --header-gradient: none;
+  --theme-font-sans: var(--font-pebble-sans), "DM Sans", ui-sans-serif, sans-serif;
+  --theme-font-display: var(--font-pebble-sans), "DM Sans", ui-sans-serif, sans-serif;
   --card-radius: 1.25rem;
-  --card-padding: clamp(1.25rem, 3vw, 2rem);
   --card-shadow: 0 8px 30px 0 rgb(0 0 0 / 0.06);
   --card-border: 1px solid var(--border);
-  --layout-gap-sm: 1rem;
-  --layout-gap-md: 1.5rem;
-  --layout-gap-lg: 2rem;
-  --layout-gap-xl: 2.5rem;
-  --layout-gap-2xl: 3rem;
-  --page-vertical-padding: 2rem;
-  --page-header-gap: 2rem;
 }
 
-/* Warm cream, terracotta, sage — restaurant / atelier landing look */
+/* Warm cream, terracotta, sage — one earth family */
 [data-theme="atelier"] {
-  --background: #f4f1de;
-  --foreground: #3d405b;
+  --background: #f7f3e8;
+  --foreground: #2f3144;
   --surface: #fffcf5;
-  --border: #e0d6c2;
-  --muted: #7a7264;
-  --accent: #e07a5f;
-  --content-accent: #e07a5f;
-  --sidebar-left-accent: #81b29a;
+  --border: #ddd2bc;
+  --muted: #6b6458;
+  /* Deeper terracotta: AA as text on cream and under #fffcf5; the lighter tone stays for decorative chrome */
+  --accent: #ad4e2c;
+  --on-accent: #fffcf5;
+  --content-accent: #c96442;
+  --sidebar-left-accent: #6f9b84;
   --sidebar-right-accent: #3d405b;
+  --title-gradient: linear-gradient(
+    115deg,
+    #2f3144 0%,
+    #c96442 55%,
+    #81b29a 120%
+  );
+  --header-gradient: linear-gradient(
+    105deg,
+    color-mix(in srgb, var(--surface) 88%, #c96442) 0%,
+    color-mix(in srgb, var(--surface) 92%, #81b29a) 100%
+  );
+  --theme-font-sans: var(--font-editorial-sans), "Source Sans 3", ui-sans-serif, sans-serif;
+  --theme-font-display: var(--font-atelier-display), Fraunces, Georgia, serif;
   --card-shadow: 0 2px 8px 0 rgb(61 64 91 / 0.08);
 }
 
-/* Coastal: sand ground, deep teal, coral stripe */
+/* Coastal: sand + teal brand; coral as restrained complement */
 [data-theme="harbor"] {
   --background: #eef3f0;
-  --foreground: #143642;
+  --foreground: #0f2d36;
   --surface: #fbfaf6;
-  --border: #c9d6d1;
-  --muted: #5c7178;
-  --accent: #1d6a7a;
-  --content-accent: #c45c3e;
-  --sidebar-left-accent: #1d6a7a;
-  --sidebar-right-accent: #4a7c59;
+  --border: #c5d4ce;
+  --muted: #4a6068;
+  --accent: #176574;
+  --on-accent: #fbfaf6;
+  --content-accent: #b5523a;
+  --sidebar-left-accent: #176574;
+  --sidebar-right-accent: #3f7350;
+  --title-gradient: linear-gradient(
+    120deg,
+    #0f2d36 10%,
+    #176574 55%,
+    #b5523a 130%
+  );
+  --header-gradient: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--surface) 86%, #176574) 0%,
+    color-mix(in srgb, var(--surface) 90%, #b5523a) 100%
+  );
+  --theme-font-sans: var(--font-harbor-sans), Outfit, ui-sans-serif, sans-serif;
+  --theme-font-display: var(--font-harbor-display), "Source Serif 4", Georgia, serif;
   --card-shadow: 0 1px 4px 0 rgb(20 54 66 / 0.08);
 }
 
-/* Polar night + frost + aurora — Nord (https://www.nordtheme.com) */
+/* Polar night + frost + aurora — Nord-aligned, better muted contrast */
 [data-theme="nord"] {
   --background: #eceff4;
   --foreground: #2e3440;
   --surface: #ffffff;
   --border: #d8dee9;
-  --muted: #4c566a;
-  --accent: #5e81ac;
+  --muted: #434c5e;
+  /* Nord10 deepened one step: AA as text on snow and under #eceff4 (Nord10 itself is 3.5:1) */
+  --accent: #4c6a92;
+  --on-accent: #eceff4;
   --content-accent: #d08770;
   --sidebar-left-accent: #88c0d0;
   --sidebar-right-accent: #b48ead;
+  --title-gradient: linear-gradient(
+    118deg,
+    #2e3440 0%,
+    #5e81ac 50%,
+    #88c0d0 100%
+  );
+  --header-gradient: linear-gradient(
+    95deg,
+    color-mix(in srgb, var(--surface) 88%, #5e81ac) 0%,
+    color-mix(in srgb, var(--surface) 90%, #88c0d0) 100%
+  );
+  --theme-font-sans: var(--font-nord-sans), "IBM Plex Sans", ui-sans-serif, sans-serif;
+  --theme-font-display: var(--font-nord-display), "IBM Plex Serif", Georgia, serif;
   --card-shadow: 0 1px 3px 0 rgb(46 52 64 / 0.08);
 }
 
@@ -122,12 +208,49 @@ html[data-theme="editorial"] {
   --foreground: #f3ede3;
   --surface: #1c1916;
   --border: #3a342e;
-  --muted: #a89f93;
+  --muted: #b7aea0;
   --accent: #d4a054;
+  --on-accent: #1c1916;
   --content-accent: #d4a054;
-  --sidebar-left-accent: #6b8f71;
+  --sidebar-left-accent: #7a9a7e;
   --sidebar-right-accent: #c4785b;
+  --title-gradient: linear-gradient(
+    115deg,
+    #f3ede3 0%,
+    #d4a054 48%,
+    #c4785b 100%
+  );
+  --header-gradient: linear-gradient(
+    105deg,
+    color-mix(in srgb, var(--surface) 82%, #d4a054) 0%,
+    color-mix(in srgb, var(--surface) 88%, #3a342e) 100%
+  );
+  --theme-font-sans: var(--font-ink-sans), Karla, ui-sans-serif, sans-serif;
+  --theme-font-display: var(--font-ink-display), "Cormorant Garamond", Georgia, serif;
   --card-shadow: 0 1px 8px 0 rgb(0 0 0 / 0.45);
+}
+
+/* Gallery: white canvas, cream mat, charcoal — Lattice-like flat mono */
+html[data-theme="gallery"] {
+  --background: #ffffff;
+  --foreground: #111111;
+  --surface: #f2efe8;
+  --border: #d9d4cb;
+  --muted: #5c5c5c;
+  --accent: #313131;
+  --on-accent: #ffffff;
+  --content-accent: #111111;
+  --sidebar-left-accent: #8a857c;
+  --sidebar-right-accent: #313131;
+  --title-gradient: none;
+  --header-gradient: none;
+  --theme-font-sans: var(--font-harbor-sans), Outfit, ui-sans-serif, sans-serif;
+  --theme-font-display: var(--font-gallery-display), Forum, Georgia, serif;
+  --card-radius: 0;
+  --card-shadow: none;
+  --card-border: 1px solid var(--border);
+  --page-header-gap: var(--space-7);
+  --page-title-gap: var(--space-6);
 }
 
 @theme inline {
@@ -137,14 +260,15 @@ html[data-theme="editorial"] {
   --color-border: var(--border);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--theme-font-sans);
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --font-display: Iowan Old Style, Baskerville, Times New Roman, serif;
+  --font-display: var(--theme-font-display);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family: var(--theme-font-sans);
   min-height: 100vh;
   transition:
     background-color 220ms ease,
@@ -155,10 +279,69 @@ body {
   background: color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
+/* ========== Accessibility baseline ==========
+   Unlayered, so it wins over Tailwind's `outline-none` utilities: every keyboard focus is visible
+   (WCAG 2.4.7 / 2.4.11). An outline never changes layout, so edit mode stays zero-shift. */
+:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
+}
+
+/* Text fields and selects are identified by their edge, so it must meet 3:1 (WCAG 1.4.11) */
+:where(input:not([type="checkbox"], [type="radio"], [type="range"]), select, textarea) {
+  border-color: var(--control-border);
+}
+
+/* Keep focused / scrolled-to elements clear of the sticky header and the fixed editor bar (WCAG 2.4.11) */
+/* Same in view and edit, so toggling edit mode never changes scroll behaviour */
+html {
+  scroll-padding-top: var(--space-9);
+  scroll-padding-bottom: var(--space-9);
+}
+
+/* The skip target receives programmatic focus only; it needs no ring */
+#main-content:focus {
+  outline: none;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 50;
+  top: var(--space-2);
+  left: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--space-2);
+  background: var(--foreground);
+  color: var(--background);
+  font-weight: 600;
+}
+
+/* Visually hidden until focused (stays in the accessibility tree and the Tab order) */
+.skip-link:not(:focus) {
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* clip, not hidden: hidden makes the shell a scroll container, which offsets and un-sticks the sticky header */
 .site-shell {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .site-shell::before,
@@ -186,10 +369,12 @@ body {
   background: var(--content-accent);
 }
 
+/* Stacking: block edit chrome (30–35) < sticky header (36) < editor bar (40) */
 .site-header {
+  z-index: 36;
   border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
-  border-radius: 1rem;
-  padding: 0.75rem 1rem;
+  border-radius: var(--space-4);
+  padding: var(--space-3) var(--space-4);
   background: color-mix(in srgb, var(--surface) 82%, transparent);
   box-shadow: 0 12px 36px rgb(0 0 0 / 0.06);
   backdrop-filter: blur(18px);
@@ -198,9 +383,9 @@ body {
 .site-brand {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.55rem;
+  gap: var(--space-2);
   color: var(--foreground);
-  font-family: var(--font-display);
+  font-family: var(--theme-font-display);
   font-size: 1.35rem;
   line-height: 1;
   letter-spacing: -0.035em;
@@ -208,7 +393,7 @@ body {
 }
 
 .site-brand span {
-  font-family: var(--font-sans);
+  font-family: var(--theme-font-sans);
   font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.22em;
@@ -216,7 +401,7 @@ body {
 
 .site-nav-link {
   position: relative;
-  padding-block: 0.25rem;
+  padding-block: var(--space-1);
   transition: color 160ms ease;
 }
 
@@ -241,31 +426,85 @@ body {
 
 .page-content {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--section-gap);
 }
 
+/* Title → content totals --page-title-gap: the flex gap supplies --section-gap, the margin adds the rest */
 .page-title {
   max-width: 18ch;
-  margin-bottom: 0.25rem;
-  font-family: var(--font-display);
-  font-size: clamp(3rem, 8vw, 6.75rem);
+  margin: 0 0 calc(var(--page-title-gap) - var(--section-gap));
+  overflow-wrap: break-word;
+  font-family: var(--theme-font-display);
+  font-size: clamp(2.75rem, 7vw, 5.5rem);
   font-weight: 400;
-  line-height: 0.88;
+  line-height: 0.92;
   letter-spacing: -0.065em;
+  color: var(--foreground);
 }
 
 .page-title::before {
   display: block;
   width: 4.5rem;
   height: 1px;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-4);
   border-radius: 9999px;
-  background: var(--accent);
+  background: var(--content-accent);
   content: "";
+}
+
+/* Gradient titles + brand (atelier, harbor, nord, ink) */
+html[data-theme="atelier"] .page-title,
+html[data-theme="harbor"] .page-title,
+html[data-theme="nord"] .page-title,
+html[data-theme="ink"] .page-title {
+  background-image: var(--title-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+html[data-theme="atelier"] .page-title::before,
+html[data-theme="harbor"] .page-title::before,
+html[data-theme="nord"] .page-title::before,
+html[data-theme="ink"] .page-title::before {
+  background: var(--title-gradient);
+  height: 3px;
+  width: 5.5rem;
+}
+
+html[data-theme="atelier"] .site-brand,
+html[data-theme="harbor"] .site-brand,
+html[data-theme="nord"] .site-brand,
+html[data-theme="ink"] .site-brand {
+  background-image: var(--title-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+html[data-theme="atelier"] .site-brand span,
+html[data-theme="harbor"] .site-brand span,
+html[data-theme="nord"] .site-brand span,
+html[data-theme="ink"] .site-brand span {
+  color: color-mix(in srgb, var(--foreground) 55%, var(--accent));
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+}
+
+html[data-theme="atelier"] .site-header,
+html[data-theme="harbor"] .site-header,
+html[data-theme="nord"] .site-header,
+html[data-theme="ink"] .site-header {
+  background: var(--header-gradient);
+  border-color: color-mix(in srgb, var(--border) 70%, var(--accent));
 }
 
 .page-content h2,
 .page-content h3 {
-  font-family: var(--font-display);
+  font-family: var(--theme-font-display);
   letter-spacing: -0.025em;
 }
 
@@ -304,6 +543,39 @@ body {
 
 [data-theme="editorial"] .site-footer a:hover {
   color: #ffffff;
+}
+
+[data-theme="gallery"] .site-header {
+  border-inline: 0;
+  border-top: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  box-shadow: none;
+  background: color-mix(in srgb, var(--background) 94%, transparent);
+}
+
+[data-theme="gallery"] .site-brand {
+  letter-spacing: 0.12em;
+}
+
+[data-theme="gallery"] .layout-content-card {
+  border-top-width: 1px;
+  background: var(--surface);
+}
+
+[data-theme="gallery"] .layout-content-card:hover {
+  box-shadow: none;
+  transform: none;
+}
+
+[data-theme="gallery"] .site-footer {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+[data-theme="gallery"] .site-footer > div {
+  color: var(--muted);
 }
 
 /* Layout regions — override in your CSS or change :root tokens */
@@ -354,58 +626,318 @@ body {
   );
 }
 
+/* Blocks are flat content inside their region (main card, sidebar, module cell): no card per block,
+   so containers never nest more than two deep. Size to content — never clip children. */
+.content-block {
+  overflow: visible;
+}
+
+/* A heading belongs to the block after it: pull that block closer than the normal block gap */
+.block-unit-after-heading {
+  margin-top: calc(var(--heading-gap) - var(--block-gap));
+}
+
+/* A heading that opens a new group gets section-sized space above it */
+.block-unit-heading {
+  margin-top: calc(var(--section-gap) - var(--block-gap));
+}
+
+.block-column,
+.block-unit {
+  position: relative;
+  min-width: 0;
+}
+
+.block-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--block-gap);
+}
+
+/* ========== Edit chrome (WYSIWYG) ==========
+   Every edit control is absolutely positioned: zero layout footprint, so content
+   boxes are identical in view and edit. Outlines never affect layout. */
+.is-editing .block-unit:hover {
+  outline: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: var(--space-1);
+  border-radius: var(--card-radius);
+}
+
+.edit-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-width: var(--space-5);
+  height: var(--space-5);
+  padding-inline: var(--space-1);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1;
+  box-shadow: var(--card-shadow);
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    border-color 120ms ease;
+}
+
+.edit-chip:hover,
+.edit-chip:focus-visible {
+  color: var(--foreground);
+  border-color: var(--accent);
+}
+
+.edit-chip-wide {
+  padding-inline: var(--space-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.edit-popover {
+  position: absolute;
+  z-index: 30;
+}
+
+.edit-popover:hover,
+.edit-popover:focus-within,
+.edit-popover[data-open] {
+  z-index: 35;
+}
+
+/* Chips sit in the region's padding gutter (--card-padding), beside the flat block, not over its text */
+.block-controls {
+  top: 0;
+  right: calc(-1 * var(--space-5));
+}
+
+.block-region-add {
+  position: absolute;
+  z-index: 30;
+  top: calc(-1 * var(--space-5));
+  left: calc(-1 * var(--space-5));
+}
+
+.empty-sections-menu {
+  top: 0;
+  right: 0;
+}
+
+/* Bridge padding keeps hover alive while the pointer travels from chip to menu */
+.edit-popover-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 11rem;
+  padding: var(--space-1);
+  margin-top: var(--space-1);
+  border: 1px solid var(--border);
+  border-radius: var(--space-2);
+  background: var(--surface);
+  box-shadow:
+    var(--card-shadow),
+    0 12px 32px rgb(0 0 0 / 0.12);
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 120ms ease,
+    visibility 0s linear 120ms;
+}
+
+.edit-popover-menu::before {
+  position: absolute;
+  inset: calc(-1 * var(--space-2)) 0 auto 0;
+  height: var(--space-2);
+  content: "";
+}
+
+.edit-popover:hover .edit-popover-menu,
+.edit-popover:focus-within .edit-popover-menu,
+.edit-popover[data-open] .edit-popover-menu {
+  visibility: visible;
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+/* Escape dismissed it (WCAG 1.4.13): stays hidden until pointer / focus leaves or the chip is pressed */
+.edit-popover[data-dismissed] .edit-popover-menu {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.edit-menu-heading {
+  padding: var(--space-1) var(--space-2);
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.edit-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--space-1);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.edit-menu-item:hover,
+.edit-menu-item:focus-visible {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+.edit-menu-danger {
+  color: #b91c1c;
+}
+
+.edit-menu-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-5);
+  color: var(--muted);
+}
+
+.edit-menu-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.edit-menu-field input {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--space-1);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 0.875rem;
+}
+
+/* List item remove: overlays the row end, shown on row hover */
+.edit-inline-remove {
+  position: absolute;
+  top: 0;
+  right: 0;
+  visibility: hidden;
+}
+
+.group:hover > .edit-inline-remove,
+.edit-inline-remove:focus-visible {
+  visibility: visible;
+}
+
+.editor-bar {
+  position: fixed;
+  z-index: 40;
+  bottom: var(--space-4);
+  left: 50%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  max-width: calc(100vw - var(--space-6));
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: 0 12px 36px rgb(0 0 0 / 0.16);
+  backdrop-filter: blur(12px);
+  transform: translateX(-50%);
+}
+
+.block-body {
+  overflow-wrap: break-word;
+}
+
+.block-body p {
+  max-width: var(--measure);
+}
+
+/* Browsers give contenteditable its own wrapping defaults; pin them so edit text wraps like view */
+.page-content [contenteditable] {
+  overflow-wrap: break-word;
+  line-break: auto;
+}
+
 /* ========== RocketTheme-style template sections ==========
    Applies when PageRenderer uses rockettheme template (class + data-template).
    Each row gets a distinct look: utility bar, header, nav, showcase, etc. */
 
 .layout-template-rockettheme .rockettheme-row,
 [data-template="rockettheme"] .rockettheme-row {
-  margin-left: -0.5rem;
-  margin-right: -0.5rem;
+  margin-left: calc(-1 * var(--space-2));
+  margin-right: calc(-1 * var(--space-2));
+}
+
+/* Dark rows: remap text tokens so blocks inside (which use --foreground / --muted) stay readable */
+.rockettheme-utility,
+.rockettheme-nav,
+.rockettheme-footer {
+  --foreground: var(--inverse-fg);
+  --muted: var(--inverse-muted);
+  --border: var(--inverse-border);
+  --accent: var(--inverse-fg);
+  --on-accent: var(--inverse-bg);
+  background: var(--inverse-bg);
+  color: var(--foreground);
 }
 
 .layout-template-rockettheme .rockettheme-utility,
 [data-template="rockettheme"] .rockettheme-utility {
-  background: color-mix(in srgb, var(--foreground) 88%, var(--surface));
-  color: var(--surface);
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--space-2);
   font-size: 0.875rem;
   border: 1px solid var(--border);
 }
 
 .layout-template-rockettheme .rockettheme-utility [data-module-position],
 [data-template="rockettheme"] .rockettheme-utility [data-module-position] {
-  min-height: 2rem;
+  min-height: var(--space-6);
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
 }
 
 .layout-template-rockettheme .rockettheme-header,
 [data-template="rockettheme"] .rockettheme-header {
   background: color-mix(in srgb, var(--surface) 92%, var(--content-accent));
-  padding: 1.25rem 1.5rem;
+  padding: var(--space-4) var(--space-5);
   border: 1px solid var(--border);
-  border-radius: 0.5rem;
+  border-radius: var(--space-2);
   border-left: 4px solid var(--content-accent);
   box-shadow: var(--card-shadow);
 }
 
 .layout-template-rockettheme .rockettheme-header [data-module-position],
 [data-template="rockettheme"] .rockettheme-header [data-module-position] {
-  min-height: 3rem;
+  min-height: var(--space-7);
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   font-weight: 600;
   color: var(--muted);
 }
 
 .layout-template-rockettheme .rockettheme-nav,
 [data-template="rockettheme"] .rockettheme-nav {
-  background: var(--foreground);
-  color: var(--surface);
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--space-1);
   border: 1px solid var(--border);
 }
 
@@ -413,13 +945,15 @@ body {
 [data-template="rockettheme"] .rockettheme-nav [data-module-position] {
   min-height: 2.5rem;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   font-size: 0.9375rem;
 }
 
 .layout-template-rockettheme .rockettheme-showcase,
 [data-template="rockettheme"] .rockettheme-showcase {
-  padding: 0.25rem 0;
+  padding: var(--space-1) 0;
 }
 
 .layout-template-rockettheme .rockettheme-showcase [data-module-position],
@@ -427,53 +961,56 @@ body {
   min-height: 5rem;
   background: color-mix(in srgb, var(--content-accent) 22%, var(--surface));
   border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  padding: 1rem;
+  border-radius: var(--space-2);
+  padding: var(--space-4);
   box-shadow: var(--card-shadow);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   font-size: 0.8125rem;
   color: var(--muted);
 }
 
 .layout-template-rockettheme .rockettheme-mainbody,
 [data-template="rockettheme"] .rockettheme-mainbody {
-  padding: 0.5rem 0;
+  padding: var(--space-2) 0;
 }
 
 .layout-template-rockettheme .rockettheme-bottom,
 [data-template="rockettheme"] .rockettheme-bottom {
   background: color-mix(in srgb, var(--muted) 12%, var(--surface));
-  padding: 1rem 1.25rem;
-  border-radius: 0.5rem;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--space-2);
   border: 1px solid var(--border);
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
 }
 
 .layout-template-rockettheme .rockettheme-bottom [data-module-position],
 [data-template="rockettheme"] .rockettheme-bottom [data-module-position] {
   min-height: 3.5rem;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   font-size: 0.875rem;
   color: var(--muted);
 }
 
 .layout-template-rockettheme .rockettheme-footer,
 [data-template="rockettheme"] .rockettheme-footer {
-  background: color-mix(in srgb, var(--foreground) 90%, var(--surface));
-  color: color-mix(in srgb, var(--surface) 72%, var(--muted));
-  padding: 1rem 1.25rem;
-  border-radius: 0.5rem;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--space-2);
   border: 1px solid var(--border);
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
   font-size: 0.8125rem;
 }
 
 .layout-template-rockettheme .rockettheme-footer [data-module-position],
 [data-template="rockettheme"] .rockettheme-footer [data-module-position] {
-  min-height: 3rem;
+  min-height: var(--space-7);
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
 }

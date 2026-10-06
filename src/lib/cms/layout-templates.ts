@@ -43,7 +43,7 @@ const TEMPLATES: LayoutTemplate[] = [
     rows: [
       {
         gridClassName:
-          "grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4 sm:gap-6 md:gap-8 lg:gap-10",
+          "grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-[var(--layout-gap-md)] md:gap-[var(--layout-gap-lg)]",
         positions: ["left", "main"],
         orderClassNames: ["order-2 md:order-1", "order-1 md:order-2"],
       },
@@ -56,7 +56,7 @@ const TEMPLATES: LayoutTemplate[] = [
     rows: [
       {
         gridClassName:
-          "grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] gap-4 sm:gap-6 md:gap-8 lg:gap-10",
+          "grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] gap-[var(--layout-gap-md)] lg:gap-[var(--layout-gap-lg)]",
         positions: ["left", "main", "right"],
         orderClassNames: ["order-2 lg:order-1", "order-1 lg:order-2", "order-3"],
       },
@@ -66,12 +66,12 @@ const TEMPLATES: LayoutTemplate[] = [
     id: "rockettheme",
     name: "RocketTheme-style (complex)",
     description:
-      "Gantry-style: utility bar, header, navigation, showcase row, mainbody + sidebars, bottom band, footer columns.",
+      "Gantry-style: utility bar, header, navigation, showcase row, single-column mainbody, bottom band, footer columns.",
     rows: [
       /* Utility bar — top strip (search, login, etc.) */
       {
         gridClassName:
-          "rockettheme-row rockettheme-utility grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4",
+          "rockettheme-row rockettheme-utility grid grid-cols-1 sm:grid-cols-3 gap-[var(--space-2)] sm:gap-[var(--space-4)]",
         positions: ["utility-a", "utility-b", "utility-c"],
       },
       /* Header — logo / site title area */
@@ -87,26 +87,24 @@ const TEMPLATES: LayoutTemplate[] = [
       /* Showcase / feature — 4 highlight boxes */
       {
         gridClassName:
-          "rockettheme-row rockettheme-showcase grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4",
+          "rockettheme-row rockettheme-showcase grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[var(--space-3)] sm:gap-[var(--space-4)]",
         positions: ["showcase-a", "showcase-b", "showcase-c", "showcase-d"],
       },
-      /* Mainbody — content + sidebars */
+      /* Mainbody — content blocks in one column only */
       {
-        gridClassName:
-          "rockettheme-row rockettheme-mainbody grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] gap-4 sm:gap-6 lg:gap-8",
-        positions: ["left", "main", "right"],
-        orderClassNames: ["order-2 lg:order-1", "order-1 lg:order-2", "order-3"],
+        gridClassName: "rockettheme-row rockettheme-mainbody grid grid-cols-1",
+        positions: ["main"],
       },
       /* Bottom — pre-footer band */
       {
         gridClassName:
-          "rockettheme-row rockettheme-bottom grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4",
+          "rockettheme-row rockettheme-bottom grid grid-cols-1 sm:grid-cols-2 gap-[var(--space-3)] sm:gap-[var(--space-4)]",
         positions: ["bottom-a", "bottom-b"],
       },
       /* Footer — 4-column footer */
       {
         gridClassName:
-          "rockettheme-row rockettheme-footer grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6",
+          "rockettheme-row rockettheme-footer grid grid-cols-2 lg:grid-cols-4 gap-[var(--space-4)] sm:gap-[var(--space-5)]",
         positions: ["footer-a", "footer-b", "footer-c", "footer-d"],
       },
     ],
@@ -133,10 +131,12 @@ const RESPONSIVE_GRID_COLS = /\s*(sm:|md:|lg:)grid-cols-(?:\d+|\[[^\]]+\])/g;
 /**
  * Grid class for a row when only `visibleCount` positions are shown (empty module positions collapsed).
  * Keeps gap/breakpoints from the row and adjusts column count.
+ * Returns "" when nothing is visible (caller should omit the row).
  */
 export function getRowGridClassName(row: LayoutRow, visibleCount: number): string {
+  if (visibleCount <= 0) return "";
   if (visibleCount === row.positions.length) return row.gridClassName;
-  if (visibleCount <= 1) {
+  if (visibleCount === 1) {
     return row.gridClassName.replace(RESPONSIVE_GRID_COLS, "").trim().replace(/\s+/g, " ");
   }
   return row.gridClassName.replace(
