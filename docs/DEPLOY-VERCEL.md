@@ -107,19 +107,15 @@ Covered by [src/proxy.test.ts](../src/proxy.test.ts).
 
 ## Phase 3 — Push to GitHub
 
-The repo currently has **no remote** and is on branch `main`.
+Remote: `https://github.com/milenstanev/wysiwyg-cms` (branch `main`).
 
 ```bash
-# Create the repo on github.com (or: gh repo create wysiwyg-cms --private --source=. --push)
-git remote add origin https://github.com/YOUR_USER/wysiwyg-cms.git
-git add -A
-git commit -m "Deploy prep: Postgres adapter, admin auth"
 git push -u origin main
 ```
 
 Notes:
 
-- `.gitignore` already excludes `.env*` and `*.db`, so no secrets or the local SQLite file are
+- `.gitignore` already excludes `.env*`, `*.db`, and `.vercel`, so no secrets or local DB files are
   pushed. All environment values go into the Vercel dashboard.
 - `server/` (Node + MongoDB API) is tracked but unused by the Next.js app and is not deployed by
   Vercel. Leave it, or split it out per [SUBMODULE.md](../SUBMODULE.md). If it ever becomes a real
@@ -127,17 +123,37 @@ Notes:
 
 ---
 
-## Phase 4 — Create the database and import into Vercel
+## Phase 4 — Vercel project + database (done for this repo)
 
-1. In the Vercel dashboard: **Add New → Project → Import** the GitHub repo. Framework preset is
-   auto-detected as Next.js; root directory `./`; leave build settings at defaults (the
-   `package.json` build script handles Prisma).
-2. **Storage → Create Database → Neon (Postgres)** from the Vercel Marketplace, and connect it to
-   the project. This injects `DATABASE_URL` automatically for all environments.
-3. Add the remaining environment variable under **Settings → Environment Variables**:
-   - `ADMIN_PASSWORD` — any strong value (Production + Preview).
-4. The production branch is `main`, which is Vercel's default — no change needed.
-5. Deploy. `prisma migrate deploy` in the build step creates the `Page` table on first run.
+**Live URL:** [https://wysiwyg-cms.vercel.app](https://wysiwyg-cms.vercel.app)
+
+The Vercel project `wysiwyg-cms` is linked to the GitHub repo. **Native Vercel Git integration**
+deploys on every push — no GitHub Actions / GitLab CI workflow is required (and adding one would
+double-deploy unless you disable Git deploys).
+
+1. Framework preset: Next.js; root `./`; build uses `package.json` (`prisma migrate deploy && …`).
+2. **Storage → Neon (Postgres)** injects `DATABASE_URL` for all environments.
+3. Env vars under **Settings → Environment Variables**:
+   - `ADMIN_PASSWORD` — strong value (Production + Preview).
+4. Production branch: `main`.
+5. `prisma migrate deploy` in the build step creates the `Page` table on first run.
+
+### Optional: CLI / CI deploy without Git integration
+
+Only needed if you disconnect Git and deploy from a pipeline. Create a Vercel token in the
+dashboard, then set these as CI secrets (never commit them):
+
+| Secret | Source |
+| --- | --- |
+| `VERCEL_TOKEN` | Account → Tokens |
+| `VERCEL_ORG_ID` | `.vercel/project.json` → `orgId` (local link) |
+| `VERCEL_PROJECT_ID` | `.vercel/project.json` → `projectId` |
+
+```bash
+npx vercel pull --yes --environment=production
+npx vercel build --prod
+npx vercel deploy --prebuilt --prod
+```
 
 ---
 

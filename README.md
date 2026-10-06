@@ -1,5 +1,9 @@
 # WYSIWYG CMS
 
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=flat&logo=vercel)](https://wysiwyg-cms.vercel.app)
+
+**Live:** [https://wysiwyg-cms.vercel.app](https://wysiwyg-cms.vercel.app)
+
 A decoupled CMS frontend built with Next.js, featuring a WYSIWYG-style admin panel. Content can be stored in Postgres (Prisma) or MongoDB (Node.js API server).
 
 ## Design & architecture
@@ -144,7 +148,9 @@ npm run db:seed
 
 Docker production: `docker compose up -d` (see Option C above).
 
-Vercel: see [docs/DEPLOY-VERCEL.md](docs/DEPLOY-VERCEL.md).
+### Vercel (production)
+
+Production is on **[wysiwyg-cms.vercel.app](https://wysiwyg-cms.vercel.app)**. The GitHub repo is connected to the Vercel project, so pushes to `main` deploy production and other branches get preview URLs. Full setup: [docs/DEPLOY-VERCEL.md](docs/DEPLOY-VERCEL.md).
 
 ## Content Model
 
