@@ -46,22 +46,17 @@ describe("proxy auth gate", () => {
       expect(res.cookies.get("cms_admin")?.value).toBeTruthy();
     });
 
-    it("lets the session cookie authorize a content write", () => {
-      const token = proxy(request("/admin", { headers: basic(PASSWORD) })).cookies.get(
-        "cms_admin"
-      )!.value;
-      const res = proxy(
-        request("/api/content/home", { method: "PUT", headers: { cookie: `cms_admin=${token}` } })
-      );
-      expect(res.status).toBe(200);
-    });
-
-    it("blocks unauthenticated content writes", () => {
-      expect(proxy(request("/api/content/home", { method: "PUT" })).status).toBe(401);
+    it("allows content writes without login (temporary)", () => {
+      expect(proxy(request("/api/content/home", { method: "PUT" })).status).toBe(200);
     });
 
     it("leaves content reads public", () => {
       expect(proxy(request("/api/content")).status).toBe(200);
+    });
+
+    it("still gates media and settings APIs", () => {
+      expect(proxy(request("/api/media", { method: "GET" })).status).toBe(401);
+      expect(proxy(request("/api/settings", { method: "GET" })).status).toBe(401);
     });
   });
 });

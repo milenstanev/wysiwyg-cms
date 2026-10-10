@@ -16,6 +16,7 @@ export interface PageResponse {
   status?: string;
   publishedAt?: string;
   seo?: unknown;
+  columnWidths?: unknown;
   updatedAt: string;
 }
 
@@ -138,6 +139,7 @@ export class PageService {
       status: doc.status ?? "published",
       publishedAt: doc.publishedAt ? new Date(doc.publishedAt).toISOString() : undefined,
       seo: doc.seo,
+      columnWidths: doc.columnWidths,
       updatedAt: doc.updatedAt.toISOString(),
     };
   }

@@ -21,6 +21,6 @@ describe("LayoutSelector", () => {
   it("marks current value as selected (has correct class)", () => {
     render(<LayoutSelector value="three-col" onChange={vi.fn()} />);
     const selected = screen.getByRole("button", { name: "Three columns" });
-    expect(selected).toHaveClass("bg-zinc-900");
+    expect(selected.className).toMatch(/bg-\[var\(--accent\)\]/);
   });
 });

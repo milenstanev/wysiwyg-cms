@@ -75,6 +75,16 @@ export interface PageSeo {
   ogImage?: string;
 }
 
+/**
+ * Relative column weights (CSS `fr`) for two-col / three-col layouts.
+ * Each value is clamped to 1–4 when resolved for rendering.
+ */
+export interface ColumnWidths {
+  left?: number;
+  main?: number;
+  right?: number;
+}
+
 export interface Page {
   id: string;
   slug: string;
@@ -99,5 +109,7 @@ export interface Page {
   publishedAt?: string;
   /** Optional SEO overrides */
   seo?: PageSeo;
+  /** Optional column fr weights for two-col / three-col (ignored on other layouts). */
+  columnWidths?: ColumnWidths;
   updatedAt: string;
 }

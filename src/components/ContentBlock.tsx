@@ -7,6 +7,7 @@ import { BannerBlock } from "./blocks/BannerBlock";
 import { ShowcaseBlock } from "./blocks/ShowcaseBlock";
 import { ListBlock } from "./blocks/ListBlock";
 import { TableBlock } from "./blocks/TableBlock";
+import { RichEditable } from "./editor/RichEditable";
 
 interface ContentBlockProps {
   block: BlockType;
@@ -20,12 +21,6 @@ function safeContent(block: BlockType): string {
 }
 
 export function ContentBlock({ block, editable, onEdit, onBlockUpdate }: ContentBlockProps) {
-  const handleInput = (
-    e: React.FormEvent<HTMLHeadingElement | HTMLParagraphElement | HTMLDivElement>
-  ) => {
-    onEdit?.(block.id, (e.currentTarget as HTMLElement).textContent || "");
-  };
-
   const handleFieldEdit = (field: "title" | "content", value: string) => {
     onBlockUpdate?.(block.id, field === "title" ? { title: value } : { content: value });
   };
@@ -46,27 +41,26 @@ export function ContentBlock({ block, editable, onEdit, onBlockUpdate }: Content
     const Tag = level === "4" ? "h4" : level === "3" ? "h3" : "h2";
     const sizeClass = level === "4" ? "text-lg" : level === "3" ? "text-xl" : "text-2xl";
     return (
-      <Tag
-        contentEditable={editable}
-        suppressContentEditableWarning
-        onInput={handleInput}
+      <RichEditable
+        as={Tag}
+        html={content}
+        editable={editable}
+        onHtmlChange={(html) => onEdit?.(block.id, html)}
         className={`${sizeClass} font-bold text-[var(--foreground)] outline-none`}
-      >
-        {content}
-      </Tag>
+      />
     );
   }
 
   if (block.type === "text") {
+    // div (not p) so lists / quotes from the format toolbar are valid HTML
     return (
-      <p
-        contentEditable={editable}
-        suppressContentEditableWarning
-        onInput={handleInput}
-        className="text-lg text-[var(--muted)] leading-relaxed outline-none"
-      >
-        {content}
-      </p>
+      <RichEditable
+        as="div"
+        html={content}
+        editable={editable}
+        onHtmlChange={(html) => onEdit?.(block.id, html)}
+        className="rich-text-block text-lg text-[var(--muted)] leading-relaxed outline-none"
+      />
     );
   }
 
@@ -76,7 +70,7 @@ export function ContentBlock({ block, editable, onEdit, onBlockUpdate }: Content
     return (
       <div className="space-y-[var(--space-2)]">
         {content ? (
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-zinc-100">
+          <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-[color-mix(in_srgb,var(--muted)_12%,var(--surface))]">
             <Image
               src={content}
               alt={alt}

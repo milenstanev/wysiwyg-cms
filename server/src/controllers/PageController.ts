@@ -85,6 +85,7 @@ export class PageController {
         status: body.status,
         publishedAt: body.publishedAt ? new Date(body.publishedAt) : null,
         seo: body.seo,
+        columnWidths: body.columnWidths,
       });
       res.json(updated);
     } catch {

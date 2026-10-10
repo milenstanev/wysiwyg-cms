@@ -9,6 +9,7 @@ import type {
   PageStatus,
 } from "./types";
 import { LAYOUT_OPTIONS, BLOCK_TYPES, COMPONENT_TYPES, MODULE_IDS, PAGE_STATUSES } from "./types";
+import { ensureColumnWidths } from "./column-widths";
 
 const DEFAULT_LAYOUT: PageLayout = "single";
 const DEFAULT_COMPONENT: ComponentType = "content";
@@ -119,6 +120,7 @@ export function normalizePage(
           ? page.updatedAt
           : undefined,
     seo: ensureSeo(page.seo),
+    columnWidths: ensureColumnWidths(page.columnWidths),
     updatedAt: page.updatedAt,
   };
 }
@@ -165,6 +167,15 @@ export function parseSeoJson(json: string | null | undefined): PageSeo | undefin
   if (json == null || json === "") return undefined;
   try {
     return ensureSeo(JSON.parse(json) as unknown);
+  } catch {
+    return undefined;
+  }
+}
+
+export function parseColumnWidthsJson(json: string | null | undefined) {
+  if (json == null || json === "") return undefined;
+  try {
+    return ensureColumnWidths(JSON.parse(json) as unknown);
   } catch {
     return undefined;
   }

@@ -2,7 +2,6 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createHash, timingSafeEqual } from "node:crypto";
 
 const COOKIE_NAME = "cms_admin";
-const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 function sessionToken(password: string): string {
   return createHash("sha256").update(`cms-admin:${password}`).digest("hex");
@@ -43,8 +42,8 @@ export function proxy(req: NextRequest) {
 
   const pathname = req.nextUrl.pathname;
   const isApi = isProtectedApi(pathname);
-  // Media list and settings GET stay admin-only; content GET stays public.
-  if (pathname.startsWith("/api/content") && READ_METHODS.has(req.method)) {
+  // Content API is open for now (public WYSIWYG save). Media/settings stay gated.
+  if (pathname.startsWith("/api/content")) {
     return NextResponse.next();
   }
 

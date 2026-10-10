@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { LayoutDropdown } from "@/components/layout/LayoutDropdown";
 import { PageShell } from "@/components/layout/PageShell";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { SelectionFormatToolbar } from "@/components/editor/SelectionFormatToolbar";
 import { usePageEditor } from "@/hooks/usePageEditor";
 import type { Page } from "@/lib/cms/types";
 import { TEST_ID } from "@/lib/test-ids";
@@ -25,7 +26,7 @@ export interface EditableSitePageProps {
 }
 
 export function EditableSitePage({ initialPage, allPages, currentSlug }: EditableSitePageProps) {
-  const { page, isEditing, setEditing, saving, message, callbacks, actions } =
+  const { page, isEditing, isDirty, setEditing, saving, message, callbacks, actions } =
     usePageEditor(initialPage);
 
   const navPages = allPages.filter((p) => p.slug !== "home" && p.showInNav !== false);
@@ -94,6 +95,7 @@ export function EditableSitePage({ initialPage, allPages, currentSlug }: Editabl
         currentSlug={currentSlug}
         {...callbacks}
       />
+      {isEditing && <SelectionFormatToolbar />}
       {/* Always mounted so screen readers announce every change; the visible copy is aria-hidden */}
       <p role="status" className="sr-only">
         {message}
@@ -116,7 +118,12 @@ export function EditableSitePage({ initialPage, allPages, currentSlug }: Editabl
                 onChange={(e) => {
                   const next = e.target.value;
                   if (next === page.slug) return;
-                  if (!window.confirm("Switch page? Unsaved changes will be lost.")) return;
+                  if (
+                    isDirty &&
+                    !window.confirm("Switch page? Unsaved changes will be lost.")
+                  ) {
+                    return;
+                  }
                   window.location.assign(next === "home" ? "/?edit=1" : `/${next}?edit=1`);
                 }}
                 className="text-sm bg-[var(--surface)] border border-[var(--border)] rounded px-[var(--space-2)] py-[var(--space-1)] text-[var(--foreground)]"

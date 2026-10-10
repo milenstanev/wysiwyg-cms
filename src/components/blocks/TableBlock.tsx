@@ -74,7 +74,7 @@ export function TableBlock({ rows = [], content, settings, editable, onEdit }: T
     <div className={wrapperClass}>
       <table className="w-full text-sm">
         {caption && (
-          <caption className="text-left text-sm text-[var(--muted)] px-2 py-1">{caption}</caption>
+          <caption className="text-left text-sm text-[var(--muted)] px-[var(--space-2)] py-[var(--space-1)]">{caption}</caption>
         )}
         {tableHeader.length > 0 && (
           <thead>
@@ -83,7 +83,7 @@ export function TableBlock({ rows = [], content, settings, editable, onEdit }: T
                 <th
                   key={i}
                   {...editProps(0, i)}
-                  className={`px-4 py-3 text-left font-medium text-[var(--foreground)] outline-none ${bordered ? "border-b border-r border-[var(--border)] last:border-r-0" : "border-b border-[var(--border)]"}`}
+                  className={`px-[var(--space-4)] py-[var(--space-3)] text-left font-medium text-[var(--foreground)] outline-none ${bordered ? "border-b border-r border-[var(--border)] last:border-r-0" : "border-b border-[var(--border)]"}`}
                 >
                   {cell}
                 </th>
@@ -101,7 +101,7 @@ export function TableBlock({ rows = [], content, settings, editable, onEdit }: T
                 <td
                   key={ci}
                   {...editProps(ri + bodyOffset, ci)}
-                  className={`px-4 py-3 text-[var(--muted)] outline-none ${cellBorder}`}
+                  className={`px-[var(--space-4)] py-[var(--space-3)] text-[var(--muted)] outline-none ${cellBorder}`}
                 >
                   {cell}
                 </td>
