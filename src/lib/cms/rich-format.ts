@@ -1,5 +1,7 @@
 /** Helpers for selection-based rich formatting inside [data-rich-edit]. */
 
+import { isSafeHref, isSafeImgSrc } from "./sanitize-html";
+
 export function richEditAncestor(node: Node | null): HTMLElement | null {
   let n: Node | null = node;
   while (n) {
@@ -87,7 +89,7 @@ export function applyCreateLink(href: string): boolean {
   const ctx = selectionInRichEdit();
   if (!ctx) return false;
   const url = href.trim();
-  if (!url) return false;
+  if (!url || !isSafeHref(url)) return false;
   ctx.editable.focus();
   return document.execCommand("createLink", false, url);
 }
@@ -165,7 +167,7 @@ export function applyInsertImage(src: string): boolean {
   const ctx = selectionInRichEdit({ allowCollapsed: true });
   if (!ctx) return false;
   const url = src.trim();
-  if (!url || !/^https?:\/\//i.test(url)) return false;
+  if (!url || !isSafeImgSrc(url)) return false;
   ctx.editable.focus();
   return document.execCommand("insertImage", false, url);
 }

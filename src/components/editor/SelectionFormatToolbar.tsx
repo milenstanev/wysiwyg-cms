@@ -224,8 +224,13 @@ export function SelectionFormatToolbar() {
 
   const applyUrlInput = () => {
     restoreSelection(savedRange.current);
-    if (inputMode === "link") applyCreateLink(urlValue);
-    else if (inputMode === "image") applyInsertImage(urlValue);
+    const applied =
+      inputMode === "link"
+        ? applyCreateLink(urlValue)
+        : inputMode === "image"
+          ? applyInsertImage(urlValue)
+          : false;
+    if (!applied) return;
     afterMutation();
     setInputMode(null);
     refresh();

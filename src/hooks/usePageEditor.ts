@@ -255,7 +255,7 @@ export function usePageEditor(
       });
       if (res.ok) {
         setMessage("Saved!");
-        setEditSnapshot(clonePage(page));
+        // Exit edit mode after save (toolbar closes); snapshot cleared with editing.
         setIsEditing(false);
         setEditSnapshot(null);
         try {

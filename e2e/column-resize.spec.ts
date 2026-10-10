@@ -146,6 +146,11 @@ test.describe("Column resize", () => {
       await firstHandle.focus();
       await expect(firstHandle).toBeFocused();
       await expect(firstHandle).toHaveAttribute("aria-label", /Resize columns/i);
+
+      const colsBefore = await layoutColsVar(page);
+      await firstHandle.press("ArrowRight");
+      const colsAfter = await layoutColsVar(page);
+      expect(colsAfter).not.toBe(colsBefore);
     } finally {
       await putPageJson(request, "about", original);
     }

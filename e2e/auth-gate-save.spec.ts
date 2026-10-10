@@ -5,9 +5,6 @@ import { getRichField, gotoEdit } from "./helpers/editor";
 /**
  * Auth gate for content writes. Skipped unless E2E_ADMIN_PASSWORD is set.
  * When set, the server must also have ADMIN_PASSWORD (same value) for the gate to engage.
- *
- * Note: with the current temporary open `/api/content` proxy policy, these cases
- * document the intended gated behaviour when the gate is re-enabled.
  */
 const password = process.env.E2E_ADMIN_PASSWORD;
 

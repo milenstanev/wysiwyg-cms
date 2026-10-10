@@ -45,6 +45,7 @@ export function RichEditable({
       contentEditable
       suppressContentEditableWarning
       data-rich-edit="true"
+      dangerouslySetInnerHTML={{ __html: safe }}
       onInput={() => {
         const el = ref.current;
         if (!el) return;

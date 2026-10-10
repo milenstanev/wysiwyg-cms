@@ -114,7 +114,8 @@ export function ColumnResizeHandles({
         if (left == null) return null;
         const leftFr = resolved[boundary.leftKey] ?? COLUMN_FR_MIN;
         const rightFr = resolved[boundary.rightKey] ?? COLUMN_FR_MIN;
-        const label = `Resize columns (${boundary.leftKey} ${leftFr}fr / ${boundary.rightKey} ${rightFr}fr). Drag horizontally. Range ${COLUMN_FR_MIN}–${COLUMN_FR_MAX}.`;
+        const label = `Resize columns (${boundary.leftKey} ${leftFr}fr / ${boundary.rightKey} ${rightFr}fr). Drag or use arrow keys. Range ${COLUMN_FR_MIN}–${COLUMN_FR_MAX}.`;
+        const KEYBOARD_STEP = 0.25;
         return (
           <button
             key={`${boundary.leftKey}-${boundary.rightKey}-${i}`}
@@ -124,6 +125,49 @@ export function ColumnResizeHandles({
             data-testid={TEST_ID.columnResizeHandle}
             aria-label={label}
             title={label}
+            onKeyDown={(e) => {
+              let deltaFr = 0;
+              if (e.key === "ArrowLeft") deltaFr = -KEYBOARD_STEP;
+              else if (e.key === "ArrowRight") deltaFr = KEYBOARD_STEP;
+              else if (e.key === "Home") {
+                e.preventDefault();
+                const current = resolveColumnWidths(layoutRef.current, widthsRef.current);
+                const pair =
+                  (current[boundary.leftKey] ?? COLUMN_FR_MIN) +
+                  (current[boundary.rightKey] ?? COLUMN_FR_MIN);
+                onChangeRef.current({
+                  ...current,
+                  [boundary.leftKey]: COLUMN_FR_MIN,
+                  [boundary.rightKey]: Math.min(COLUMN_FR_MAX, Math.max(COLUMN_FR_MIN, pair - COLUMN_FR_MIN)),
+                });
+                return;
+              } else if (e.key === "End") {
+                e.preventDefault();
+                const current = resolveColumnWidths(layoutRef.current, widthsRef.current);
+                const pair =
+                  (current[boundary.leftKey] ?? COLUMN_FR_MIN) +
+                  (current[boundary.rightKey] ?? COLUMN_FR_MIN);
+                onChangeRef.current({
+                  ...current,
+                  [boundary.leftKey]: Math.min(COLUMN_FR_MAX, Math.max(COLUMN_FR_MIN, pair - COLUMN_FR_MIN)),
+                  [boundary.rightKey]: COLUMN_FR_MIN,
+                });
+                return;
+              } else {
+                return;
+              }
+              e.preventDefault();
+              onChangeRef.current(
+                nudgeColumnPair(
+                  widthsRef.current,
+                  boundary.leftKey,
+                  boundary.rightKey,
+                  deltaFr,
+                  layoutRef.current,
+                  { snap: true }
+                )
+              );
+            }}
             onPointerDown={(e) => {
               if (e.button !== 0) return;
               e.preventDefault();

@@ -1,5 +1,7 @@
 /**
  * Allowlisted HTML for rich text fields.
+ * Keep in sync with src/lib/cms/sanitize-html.ts (Next persist path).
+ *
  * Inline: b, strong, i, em, u, a[href], br, span
  * Blocks: p, div, h2–h4, ul, ol, li, blockquote
  * Attrs: href (safe), style text-align only, class (allowlisted)
@@ -207,6 +209,31 @@ export function plainTextFromHtml(html: string): string {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"');
+}
+
+/** Sanitize rich string fields on a content block (persist path). */
+export function sanitizeContentBlockFields<T extends {
+  content?: string;
+  title?: string;
+  items?: string[];
+  rows?: string[][];
+}>(block: T): T {
+  const next: T = { ...block };
+  if (typeof next.content === "string") next.content = sanitizeRichHtml(next.content);
+  if (typeof next.title === "string") next.title = sanitizeRichHtml(next.title);
+  if (Array.isArray(next.items)) {
+    next.items = next.items.map((item) =>
+      typeof item === "string" ? sanitizeRichHtml(item) : item
+    );
+  }
+  if (Array.isArray(next.rows)) {
+    next.rows = next.rows.map((row) =>
+      Array.isArray(row)
+        ? row.map((cell) => (typeof cell === "string" ? sanitizeRichHtml(cell) : cell))
+        : row
+    );
+  }
+  return next;
 }
 
 /** Sanitize rich string fields on a content block (persist path). */

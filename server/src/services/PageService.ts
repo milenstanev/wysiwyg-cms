@@ -1,4 +1,22 @@
 import type { IPageRepository, PageDocument } from "../repositories/PageRepository.js";
+import { sanitizeContentBlockFields, sanitizeRichHtml } from "../lib/sanitize-html.js";
+
+function sanitizeBlocks(value: unknown): unknown[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    if (item == null || typeof item !== "object") return item;
+    return sanitizeContentBlockFields(item as { content?: string; title?: string; items?: string[]; rows?: string[][] });
+  });
+}
+
+function sanitizePositionBlocks(value: unknown): Record<string, unknown[]> {
+  if (value == null || typeof value !== "object" || Array.isArray(value)) return {};
+  const out: Record<string, unknown[]> = {};
+  for (const [key, arr] of Object.entries(value as Record<string, unknown>)) {
+    out[key] = sanitizeBlocks(arr);
+  }
+  return out;
+}
 
 export interface PageResponse {
   id: string;
@@ -57,7 +75,15 @@ export class PageService {
   }
 
   async updatePage(data: Omit<PageDocument, "updatedAt">): Promise<PageResponse> {
-    const page = await this.pageRepository.upsert(data);
+    const sanitized: Omit<PageDocument, "updatedAt"> = {
+      ...data,
+      title: typeof data.title === "string" ? sanitizeRichHtml(data.title) : data.title,
+      blocks: sanitizeBlocks(data.blocks),
+      leftBlocks: sanitizeBlocks(data.leftBlocks),
+      rightBlocks: sanitizeBlocks(data.rightBlocks),
+      positionBlocks: sanitizePositionBlocks(data.positionBlocks),
+    };
+    const page = await this.pageRepository.upsert(sanitized);
     return this.toResponse(page);
   }
 
