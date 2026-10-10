@@ -34,7 +34,7 @@ export function MediaPicker({ value, onChange, alt, onAltChange }: MediaPickerPr
   }, []);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   const handleUpload = async (file: File) => {
@@ -100,7 +100,7 @@ export function MediaPicker({ value, onChange, alt, onAltChange }: MediaPickerPr
         />
       </label>
       {error && (
-        <p className="text-xs text-[color-mix(in_srgb,#dc2626_70%,var(--foreground))]" role="alert">
+        <p className="text-xs text-[var(--danger)]" role="alert">
           {error}
         </p>
       )}

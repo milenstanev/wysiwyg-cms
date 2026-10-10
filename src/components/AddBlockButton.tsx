@@ -34,6 +34,7 @@ export function AddBlockButton({
   const [open, setOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  /** gap: 4px matches `--space-1` */
   const portalPosition = usePortalPosition(anchorRef, open, {
     width: variant === "inline" ? 200 : 160,
     gap: 4,
@@ -62,7 +63,7 @@ export function AddBlockButton({
       ref={dropdownRef}
       role="group"
       aria-label={`${label}: choose a block type`}
-      className={`fixed z-[9999] py-1 bg-white rounded-lg shadow-lg border border-zinc-200 ${roomy ? "min-w-[160px]" : "min-w-[140px]"}`}
+      className={`fixed z-[9999] py-[var(--space-1)] bg-[var(--surface)] rounded-lg shadow-lg border border-[var(--border)] ${roomy ? "min-w-[160px]" : "min-w-[140px]"}`}
       style={portalPosition}
     >
       {BLOCK_OPTIONS.map((opt) => (
@@ -70,12 +71,14 @@ export function AddBlockButton({
           key={opt.type}
           type="button"
           onClick={() => handleSelect(opt.type)}
-          className={`w-full text-left text-sm text-zinc-700 hover:bg-zinc-50 flex items-center gap-2 ${
-            roomy ? "px-4 py-2.5 gap-3" : "px-3 py-2"
+          className={`w-full text-left text-sm text-[var(--foreground)] hover:bg-[color-mix(in_srgb,var(--muted)_12%,var(--surface))] flex items-center ${
+            roomy
+              ? "gap-[var(--space-3)] px-[var(--space-4)] py-[var(--space-2)]"
+              : "gap-[var(--space-2)] px-[var(--space-3)] py-[var(--space-2)]"
           }`}
         >
           <span
-            className={`flex items-center justify-center rounded bg-zinc-100 text-zinc-600 font-medium ${
+            className={`flex items-center justify-center rounded bg-[color-mix(in_srgb,var(--muted)_14%,var(--surface))] text-[var(--muted)] font-medium ${
               roomy ? "w-8 h-8 rounded-md" : "w-5 h-5 text-xs"
             }`}
           >
@@ -137,10 +140,12 @@ export function AddBlockButton({
           ref={triggerRef}
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-zinc-300 text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 hover:bg-zinc-50 transition-colors text-sm"
+          className="flex items-center gap-[var(--space-2)] px-[var(--space-3)] py-[var(--space-2)] rounded-lg border border-dashed border-[var(--control-border)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--foreground)] hover:bg-[color-mix(in_srgb,var(--muted)_10%,var(--surface))] transition-colors text-sm"
           aria-expanded={open}
         >
-          <span aria-hidden className="text-zinc-400">+</span>
+          <span aria-hidden className="text-[var(--muted)]">
+            +
+          </span>
           {label}
         </button>
       </div>

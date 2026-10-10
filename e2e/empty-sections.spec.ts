@@ -7,17 +7,23 @@ import type { Page as CmsPage } from "../src/lib/cms/types";
 test.describe("Empty sections collapse", () => {
   test("about (single, no modules): no rockettheme module chrome", async ({ page }) => {
     await page.goto("/about");
-    await expect(page.getByRole("heading", { name: "About Us" })).toBeVisible({ timeout: 10000 });
-    await expect(page.locator("[data-module-position]")).toHaveCount(0);
-    await expect(page.locator(".rockettheme-utility")).toHaveCount(0);
+    const aboutHeading = page.getByRole("heading", { name: "About Us" });
+    await expect(aboutHeading).toBeVisible();
+    const modulePositions = page.locator("[data-module-position]");
+    await expect(modulePositions).toHaveCount(0);
+    const rocketthemeUtility = page.locator(".rockettheme-utility");
+    await expect(rocketthemeUtility).toHaveCount(0);
   });
 
   test("home rockettheme: only positions with content appear", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible({ timeout: 10000 });
+    const welcomeHeading = page.getByRole("heading", { name: "Welcome" });
+    await expect(welcomeHeading).toBeVisible();
 
-    await expect(page.locator('[data-module-position="utility-a"]')).toBeVisible();
-    await expect(page.locator('[data-module-position="header"]')).toBeVisible();
+    const utilityA = page.locator('[data-module-position="utility-a"]');
+    await expect(utilityA).toBeVisible();
+    const headerModule = page.locator('[data-module-position="header"]');
+    await expect(headerModule).toBeVisible();
 
     const rows = page.locator("[data-template-row]");
     const count = await rows.count();
@@ -48,15 +54,19 @@ test.describe("Empty sections collapse", () => {
 
     try {
       await page.goto("/");
-      await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible({ timeout: 10000 });
-      await expect(page.locator('[data-module-position="utility-c"]')).toHaveCount(0);
+      const welcomeHeading = page.getByRole("heading", { name: "Welcome" });
+      await expect(welcomeHeading).toBeVisible();
+      const utilityC = page.locator('[data-module-position="utility-c"]');
+      await expect(utilityC).toHaveCount(0);
 
       const utilityRow = page.locator(".rockettheme-utility");
       await expect(utilityRow).toBeVisible();
       const visible = await utilityRow.getAttribute("data-visible-count");
       expect(Number(visible)).toBe(2);
-      await expect(page.locator('[data-module-position="utility-a"]')).toBeVisible();
-      await expect(page.locator('[data-module-position="utility-b"]')).toBeVisible();
+      const utilityA = page.locator('[data-module-position="utility-a"]');
+      await expect(utilityA).toBeVisible();
+      const utilityB = page.locator('[data-module-position="utility-b"]');
+      await expect(utilityB).toBeVisible();
     } finally {
       await request.put("/api/content/home", {
         data: {

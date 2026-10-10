@@ -70,6 +70,8 @@
   --inverse-border: color-mix(in srgb, var(--surface) 22%, var(--foreground));
   /* Form-field edges must reach 3:1 (WCAG 1.4.11); --border is decorative and much lighter */
   --control-border: color-mix(in srgb, var(--foreground) 55%, var(--surface));
+  /* Error / destructive text on surface (AA vs typical cream/white surfaces) */
+  --danger: #b42318;
 }
 
 html[data-theme="editorial"] {
@@ -1014,3 +1016,325 @@ html[data-theme="ink"] .site-header {
   align-items: stretch;
   justify-content: flex-start;
 }
+/* —— Column width overrides (two-col / three-col) —— */
+.layout-column-row {
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  [data-layout="two-col"] .layout-column-row[data-cols-custom="true"] {
+    grid-template-columns: var(--layout-cols);
+  }
+}
+
+@media (min-width: 1024px) {
+  [data-layout="three-col"] .layout-column-row[data-cols-custom="true"] {
+    grid-template-columns: var(--layout-cols);
+  }
+}
+
+/* Span all tracks so abspos inset fills the row (not a collapsed auto cell). */
+.column-resize-layer {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  display: none;
+}
+
+/* Only when columns sit side-by-side (stacked = no drag). */
+@media (min-width: 768px) {
+  [data-layout="two-col"] .layout-column-row-editing .column-resize-layer {
+    display: block;
+  }
+}
+
+@media (min-width: 1024px) {
+  [data-layout="three-col"] .layout-column-row-editing .column-resize-layer {
+    display: block;
+  }
+}
+
+.column-resize-handle {
+  pointer-events: auto;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--space-6);
+  margin-left: calc(var(--space-6) / -2);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+/* Full-height divider — dashed so it reads as a control, not a card edge */
+.column-resize-handle::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  transform: translateX(-50%);
+  border-left: 2px dashed var(--control-border);
+  opacity: 1;
+}
+
+/* Center grip pill — surface fill so it pops on every theme */
+.column-resize-handle::after {
+  content: "⠿";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-5);
+  height: var(--space-8);
+  transform: translate(-50%, -50%);
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  border: 2px solid var(--control-border);
+  border-radius: var(--space-1);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--foreground) 18%, transparent);
+  opacity: 1;
+}
+
+.column-resize-handle:hover::before,
+.column-resize-handle:focus-visible::before,
+body.is-column-resizing .column-resize-handle::before {
+  border-left-color: var(--accent);
+  border-left-width: 3px;
+}
+
+.column-resize-handle:hover::after,
+.column-resize-handle:focus-visible::after,
+body.is-column-resizing .column-resize-handle::after {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+body.is-column-resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+body.is-column-resizing iframe {
+  pointer-events: none;
+}
+
+/* —— Selection format toolbar (overlay; zero layout shift) —— */
+.selection-format-toolbar {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: min(36rem, calc(100vw - var(--space-4)));
+  padding: var(--space-1);
+  border: 1px solid var(--control-border);
+  border-radius: var(--space-2);
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow:
+    var(--card-shadow),
+    0 8px 24px color-mix(in srgb, var(--foreground) 14%, transparent);
+}
+
+.selection-format-style {
+  min-height: var(--space-6);
+  max-width: 11rem;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--control-border);
+  border-radius: var(--space-1);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 0.75rem;
+}
+
+.selection-format-drag {
+  min-width: var(--space-6);
+  min-height: var(--space-6);
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--space-1);
+  background: color-mix(in srgb, var(--border) 55%, var(--surface));
+  color: var(--muted);
+  cursor: grab;
+  touch-action: none;
+  font-size: 0.75rem;
+  letter-spacing: -0.08em;
+}
+
+.selection-format-drag:active {
+  cursor: grabbing;
+}
+
+.selection-format-submit {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.selection-format-submit:hover,
+.selection-format-submit[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--on-accent);
+  filter: brightness(1.05);
+}
+
+.rich-text-block img,
+[data-rich-edit="true"] img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--space-1);
+  margin-block: var(--space-2);
+}
+
+.rich-text-block .page-title1,
+.rich-text-block .page-title2,
+[data-rich-edit="true"] .page-title1,
+[data-rich-edit="true"] .page-title2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.rich-text-block .page-subtitle-title1,
+[data-rich-edit="true"] .page-subtitle-title1 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.rich-text-block .line-height-18,
+[data-rich-edit="true"] .line-height-18 {
+  line-height: 1.8;
+}
+
+.rich-text-block .padding-bottom-10,
+[data-rich-edit="true"] .padding-bottom-10 {
+  padding-bottom: var(--space-2);
+}
+
+.rich-text-block .padding-bottom-20,
+[data-rich-edit="true"] .padding-bottom-20 {
+  padding-bottom: var(--space-4);
+}
+
+.selection-format-btn {
+  min-width: var(--space-6);
+  min-height: var(--space-6);
+  padding: var(--space-1) var(--space-2);
+  border: 0;
+  border-radius: var(--space-1);
+  background: transparent;
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.selection-format-btn:hover,
+.selection-format-btn[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  color: var(--accent);
+}
+
+.selection-format-btn-italic {
+  font-style: italic;
+}
+
+.selection-format-btn-underline {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.selection-format-sep {
+  width: 1px;
+  align-self: stretch;
+  margin-block: var(--space-1);
+  background: var(--border);
+}
+
+.selection-format-link-row {
+  display: flex;
+  flex: 1 1 100%;
+  align-items: center;
+  gap: var(--space-1);
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--border);
+}
+
+.selection-format-link-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--space-6);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--control-border);
+  border-radius: var(--space-1);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 0.8125rem;
+}
+
+[data-rich-edit="true"] a,
+.rich-text-block a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.rich-text-block ul,
+[data-rich-edit="true"] ul {
+  list-style: disc;
+  padding-left: var(--space-5);
+  margin-block: var(--space-2);
+}
+
+.rich-text-block ol,
+[data-rich-edit="true"] ol {
+  list-style: decimal;
+  padding-left: var(--space-5);
+  margin-block: var(--space-2);
+}
+
+.rich-text-block blockquote,
+[data-rich-edit="true"] blockquote {
+  margin-block: var(--space-3);
+  padding-left: var(--space-4);
+  border-left: 3px solid var(--content-accent, var(--accent));
+  color: var(--muted);
+  font-style: italic;
+}
+
+.rich-text-block h2,
+[data-rich-edit="true"] h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-block: var(--space-3) var(--space-2);
+}
+
+.rich-text-block h3,
+[data-rich-edit="true"] h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-block: var(--space-3) var(--space-2);
+}
+
+.rich-text-block p,
+[data-rich-edit="true"] p {
+  margin-block: var(--space-2);
+}
+

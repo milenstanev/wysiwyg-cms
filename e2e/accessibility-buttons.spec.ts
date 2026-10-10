@@ -16,14 +16,14 @@ test.describe("Edit button is accessible", () => {
   test("Edit this page is visible and enabled", async ({ page }) => {
     await page.goto("/");
     const editBtn = getEditButton(page);
-    await expect(editBtn).toBeVisible({ timeout: 10000 });
+    await expect(editBtn).toBeVisible();
     await expect(editBtn).toBeEnabled();
   });
 
   test("Edit this page is focusable and receives focus", async ({ page }) => {
     await page.goto("/");
     const editBtn = getEditButton(page);
-    await expect(editBtn).toBeVisible({ timeout: 10000 });
+    await expect(editBtn).toBeVisible();
     await editBtn.focus();
     const focusedIsEdit = await page.evaluate((editId) => {
       const el = document.activeElement;
@@ -38,7 +38,7 @@ test.describe("Edit button is accessible", () => {
   test("Edit this page is not covered by another element (clickable)", async ({ page }) => {
     await page.goto("/");
     const editBtn = getEditButton(page);
-    await expect(editBtn).toBeVisible({ timeout: 10000 });
+    await expect(editBtn).toBeVisible();
     const box = await editBtn.boundingBox();
     expect(box, "Edit button must have a bounding box").not.toBeNull();
     if (box) {
@@ -61,9 +61,13 @@ test.describe("Edit button is accessible", () => {
 
   test("Edit this page click enters edit mode and Save/Cancel are visible", async ({ page }) => {
     await page.goto("/");
-    await getEditButton(page).click();
-    await expect(page.getByRole("button", { name: /Save/i })).toBeVisible({ timeout: 5000 });
-    await expect(page.getByRole("button", { name: /Cancel/i })).toBeVisible();
+    const editPageButton = getEditButton(page);
+    await expect(editPageButton).toBeVisible();
+    await editPageButton.click();
+    const saveButton = page.getByRole("button", { name: /Save/i });
+    await expect(saveButton).toBeVisible();
+    const cancelButton = page.getByRole("button", { name: /Cancel/i });
+    await expect(cancelButton).toBeVisible();
   });
 });
 
@@ -72,7 +76,7 @@ test.describe("Edit mode buttons are accessible", () => {
     await page.goto("/?edit=1");
     const saveBtn = page.getByRole("button", { name: /Save/i });
     const cancelBtn = page.getByRole("button", { name: /Cancel/i });
-    await expect(saveBtn).toBeVisible({ timeout: 10000 });
+    await expect(saveBtn).toBeVisible();
     await expect(cancelBtn).toBeVisible();
     await expect(saveBtn).toBeEnabled();
     await expect(cancelBtn).toBeEnabled();
@@ -81,20 +85,25 @@ test.describe("Edit mode buttons are accessible", () => {
   test("Layout dropdown and options are findable by role and name", async ({ page }) => {
     await page.goto("/?edit=1");
     const layoutBtn = page.getByRole("button", { name: /Choose layout/i });
-    await expect(layoutBtn).toBeVisible({ timeout: 5000 });
+    await expect(layoutBtn).toBeVisible();
     await layoutBtn.click();
-    await expect(page.getByRole("button", { name: "Single column" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Two columns" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Three columns" })).toBeVisible();
+    const singleButton = page.getByRole("button", { name: "Single column" });
+    await expect(singleButton).toBeVisible();
+    const twoButton = page.getByRole("button", { name: "Two columns" });
+    await expect(twoButton).toBeVisible();
+    const threeButton = page.getByRole("button", { name: "Three columns" });
+    await expect(threeButton).toBeVisible();
   });
 
   test("Add block (main) and block type options are findable", async ({ page }) => {
     await page.goto("/?edit=1");
     const addBlock = page.getByRole("button", { name: /Add block \(main\)/i });
-    await expect(addBlock).toBeVisible({ timeout: 5000 });
+    await expect(addBlock).toBeVisible();
     await addBlock.click();
-    await expect(page.getByRole("button", { name: "Heading" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Paragraph" })).toBeVisible();
+    const headingButton = page.getByRole("button", { name: "Heading" });
+    await expect(headingButton).toBeVisible();
+    const paragraphButton = page.getByRole("button", { name: "Paragraph" });
+    await expect(paragraphButton).toBeVisible();
   });
 });
 
@@ -109,10 +118,14 @@ test.describe("Block toolbar is accessible", () => {
   }) => {
     await page.goto("/?edit=1");
     const unit = mainBlockUnits(page).first();
-    await expect(unit).toBeVisible({ timeout: 10000 });
-    await unit.getByRole("button", { name: "Block actions" }).hover();
-    await expect(unit.getByRole("button", { name: "Move down" })).toBeVisible({ timeout: 2000 });
-    await expect(unit.getByRole("button", { name: "Remove block" })).toBeVisible();
+    await expect(unit).toBeVisible();
+    const blockActions = unit.getByRole("button", { name: "Block actions" });
+    await expect(blockActions).toBeVisible();
+    await blockActions.hover();
+    const moveDownButton = unit.getByRole("button", { name: "Move down" });
+    const removeBlockButton = unit.getByRole("button", { name: "Remove block" });
+    await expect(moveDownButton).toBeVisible();
+    await expect(removeBlockButton).toBeVisible();
   });
 
   test("Block toolbar opens when the chip has keyboard focus (focus-within) and Remove block is enabled", async ({
@@ -120,21 +133,29 @@ test.describe("Block toolbar is accessible", () => {
   }) => {
     await page.goto("/?edit=1");
     const unit = mainBlockUnits(page).first();
-    await expect(unit).toBeVisible({ timeout: 10000 });
+    await expect(unit).toBeVisible();
     await unit.getByRole("button", { name: "Block actions" }).focus();
     const removeBtn = unit.getByRole("button", { name: "Remove block" });
-    await expect(removeBtn).toBeVisible({ timeout: 3000 });
+    await expect(removeBtn).toBeVisible();
     await expect(removeBtn).toBeEnabled();
   });
 
   test("Block settings findable for a new table block from its chip", async ({ page }) => {
     await page.goto("/?edit=1");
-    await page.getByRole("button", { name: /Add block \(main\)/i }).click();
-    await page.getByRole("button", { name: "Table" }).click();
-    await expect(page.getByText("Header 1")).toBeVisible({ timeout: 3000 });
+    const addButton = page.getByRole("button", { name: /Add block \(main\)/i });
+    await expect(addButton).toBeVisible();
+    await addButton.click();
+    const tableButton = page.getByRole("button", { name: "Table" });
+    await expect(tableButton).toBeVisible();
+    await tableButton.click();
+    const header1 = page.getByText("Header 1");
+    await expect(header1).toBeVisible();
     const tableUnit = mainBlockUnits(page).filter({ hasText: "Header 1" }).first();
-    await tableUnit.getByRole("button", { name: "Block actions" }).hover();
-    await expect(tableUnit.getByRole("button", { name: "Block settings" })).toBeVisible();
+    const blockActions = tableUnit.getByRole("button", { name: "Block actions" });
+    await expect(blockActions).toBeVisible();
+    await blockActions.hover();
+    const blockSettingsButton = tableUnit.getByRole("button", { name: "Block settings" });
+    await expect(blockSettingsButton).toBeVisible();
   });
 });
 
@@ -142,16 +163,21 @@ test.describe("Keyboard activation", () => {
   test("Enter on focused Edit this page activates edit mode", async ({ page }) => {
     await page.goto("/");
     const editBtn = getEditButton(page);
+    await expect(editBtn).toBeVisible();
     await editBtn.focus();
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("button", { name: /Save/i })).toBeVisible({ timeout: 5000 });
+    const saveButton = page.getByRole("button", { name: /Save/i });
+    await expect(saveButton).toBeVisible();
   });
 
   test("Enter on focused Cancel exits edit mode", async ({ page }) => {
     await page.goto("/?edit=1");
-    await page.getByRole("button", { name: /Cancel/i }).focus();
+    const cancelButton = page.getByRole("button", { name: /Cancel/i });
+    await expect(cancelButton).toBeVisible();
+    await cancelButton.focus();
     await page.keyboard.press("Enter");
-    await expect(getEditButton(page)).toBeVisible({ timeout: 3000 });
-    await expect(page.getByRole("button", { name: /Cancel/i })).not.toBeVisible();
+    const editButton = getEditButton(page);
+    await expect(editButton).toBeVisible();
+    await expect(cancelButton).not.toBeVisible();
   });
 });

@@ -43,7 +43,7 @@ export function proxy(req: NextRequest) {
 
   const pathname = req.nextUrl.pathname;
   const isApi = isProtectedApi(pathname);
-  // Media list and settings GET stay admin-only; content GET stays public.
+  // Content reads stay public; writes require admin cookie / Basic (same as media/settings).
   if (pathname.startsWith("/api/content") && READ_METHODS.has(req.method)) {
     return NextResponse.next();
   }

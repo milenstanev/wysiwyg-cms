@@ -26,5 +26,6 @@ model Page {
   status          String?   @default("published")
   publishedAt     DateTime?
   seo             String? // JSON: PageSeo
+  columnWidths    String? // JSON: ColumnWidths { left?, main?, right? } fr weights
   updatedAt       DateTime  @updatedAt
 }

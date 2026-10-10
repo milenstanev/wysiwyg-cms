@@ -1,10 +1,21 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import type { Page, ContentBlock, BlockType, PageLayout, PageModuleAssignment } from "@/lib/cms/types";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import type {
+  Page,
+  ContentBlock,
+  BlockType,
+  PageLayout,
+  PageModuleAssignment,
+  ColumnWidths,
+} from "@/lib/cms/types";
 import type { PositionId } from "@/lib/cms/types";
 import type { PageRendererCallbacks } from "@/lib/cms/page-editor.types";
 import { createBlock } from "@/lib/cms/block-defaults";
+import { defaultColumnWidths, layoutSupportsColumnWidths } from "@/lib/cms/column-widths";
+import { pageEditFingerprint } from "@/lib/cms/page-fingerprint";
+
+export { pageEditFingerprint } from "@/lib/cms/page-fingerprint";
 
 function getBlocksForPosition(p: Page, positionId: PositionId): ContentBlock[] {
   if (positionId === "main") return p.blocks;
@@ -21,6 +32,10 @@ function setBlocksForPosition(p: Page, positionId: PositionId, blocks: ContentBl
   return { ...p, positionBlocks: next };
 }
 
+function clonePage(p: Page): Page {
+  return structuredClone(p);
+}
+
 export interface UsePageEditorOptions {
   /** Persist page to API. Called after successful save. */
   onSaved?: () => void;
@@ -29,6 +44,7 @@ export interface UsePageEditorOptions {
 export interface UsePageEditorResult {
   page: Page;
   isEditing: boolean;
+  isDirty: boolean;
   setEditing: (value: boolean) => void;
   saving: boolean;
   message: string | null;
@@ -46,18 +62,67 @@ export function usePageEditor(
   options: UsePageEditorOptions = {}
 ): UsePageEditorResult {
   const [page, setPage] = useState<Page>(initialPage);
-  const [isEditing, setEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editSnapshot, setEditSnapshot] = useState<Page | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const startedFromQuery = useRef(false);
+
+  const isDirty = useMemo(() => {
+    if (!isEditing || !editSnapshot) return false;
+    return pageEditFingerprint(page) !== pageEditFingerprint(editSnapshot);
+  }, [isEditing, editSnapshot, page]);
+
+  const beginEditing = useCallback((base: Page) => {
+    setEditSnapshot(clonePage(base));
+    setIsEditing(true);
+  }, []);
 
   // Read ?edit=1 after mount: the server render has no URL, so reading it in initial state breaks hydration
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("edit") === "1") setEditing(true);
-  }, []);
+    if (startedFromQuery.current) return;
+    if (new URLSearchParams(window.location.search).get("edit") === "1") {
+      startedFromQuery.current = true;
+      beginEditing(page);
+    }
+  }, [beginEditing, page]);
 
   useEffect(() => {
     setPage(initialPage);
-  }, [initialPage.id, initialPage.updatedAt]);
+    setEditSnapshot((snap) => (snap ? clonePage(initialPage) : null));
+  }, [initialPage.id, initialPage.updatedAt]); // eslint-disable-line react-hooks/exhaustive-deps -- sync on server identity only
+
+  useEffect(() => {
+    if (!isEditing || !isDirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [isEditing, isDirty]);
+
+  const setEditing = useCallback(
+    (value: boolean) => {
+      if (value) {
+        beginEditing(page);
+        return;
+      }
+      // Exiting via setEditing(false) uses the same discard path as Cancel
+      if (
+        editSnapshot &&
+        pageEditFingerprint(page) !== pageEditFingerprint(editSnapshot) &&
+        !window.confirm("Discard unsaved changes?")
+      ) {
+        return;
+      }
+      if (editSnapshot) setPage(clonePage(editSnapshot));
+      setEditSnapshot(null);
+      setIsEditing(false);
+      setMessage(null);
+    },
+    [beginEditing, page, editSnapshot]
+  );
 
   const onBlockEdit = useCallback((blockId: string, content: string) => {
     setPage((p) => {
@@ -161,11 +226,22 @@ export function usePageEditor(
   );
 
   const onLayoutChange = useCallback((layout: PageLayout) => {
-    setPage((p) => ({ ...p, layout }));
+    setPage((p) => ({
+      ...p,
+      layout,
+      // Keep widths when switching between two-col / three-col; clear otherwise.
+      columnWidths: layoutSupportsColumnWidths(layout)
+        ? p.columnWidths ?? defaultColumnWidths(layout)
+        : undefined,
+    }));
   }, []);
 
   const onModulesChange = useCallback((modules: PageModuleAssignment[]) => {
     setPage((p) => ({ ...p, modules }));
+  }, []);
+
+  const onColumnWidthsChange = useCallback((columnWidths: ColumnWidths) => {
+    setPage((p) => ({ ...p, columnWidths }));
   }, []);
 
   const save = useCallback(async () => {
@@ -179,7 +255,9 @@ export function usePageEditor(
       });
       if (res.ok) {
         setMessage("Saved!");
-        setEditing(false);
+        // Exit edit mode after save (toolbar closes); snapshot cleared with editing.
+        setIsEditing(false);
+        setEditSnapshot(null);
         try {
           options.onSaved?.();
         } catch {
@@ -199,9 +277,18 @@ export function usePageEditor(
   }, [page, options]);
 
   const cancel = useCallback(() => {
-    setEditing(false);
+    if (
+      editSnapshot &&
+      pageEditFingerprint(page) !== pageEditFingerprint(editSnapshot) &&
+      !window.confirm("Discard unsaved changes?")
+    ) {
+      return;
+    }
+    if (editSnapshot) setPage(clonePage(editSnapshot));
+    setEditSnapshot(null);
+    setIsEditing(false);
     setMessage(null);
-  }, []);
+  }, [page, editSnapshot]);
 
   const callbacks: PageRendererCallbacks = isEditing
     ? {
@@ -213,12 +300,14 @@ export function usePageEditor(
         onMoveBlock,
         onLayoutChange,
         onModulesChange,
+        onColumnWidthsChange,
       }
     : {};
 
   return {
     page,
     isEditing,
+    isDirty,
     setEditing,
     saving,
     message,

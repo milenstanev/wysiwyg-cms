@@ -5,7 +5,9 @@ import { TEST_ID } from "../src/lib/test-ids";
 test.describe("Layouts", () => {
   test("can click through all four layout options", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /Edit this page/i }).click();
+    const editButton = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton).toBeVisible();
+    await editButton.click();
     const layouts = [
       "Single column",
       "Two columns",
@@ -13,132 +15,245 @@ test.describe("Layouts", () => {
       "RocketTheme-style (complex)",
     ];
     for (const name of layouts) {
-      await page.getByRole("button", { name: /Choose layout/i }).click();
-      await page.getByRole("button", { name }).click();
-      await page.getByRole("button", { name: /Choose layout/i }).click();
-      await expect(page.getByRole("button", { name })).toHaveClass(/bg-zinc-900/);
+      const chooseLayout = page.getByRole("button", { name: /Choose layout/i });
+      await expect(chooseLayout).toBeVisible();
+      await chooseLayout.click();
+      const layoutOption = page.getByRole("button", { name });
+      await expect(layoutOption).toBeVisible();
+      await layoutOption.click();
+      await chooseLayout.click();
+      await expect(layoutOption).toHaveClass(/bg-\[var\(--accent\)\]/);
+      await page.keyboard.press("Escape");
     }
   });
 
   test("two-col + save, reload shows left add block", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await page.getByRole("button", { name: /Choose layout/i }).click();
-    await page.getByRole("button", { name: "Two columns" }).click();
-    await page.getByRole("button", { name: /Save/i }).click();
-    await expect(page.getByText("Saved!")).toBeVisible({ timeout: 5000 });
+    const editButton = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton).toBeVisible();
+    await editButton.click();
+    const chooseLayout = page.getByRole("button", { name: /Choose layout/i });
+    await expect(chooseLayout).toBeVisible();
+    await chooseLayout.click();
+    const twoColumns = page.getByRole("button", { name: "Two columns" });
+    await expect(twoColumns).toBeVisible();
+    await twoColumns.click();
+    const saveButton = page.getByRole("button", { name: /Save/i });
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+    const savedStatus = page.getByRole("status");
+    await expect(savedStatus).toHaveText(/Saved!/i);
     await page.reload();
-    await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible({ timeout: 5000 });
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await page.getByTestId(TEST_ID.emptySectionsMenu).hover();
-    await expect(page.getByRole("button", { name: /Add block \(left\)/i })).toBeVisible({
-      timeout: 3000,
-    });
+    const welcome = page.getByRole("heading", { name: "Welcome" });
+    await expect(welcome).toBeVisible();
+    const editButton2 = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton2).toBeVisible();
+    await editButton2.click();
+    const emptySectionsMenu = page.getByTestId(TEST_ID.emptySectionsMenu);
+    await expect(emptySectionsMenu).toBeVisible();
+    await emptySectionsMenu.hover();
+    const addBlockLeft = page.getByRole("button", { name: /Add block \(left\)/i });
+    await expect(addBlockLeft).toBeVisible();
   });
 
   test("three-col + save, reload still has left and right", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await page.getByRole("button", { name: /Choose layout/i }).click();
-    await page.getByRole("button", { name: "Three columns" }).click();
-    await page.getByRole("button", { name: /Save/i }).click();
-    await expect(page.getByText("Saved!")).toBeVisible({ timeout: 5000 });
+    const editButton = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton).toBeVisible();
+    await editButton.click();
+    const chooseLayout = page.getByRole("button", { name: /Choose layout/i });
+    await expect(chooseLayout).toBeVisible();
+    await chooseLayout.click();
+    const threeColumns = page.getByRole("button", { name: "Three columns" });
+    await expect(threeColumns).toBeVisible();
+    await threeColumns.click();
+    const saveButton = page.getByRole("button", { name: /Save/i });
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+    const savedStatus = page.getByRole("status");
+    await expect(savedStatus).toHaveText(/Saved!/i);
     await page.reload();
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await page.getByTestId(TEST_ID.emptySectionsMenu).hover();
-    await expect(page.getByRole("button", { name: /Add block \(left\)/i })).toBeVisible({
-      timeout: 3000,
-    });
-    await page.getByTestId(TEST_ID.emptySectionsMenu).hover();
-    await expect(page.getByRole("button", { name: /Add block \(right\)/i })).toBeVisible({
-      timeout: 3000,
-    });
+    const editButton2 = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton2).toBeVisible();
+    await editButton2.click();
+    const emptySectionsMenu = page.getByTestId(TEST_ID.emptySectionsMenu);
+    await expect(emptySectionsMenu).toBeVisible();
+    await emptySectionsMenu.hover();
+    const addBlockLeft = page.getByRole("button", { name: /Add block \(left\)/i });
+    await expect(addBlockLeft).toBeVisible();
+    const emptySectionsMenu2 = page.getByTestId(TEST_ID.emptySectionsMenu);
+    await expect(emptySectionsMenu2).toBeVisible();
+    await emptySectionsMenu2.hover();
+    const addBlockRight = page.getByRole("button", { name: /Add block \(right\)/i });
+    await expect(addBlockRight).toBeVisible();
   });
 
   test("rockettheme layout saves, main still editable after reload", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await page.getByRole("button", { name: /Choose layout/i }).click();
-    await page.getByRole("button", { name: /RocketTheme-style/ }).click();
-    await page.getByRole("button", { name: /Save/i }).click();
-    await expect(page.getByText("Saved!")).toBeVisible({ timeout: 5000 });
+    const editButton = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton).toBeVisible();
+    await editButton.click();
+    const chooseLayout = page.getByRole("button", { name: /Choose layout/i });
+    await expect(chooseLayout).toBeVisible();
+    await chooseLayout.click();
+    const rocketThemeStyle = page.getByRole("button", { name: /RocketTheme-style/ });
+    await expect(rocketThemeStyle).toBeVisible();
+    await rocketThemeStyle.click();
+    const saveButton = page.getByRole("button", { name: /Save/i });
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+    const savedStatus = page.getByRole("status");
+    await expect(savedStatus).toHaveText(/Saved!/i);
     await page.reload();
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await expect(page.getByRole("button", { name: /Choose layout/i })).toBeVisible();
-    await expect(page.locator("[data-module-position]").first()).toBeVisible({ timeout: 3000 });
-    await expect(page.getByRole("button", { name: /Add block \(main\)/i })).toBeVisible({
-      timeout: 3000,
-    });
+    const editButton2 = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton2).toBeVisible();
+    await editButton2.click();
+    const chooseLayout2 = page.getByRole("button", { name: /Choose layout/i });
+    await expect(chooseLayout2).toBeVisible();
+    const firstEl = page.locator("[data-module-position]").first();
+    await expect(firstEl).toBeVisible();
+    const addBlockMain = page.getByRole("button", { name: /Add block \(main\)/i });
+    await expect(addBlockMain).toBeVisible();
   });
 
   test("admin: set about to single column, save, frontend shows single", async ({ page }) => {
     await page.goto("/admin?page=about");
-    await page.getByRole("button", { name: /Choose layout/i }).click();
-    await page.getByRole("button", { name: "Single column" }).click();
-    await page.getByRole("button", { name: /Save/i }).click();
-    await expect(page.getByText("Saved!")).toBeVisible({ timeout: 5000 });
+    const chooseLayout = page.getByRole("button", { name: /Choose layout/i });
+    await expect(chooseLayout).toBeVisible();
+    await chooseLayout.click();
+    const singleColumn = page.getByRole("button", { name: "Single column" });
+    await expect(singleColumn).toBeVisible();
+    await singleColumn.click();
+    const saveButton = page.getByRole("button", { name: /Save/i });
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+    const savedStatus = page.getByRole("status");
+    await expect(savedStatus).toHaveText(/Saved!/i);
     await page.goto("/about");
-    await expect(page.getByRole("heading", { name: "About Us" })).toBeVisible();
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await expect(page.getByRole("button", { name: "Single column" })).toHaveClass(/bg-zinc-900/);
+    const aboutUs = page.getByRole("heading", { name: "About Us" });
+    await expect(aboutUs).toBeVisible();
+    const editButton = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton).toBeVisible();
+    await editButton.click();
+    const singleColumn2 = page.getByRole("button", { name: "Single column" });
+    await expect(singleColumn2).toHaveClass(/bg-\[var\(--accent\)\]/);
   });
 
   test("single column save and reload — no sidebar add buttons", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await page.getByRole("button", { name: /Choose layout/i }).click();
-    await page.getByRole("button", { name: "Single column" }).click();
-    await page.getByRole("button", { name: /Save/i }).click();
-    await expect(page.getByText("Saved!")).toBeVisible({ timeout: 5000 });
+    const editButton = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton).toBeVisible();
+    await editButton.click();
+    const chooseLayout = page.getByRole("button", { name: /Choose layout/i });
+    await expect(chooseLayout).toBeVisible();
+    await chooseLayout.click();
+    const singleColumn = page.getByRole("button", { name: "Single column" });
+    await expect(singleColumn).toBeVisible();
+    await singleColumn.click();
+    const saveButton = page.getByRole("button", { name: /Save/i });
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+    const savedStatus = page.getByRole("status");
+    await expect(savedStatus).toHaveText(/Saved!/i);
     await page.reload();
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await expect(page.getByRole("button", { name: /Add block \(left\)/i })).not.toBeVisible();
-    await expect(page.getByRole("button", { name: /Add block \(right\)/i })).not.toBeVisible();
+    const editButton2 = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton2).toBeVisible();
+    await editButton2.click();
+    const addBlockLeft = page.getByRole("button", { name: /Add block \(left\)/i });
+    await expect(addBlockLeft).not.toBeVisible();
+    const addBlockRight = page.getByRole("button", { name: /Add block \(right\)/i });
+    await expect(addBlockRight).not.toBeVisible();
   });
 
   test("two-col: add in left and main, save — both visible after reload", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await page.getByRole("button", { name: /Choose layout/i }).click();
-    await page.getByRole("button", { name: "Two columns" }).click();
-    await page.getByTestId(TEST_ID.emptySectionsMenu).hover();
-    await page.getByRole("button", { name: /Add block \(left\)/i }).click({ timeout: 3000 });
-    await page.getByRole("button", { name: "Heading" }).click();
-    await expect(page.getByText("New heading")).toBeVisible({ timeout: 3000 });
-    await page.getByRole("button", { name: /Add block \(main\)/i }).click();
-    await page.getByRole("button", { name: "Paragraph" }).click();
-    await expect(page.getByText("New paragraph...")).toBeVisible({ timeout: 3000 });
-    await page.getByRole("button", { name: /Save/i }).click();
-    await expect(page.getByText("Saved!")).toBeVisible({ timeout: 5000 });
+    const editButton = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton).toBeVisible();
+    await editButton.click();
+    const chooseLayout = page.getByRole("button", { name: /Choose layout/i });
+    await expect(chooseLayout).toBeVisible();
+    await chooseLayout.click();
+    const twoColumns = page.getByRole("button", { name: "Two columns" });
+    await expect(twoColumns).toBeVisible();
+    await twoColumns.click();
+    const emptySectionsMenu = page.getByTestId(TEST_ID.emptySectionsMenu);
+    await expect(emptySectionsMenu).toBeVisible();
+    await emptySectionsMenu.hover();
+    const addBlockLeft = page.getByRole("button", { name: /Add block \(left\)/i });
+    await expect(addBlockLeft).toBeVisible();
+    await addBlockLeft.click();
+    const heading = page.getByRole("button", { name: "Heading" });
+    await expect(heading).toBeVisible();
+    await heading.click();
+    const newHeading = page.getByText("New heading");
+    await expect(newHeading).toBeVisible();
+    const addBlockMain = page.getByRole("button", { name: /Add block \(main\)/i });
+    await expect(addBlockMain).toBeVisible();
+    await addBlockMain.click();
+    const paragraph = page.getByRole("button", { name: "Paragraph" });
+    await expect(paragraph).toBeVisible();
+    await paragraph.click();
+    const newParagraph = page.getByText("New paragraph...");
+    await expect(newParagraph).toBeVisible();
+    const saveButton = page.getByRole("button", { name: /Save/i });
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+    const savedStatus = page.getByRole("status");
+    await expect(savedStatus).toHaveText(/Saved!/i);
     await page.reload();
-    await expect(page.getByText("New heading")).toBeVisible();
-    await expect(page.getByText("New paragraph...")).toBeVisible();
+    const newHeading2 = page.getByText("New heading");
+    await expect(newHeading2).toBeVisible();
+    const newParagraph2 = page.getByText("New paragraph...");
+    await expect(newParagraph2).toBeVisible();
   });
 
   test("admin: set blog to two-col, save, frontend has two columns", async ({ page }) => {
     await page.goto("/admin?page=blog");
-    await page.getByRole("button", { name: /Choose layout/i }).click();
-    await page.getByRole("button", { name: "Two columns" }).click();
-    await page.getByRole("button", { name: /Save/i }).click();
-    await expect(page.getByText("Saved!")).toBeVisible({ timeout: 5000 });
+    const chooseLayout = page.getByRole("button", { name: /Choose layout/i });
+    await expect(chooseLayout).toBeVisible();
+    await chooseLayout.click();
+    const twoColumns = page.getByRole("button", { name: "Two columns" });
+    await expect(twoColumns).toBeVisible();
+    await twoColumns.click();
+    const saveButton = page.getByRole("button", { name: /Save/i });
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+    const savedStatus = page.getByRole("status");
+    await expect(savedStatus).toHaveText(/Saved!/i);
     await page.goto("/blog");
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await page.getByTestId(TEST_ID.emptySectionsMenu).hover();
-    await expect(page.getByRole("button", { name: /Add block \(left\)/i })).toBeVisible({
-      timeout: 3000,
-    });
+    const editButton = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton).toBeVisible();
+    await editButton.click();
+    const emptySectionsMenu = page.getByTestId(TEST_ID.emptySectionsMenu);
+    await expect(emptySectionsMenu).toBeVisible();
+    await emptySectionsMenu.hover();
+    const addBlockLeft = page.getByRole("button", { name: /Add block \(left\)/i });
+    await expect(addBlockLeft).toBeVisible();
   });
 
   test("rockettheme: add block in main, save, visible on reload", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await page.getByRole("button", { name: /RocketTheme-style/ }).click();
-    await page.getByRole("button", { name: /Add block \(main\)/i }).click({ timeout: 3000 });
-    await page.getByRole("button", { name: "Heading" }).click();
-    await expect(page.getByText("New heading")).toBeVisible({ timeout: 3000 });
-    await page.getByRole("button", { name: /Save/i }).click();
-    await expect(page.getByText("Saved!")).toBeVisible({ timeout: 5000 });
+    const editButton = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton).toBeVisible();
+    await editButton.click();
+    const rocketThemeStyle = page.getByRole("button", { name: /RocketTheme-style/ });
+    await expect(rocketThemeStyle).toBeVisible();
+    await rocketThemeStyle.click();
+    const addBlockMain = page.getByRole("button", { name: /Add block \(main\)/i });
+    await expect(addBlockMain).toBeVisible();
+    await addBlockMain.click();
+    const heading = page.getByRole("button", { name: "Heading" });
+    await expect(heading).toBeVisible();
+    await heading.click();
+    const newHeading = page.getByText("New heading");
+    await expect(newHeading).toBeVisible();
+    const saveButton = page.getByRole("button", { name: /Save/i });
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+    const savedStatus = page.getByRole("status");
+    await expect(savedStatus).toHaveText(/Saved!/i);
     await page.reload();
-    await expect(page.getByText("New heading")).toBeVisible();
+    const newHeading2 = page.getByText("New heading");
+    await expect(newHeading2).toBeVisible();
   });
 });

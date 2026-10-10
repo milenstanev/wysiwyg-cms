@@ -100,15 +100,25 @@ async function settle(page: Page) {
 }
 
 async function enterEdit(page: Page) {
-  await page.getByTestId(TEST_ID.editPageButton).click();
-  await expect(page.getByTestId(TEST_ID.editorBar)).toBeVisible();
+  const editPageButton = page.getByTestId(TEST_ID.editPageButton);
+  await expect(editPageButton).toBeVisible();
+  await editPageButton.click();
+  const editorBar = page.getByTestId(TEST_ID.editorBar);
+  await expect(editorBar).toBeVisible();
   await settle(page);
 }
 
 async function leaveEdit(page: Page) {
-  await page.getByRole("button", { name: "Cancel editing" }).click();
-  await expect(page.getByTestId(TEST_ID.editorBar)).toHaveCount(0);
+  const cancelButton = page.getByRole("button", { name: "Cancel editing" });
+  await expect(cancelButton).toBeVisible();
+  await cancelButton.click();
+  const editorBar = page.getByTestId(TEST_ID.editorBar);
+  await expect(editorBar).toHaveCount(0);
   await settle(page);
+}
+
+function welcomeHeading(page: Page) {
+  return page.getByRole("heading", { name: "Welcome", level: 1 });
 }
 
 async function setTheme(page: Page, theme: string) {
@@ -120,9 +130,8 @@ test.describe("WYSIWYG: content does not move between view and edit", () => {
   for (const { path, heading } of PAGES) {
     test(`${path}: every content box is identical in view and edit (0px)`, async ({ page }) => {
       await page.goto(path);
-      await expect(page.getByRole("heading", { name: heading, level: 1 })).toBeVisible({
-        timeout: 10000,
-      });
+      const pageHeading = page.getByRole("heading", { name: heading, level: 1 });
+      await expect(pageHeading).toBeVisible();
       await settle(page);
 
       const view = await measure(page);
@@ -141,9 +150,8 @@ test.describe("WYSIWYG: content does not move between view and edit", () => {
 
   test("home: identical in every theme", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Welcome", level: 1 })).toBeVisible({
-      timeout: 10000,
-    });
+    const welcome = welcomeHeading(page);
+    await expect(welcome).toBeVisible();
     for (const theme of THEMES) {
       await setTheme(page, theme);
       const view = await measure(page);
@@ -164,9 +172,8 @@ test.describe("WYSIWYG: content does not move between view and edit", () => {
     }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       await page.goto("/");
-      await expect(page.getByRole("heading", { name: "Welcome", level: 1 })).toBeVisible({
-        timeout: 10000,
-      });
+      const welcome = welcomeHeading(page);
+      await expect(welcome).toBeVisible();
       await settle(page);
       const view = await measure(page);
       await enterEdit(page);
@@ -177,9 +184,8 @@ test.describe("WYSIWYG: content does not move between view and edit", () => {
 
   test("home: <main> is pixel-identical once overlay chrome is hidden", async ({ page }, testInfo) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Welcome", level: 1 })).toBeVisible({
-      timeout: 10000,
-    });
+    const welcome = welcomeHeading(page);
+    await expect(welcome).toBeVisible();
     await settle(page);
     const main = page.locator("[data-page-main]");
     // The sticky header overlays <main> while a tall element is captured; its geometry is covered above
@@ -210,11 +216,12 @@ test.describe("WYSIWYG: content does not move between view and edit", () => {
 test.describe("Edit controls: small chip + hover popover", () => {
   test("view mode renders no edit chrome at all", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Welcome", level: 1 })).toBeVisible({
-      timeout: 10000,
-    });
-    await expect(page.locator(CHROME)).toHaveCount(0);
-    await expect(page.getByTestId(TEST_ID.blockControlsTrigger)).toHaveCount(0);
+    const welcome = welcomeHeading(page);
+    await expect(welcome).toBeVisible();
+    const editChrome = page.locator(CHROME);
+    await expect(editChrome).toHaveCount(0);
+    const blockControlsTrigger = page.getByTestId(TEST_ID.blockControlsTrigger);
+    await expect(blockControlsTrigger).toHaveCount(0);
   });
 
   test("each block gets one small chip outside the card; menu hidden until hover", async ({
@@ -258,9 +265,8 @@ test.describe("Edit controls: small chip + hover popover", () => {
     page,
   }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Welcome", level: 1 })).toBeVisible({
-      timeout: 10000,
-    });
+    const welcome = welcomeHeading(page);
+    await expect(welcome).toBeVisible();
     await settle(page);
     const view = await measure(page);
     await enterEdit(page);
@@ -274,11 +280,16 @@ test.describe("Edit controls: small chip + hover popover", () => {
 
     const menu = mainUnit.getByTestId(TEST_ID.blockControlsMenu);
     await expect(menu).toBeVisible();
-    await expect(menu.getByRole("button", { name: "Move up" })).toBeVisible();
-    await expect(menu.getByRole("button", { name: "Move down" })).toBeVisible();
-    await expect(menu.getByRole("button", { name: "Add block above" })).toBeVisible();
-    await expect(menu.getByRole("button", { name: "Add block below" })).toBeVisible();
-    await expect(menu.getByRole("button", { name: "Remove block" })).toBeVisible();
+    const moveUpButton = menu.getByRole("button", { name: "Move up" });
+    const moveDownButton = menu.getByRole("button", { name: "Move down" });
+    const addAboveButton = menu.getByRole("button", { name: "Add block above" });
+    const addBelowButton = menu.getByRole("button", { name: "Add block below" });
+    const removeBlockButton = menu.getByRole("button", { name: "Remove block" });
+    await expect(moveUpButton).toBeVisible();
+    await expect(moveDownButton).toBeVisible();
+    await expect(addAboveButton).toBeVisible();
+    await expect(addBelowButton).toBeVisible();
+    await expect(removeBlockButton).toBeVisible();
 
     const worst = maxShift(view, await measure(page));
     expect(worst.delta, `popover open: largest shift at ${worst.key}`).toBe(0);
@@ -293,21 +304,32 @@ test.describe("Edit controls: small chip + hover popover", () => {
     await enterEdit(page);
 
     const stack = page.locator(`.layout-content-card ${testIdSelector(TEST_ID.blockStack)}`);
-    const before = await stack.getByTestId(TEST_ID.contentBlock).count();
+    const contentBlocks = stack.getByTestId(TEST_ID.contentBlock);
+    const before = await contentBlocks.count();
     const first = stack.getByTestId(TEST_ID.blockEditUnit).first();
-    await first.getByTestId(TEST_ID.blockControlsTrigger).hover();
-    await first.getByRole("button", { name: "Add block below" }).click();
-    await page.getByRole("button", { name: "Paragraph" }).click();
+    const firstTrigger = first.getByTestId(TEST_ID.blockControlsTrigger);
+    await expect(firstTrigger).toBeVisible();
+    await firstTrigger.hover();
+    const addBelowButton = first.getByRole("button", { name: "Add block below" });
+    await expect(addBelowButton).toBeVisible();
+    await addBelowButton.click();
+    const paragraphButton = page.getByRole("button", { name: "Paragraph" });
+    await expect(paragraphButton).toBeVisible();
+    await paragraphButton.click();
 
-    await expect(stack.getByTestId(TEST_ID.contentBlock)).toHaveCount(before + 1);
-    await expect(stack.getByTestId(TEST_ID.contentBlock).nth(1)).toContainText("New paragraph");
+    await expect(contentBlocks).toHaveCount(before + 1);
+    const secondContentBlock = contentBlocks.nth(1);
+    await expect(secondContentBlock).toContainText("New paragraph");
   });
 
   test("keyboard: focusing the chip opens the popover", async ({ page }) => {
     await page.goto("/");
     await enterEdit(page);
     const unit = page.locator(`.layout-content-card ${testIdSelector(TEST_ID.blockEditUnit)}`).first();
-    await unit.getByTestId(TEST_ID.blockControlsTrigger).focus();
-    await expect(unit.getByTestId(TEST_ID.blockControlsMenu)).toBeVisible();
+    const trigger = unit.getByTestId(TEST_ID.blockControlsTrigger);
+    await expect(trigger).toBeVisible();
+    await trigger.focus();
+    const menu = unit.getByTestId(TEST_ID.blockControlsMenu);
+    await expect(menu).toBeVisible();
   });
 });

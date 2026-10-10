@@ -1,4 +1,11 @@
-import type { ContentBlock, Page, PageLayout, PageModuleAssignment, ComponentType } from "./types";
+import type {
+  ContentBlock,
+  Page,
+  PageLayout,
+  PageModuleAssignment,
+  ComponentType,
+  ColumnWidths,
+} from "./types";
 import type { BlockType, PositionId } from "./types";
 
 /** Callbacks passed to PageRenderer when in edit mode. All optional so the renderer can be used read-only. */
@@ -12,6 +19,7 @@ export interface PageRendererCallbacks {
   onBlockUpdate?: (blockId: string, updates: Partial<ContentBlock>) => void;
   onModulesChange?: (modules: PageModuleAssignment[]) => void;
   onComponentChange?: (region: "main" | "left" | "right", component: ComponentType) => void;
+  onColumnWidthsChange?: (widths: ColumnWidths) => void;
 }
 
 /** Optional layout overrides for designers / HTML devs */
@@ -41,6 +49,7 @@ export interface PageRendererProps {
   onMoveBlock?: (blockId: string, direction: "up" | "down", positionId: PositionId) => void;
   onBlockUpdate?: (blockId: string, updates: Partial<ContentBlock>) => void;
   onModulesChange?: (modules: PageModuleAssignment[]) => void;
+  onColumnWidthsChange?: (widths: ColumnWidths) => void;
   /** Extra class on the article wrapper */
   contentClassName?: string;
   /** Custom grid classes or unstyled cards */

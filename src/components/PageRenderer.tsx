@@ -3,6 +3,7 @@ import { getComponentForRegion, ComponentSlot } from "@/lib/cms/components";
 import { ModulePosition } from "./layout/ModulePosition";
 import { ContentCard } from "./layout/ContentCard";
 import { SidebarCard } from "./layout/SidebarCard";
+import { ColumnWidthRow } from "./layout/ColumnWidthRow";
 import { BlocksColumn } from "./BlocksColumn";
 import { CONTENT_WIDTH_CLASS } from "@/lib/layout/constants";
 import {
@@ -17,6 +18,7 @@ import {
   getModulesForPosition,
 } from "@/lib/cms/modules";
 import type { PageModuleAssignment, ModuleId } from "@/lib/cms/types";
+import { layoutSupportsColumnWidths } from "@/lib/cms/column-widths";
 
 /**
  * Renders a page from a layout template (single, two-col, three-col, rockettheme).
@@ -35,6 +37,7 @@ export function PageRenderer({
   onMoveBlock,
   onBlockUpdate,
   onModulesChange,
+  onColumnWidthsChange,
   contentClassName = "",
   layoutOptions,
 }: PageRendererProps) {
@@ -222,6 +225,30 @@ export function PageRenderer({
         // Empty section: omit the whole row so chrome/padding disappears and layout adapts
         if (visiblePositions.length === 0) return null;
         const gridClassName = getRowGridClassName(row, visiblePositions.length);
+        const colsEditable =
+          layoutSupportsColumnWidths(layout) &&
+          row.positions.some((p) => p === "left" || p === "main" || p === "right");
+        const rowBody = visiblePositions.map((positionId) => {
+          const originalIndex = row.positions.indexOf(positionId);
+          return renderPosition(positionId, rowIndex, row.orderClassNames?.[originalIndex]);
+        });
+        if (colsEditable) {
+          return (
+            <ColumnWidthRow
+              key={`${template.id}-row-${rowIndex}`}
+              layout={layout}
+              gridClassName={gridClassName}
+              rowIndex={rowIndex}
+              visiblePositions={visiblePositions}
+              visibleCount={visiblePositions.length}
+              columnWidths={page.columnWidths}
+              editable={editable}
+              onColumnWidthsChange={onColumnWidthsChange}
+            >
+              {rowBody}
+            </ColumnWidthRow>
+          );
+        }
         return (
           <div
             key={`${template.id}-row-${rowIndex}`}
@@ -229,10 +256,7 @@ export function PageRenderer({
             data-template-row={rowIndex}
             data-visible-count={visiblePositions.length}
           >
-            {visiblePositions.map((positionId) => {
-              const originalIndex = row.positions.indexOf(positionId);
-              return renderPosition(positionId, rowIndex, row.orderClassNames?.[originalIndex]);
-            })}
+            {rowBody}
           </div>
         );
       })}

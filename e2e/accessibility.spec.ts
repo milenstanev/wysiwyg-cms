@@ -31,8 +31,12 @@ const SITE_PAGES = [
 
 async function open(page: Page, path: string, mode: "view" | "edit") {
   await page.goto(mode === "edit" ? `${path}${path.includes("?") ? "&" : "?"}edit=1` : path);
-  await expect(page.locator("h1").first()).toBeVisible({ timeout: 10000 });
-  if (mode === "edit") await expect(page.getByTestId(TEST_ID.editorBar)).toBeVisible();
+  const pageTitle = page.locator("h1").first();
+  await expect(pageTitle).toBeVisible();
+  if (mode === "edit") {
+    const editorBar = page.getByTestId(TEST_ID.editorBar);
+    await expect(editorBar).toBeVisible();
+  }
   await page.evaluate(() => document.fonts.ready);
 }
 
@@ -71,7 +75,8 @@ test.describe("axe: WCAG 2.2 AA in every page, mode and theme", () => {
 
   test("/admin", async ({ page }) => {
     await page.goto("/admin");
-    await expect(page.getByTestId(TEST_ID.adminLoaded)).toBeVisible({ timeout: 10000 });
+    const adminLoaded = page.getByTestId(TEST_ID.adminLoaded);
+    await expect(adminLoaded).toBeVisible();
     for (const theme of THEMES) {
       await setTheme(page, theme);
       await expectNoAxeViolations(page, `/admin ${theme}`);
@@ -80,7 +85,8 @@ test.describe("axe: WCAG 2.2 AA in every page, mode and theme", () => {
 
   test("404 page", async ({ page }) => {
     await page.goto("/this-page-does-not-exist-a11y");
-    await expect(page.locator("h1")).toBeVisible();
+    const pageTitle2 = page.locator("h1");
+    await expect(pageTitle2).toBeVisible();
     for (const theme of THEMES) {
       await setTheme(page, theme);
       await expectNoAxeViolations(page, `404 ${theme}`);
@@ -92,21 +98,30 @@ test.describe("axe: overlays open in edit mode", () => {
   test("block actions popover", async ({ page }) => {
     await open(page, "/", "edit");
     const unit = page.locator(`.layout-content-card ${testIdSelector(TEST_ID.blockEditUnit)}`).first();
-    await unit.getByTestId(TEST_ID.blockControlsTrigger).hover();
-    await expect(unit.getByTestId(TEST_ID.blockControlsMenu)).toBeVisible();
+    const trigger = unit.getByTestId(TEST_ID.blockControlsTrigger);
+    await expect(trigger).toBeVisible();
+    await trigger.hover();
+    const menu = unit.getByTestId(TEST_ID.blockControlsMenu);
+    await expect(menu).toBeVisible();
     await expectNoAxeViolations(page, "block popover open");
   });
 
   test("add-block dropdown, layout dropdown, block settings and empty-sections menu", async ({ page }) => {
     await open(page, "/about", "edit");
 
-    await page.getByRole("button", { name: /Add block \(main\)/i }).click();
-    await expect(page.getByRole("button", { name: "Paragraph" })).toBeVisible();
+    const addButton = page.getByRole("button", { name: /Add block \(main\)/i });
+    await expect(addButton).toBeVisible();
+    await addButton.click();
+    const paragraphButton = page.getByRole("button", { name: "Paragraph" });
+    await expect(paragraphButton).toBeVisible();
     await expectNoAxeViolations(page, "add-block dropdown open");
     await page.keyboard.press("Escape");
 
-    await page.getByRole("button", { name: "Choose layout" }).click();
-    await expect(page.getByTestId(TEST_ID.layoutDropdown)).toBeVisible();
+    const chooseButton = page.getByRole("button", { name: "Choose layout" });
+    await expect(chooseButton).toBeVisible();
+    await chooseButton.click();
+    const layoutDropdown = page.getByTestId(TEST_ID.layoutDropdown);
+    await expect(layoutDropdown).toBeVisible();
     await expectNoAxeViolations(page, "layout dropdown open");
     await page.keyboard.press("Escape");
 
@@ -115,8 +130,11 @@ test.describe("axe: overlays open in edit mode", () => {
       .filter({ has: page.locator("h2") })
       .first();
     await heading.getByTestId(TEST_ID.blockControlsTrigger).hover();
-    await heading.getByRole("button", { name: "Block settings" }).click();
-    await expect(page.getByLabel(/Heading level/i)).toBeVisible();
+    const blockSettings = heading.getByRole("button", { name: "Block settings" });
+    await expect(blockSettings).toBeVisible();
+    await blockSettings.click();
+    const HeadinglevelField = page.getByLabel(/Heading level/i);
+    await expect(HeadinglevelField).toBeVisible();
     await expectNoAxeViolations(page, "block settings open");
     await page.keyboard.press("Escape");
 
@@ -125,6 +143,35 @@ test.describe("axe: overlays open in edit mode", () => {
       await sections.getByRole("button").first().hover();
       await expectNoAxeViolations(page, "empty sections menu open");
     }
+  });
+
+  test("selection format toolbar and link URL row", async ({ page }) => {
+    await open(page, "/about", "edit");
+    // Prefer paragraph text block so list/link controls are shown (hidden on headings)
+    const field = page.locator('.rich-text-block[data-rich-edit="true"]').first();
+    await field.click();
+    await field.press(process.platform === "darwin" ? "Meta+A" : "Control+A");
+    const selectionFormatToolbar = page.getByTestId(TEST_ID.selectionFormatToolbar);
+    await expect(selectionFormatToolbar).toBeVisible();
+    const formatBold = page.getByTestId(TEST_ID.formatBold);
+    await expect(formatBold).toHaveAccessibleName(/Bold/i);
+    const formatLink = page.getByTestId(TEST_ID.formatLink);
+    await expect(formatLink).toHaveAccessibleName(/link/i);
+    const formatSubmit = page.getByTestId(TEST_ID.formatSubmit);
+    await expect(formatSubmit).toHaveAccessibleName(/Apply field/i);
+    await expectNoAxeViolations(page, "format toolbar open");
+
+    await expect(formatLink).toBeVisible();
+    await formatLink.click();
+    const formatLinkInput = page.getByTestId(TEST_ID.formatLinkInput);
+    await expect(formatLinkInput).toBeVisible();
+    await expectNoAxeViolations(page, "format toolbar link row open");
+
+    await page.keyboard.press("Escape");
+    await expect(formatLinkInput).toHaveCount(0);
+
+    await page.keyboard.press("Escape");
+    await expect(selectionFormatToolbar).toHaveCount(0);
   });
 });
 
@@ -137,7 +184,8 @@ test.describe("Keyboard", () => {
     const box = await skip.boundingBox();
     expect(box && box.y >= 0 && box.height > 0, "skip link is on screen when focused").toBe(true);
     await page.keyboard.press("Enter");
-    await expect(page.locator("main#main-content")).toBeFocused();
+    const pageLocator = page.locator("main#main-content");
+    await expect(pageLocator).toBeFocused();
   });
 
   for (const mode of ["view", "edit"] as const) {
@@ -206,9 +254,10 @@ test.describe("Keyboard", () => {
     const add = page.getByRole("button", { name: /Add block \(main\)/i });
     await add.focus();
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("button", { name: "Heading" })).toBeFocused();
+    const headingButton = page.getByRole("button", { name: "Heading" });
+    await expect(headingButton).toBeFocused();
     await page.keyboard.press("Escape");
-    await expect(page.getByRole("button", { name: "Heading" })).toHaveCount(0);
+    await expect(headingButton).toHaveCount(0);
     await expect(add).toBeFocused();
 
     const layout = page.getByRole("button", { name: "Choose layout" });
@@ -216,7 +265,8 @@ test.describe("Keyboard", () => {
     await page.keyboard.press("Enter");
     await expect(layout).toHaveAttribute("aria-expanded", "true");
     const panel = page.getByTestId(TEST_ID.layoutDropdown);
-    await expect(panel.locator(":focus")).toHaveCount(1);
+    const focusedInPanel = panel.locator(":focus");
+    await expect(focusedInPanel).toHaveCount(1);
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);
     await expect(layout).toBeFocused();

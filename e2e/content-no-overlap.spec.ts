@@ -8,9 +8,13 @@ import { TEST_ID } from "../src/lib/test-ids";
 
 async function enterEditMode(page: import("@playwright/test").Page) {
   await page.goto("/");
-  await page.getByRole("button", { name: /Edit this page/i }).click();
-  await expect(page.getByRole("button", { name: /Save/i })).toBeVisible({ timeout: 5000 });
-  await expect(page.getByTestId(TEST_ID.blockStack).first()).toBeVisible({ timeout: 5000 });
+  const editPageButton = page.getByRole("button", { name: /Edit this page/i });
+  await expect(editPageButton).toBeVisible();
+  await editPageButton.click();
+  const saveButton = page.getByRole("button", { name: /Save/i });
+  await expect(saveButton).toBeVisible();
+  const blockStack = page.getByTestId(TEST_ID.blockStack).first();
+  await expect(blockStack).toBeVisible();
 }
 
 /**
@@ -45,10 +49,12 @@ function clipCheck(el: Element) {
 test.describe("Content does not overlap or clip", () => {
   test("view mode: block content is not clipped by its parent", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible({ timeout: 10000 });
+    const welcomeHeading = page.getByRole("heading", { name: "Welcome" });
+    await expect(welcomeHeading).toBeVisible();
 
     const blocks = page.getByTestId(TEST_ID.contentBlock);
-    await expect(blocks.first()).toBeVisible({ timeout: 5000 });
+    const firstBlock = blocks.first();
+    await expect(firstBlock).toBeVisible();
     const count = await blocks.count();
     expect(count).toBeGreaterThan(0);
 
@@ -62,9 +68,11 @@ test.describe("Content does not overlap or clip", () => {
 
   test("view mode: consecutive blocks do not overlap", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByTestId(TEST_ID.contentBlock).first()).toBeVisible({ timeout: 10000 });
+    const firstContentBlock = page.getByTestId(TEST_ID.contentBlock).first();
+    await expect(firstContentBlock).toBeVisible();
 
-    const boxes = await page.getByTestId(TEST_ID.contentBlock).evaluateAll((els) =>
+    const contentBlocks = page.getByTestId(TEST_ID.contentBlock);
+    const boxes = await contentBlocks.evaluateAll((els) =>
       els.map((el) => {
         const r = el.getBoundingClientRect();
         return { top: r.top, bottom: r.bottom, left: r.left };
@@ -100,7 +108,8 @@ test.describe("Content does not overlap or clip", () => {
   test("edit mode: consecutive blocks in the same column do not overlap", async ({ page }) => {
     await enterEditMode(page);
 
-    const boxes = await page.getByTestId(TEST_ID.contentBlock).evaluateAll((els) =>
+    const contentBlocks = page.getByTestId(TEST_ID.contentBlock);
+    const boxes = await contentBlocks.evaluateAll((els) =>
       els.map((el) => {
         const r = el.getBoundingClientRect();
         return { top: r.top, bottom: r.bottom, left: r.left };
