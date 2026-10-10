@@ -235,28 +235,3 @@ export function sanitizeContentBlockFields<T extends {
   }
   return next;
 }
-
-/** Sanitize rich string fields on a content block (persist path). */
-export function sanitizeContentBlockFields<T extends {
-  content?: string;
-  title?: string;
-  items?: string[];
-  rows?: string[][];
-}>(block: T): T {
-  const next: T = { ...block };
-  if (typeof next.content === "string") next.content = sanitizeRichHtml(next.content);
-  if (typeof next.title === "string") next.title = sanitizeRichHtml(next.title);
-  if (Array.isArray(next.items)) {
-    next.items = next.items.map((item) =>
-      typeof item === "string" ? sanitizeRichHtml(item) : item
-    );
-  }
-  if (Array.isArray(next.rows)) {
-    next.rows = next.rows.map((row) =>
-      Array.isArray(row)
-        ? row.map((cell) => (typeof cell === "string" ? sanitizeRichHtml(cell) : cell))
-        : row
-    );
-  }
-  return next;
-}
