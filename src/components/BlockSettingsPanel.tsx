@@ -38,14 +38,17 @@ function SettingField({
     const str = value == null ? "" : String(value);
     return (
       <div>
-        <label htmlFor={id} className="block text-sm font-medium text-[var(--foreground)] mb-[var(--space-1)]">
+        <label
+          htmlFor={id}
+          className="block text-sm font-medium text-[var(--foreground)] mb-[var(--space-1)]"
+        >
           {def.label}
         </label>
         <select
           id={id}
           value={str}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full rounded border border-[var(--control-border)] bg-[var(--surface)] px-[var(--space-2)] py-[var(--space-2)] text-sm text-[var(--foreground)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]"
+          className="edit-field-select"
         >
           {Object.entries(def.options).map(([val, label]) => (
             <option key={val} value={val}>
@@ -59,7 +62,10 @@ function SettingField({
   if (def.type === "text") {
     return (
       <div>
-        <label htmlFor={id} className="block text-sm font-medium text-[var(--foreground)] mb-[var(--space-1)]">
+        <label
+          htmlFor={id}
+          className="block text-sm font-medium text-[var(--foreground)] mb-[var(--space-1)]"
+        >
           {def.label}
         </label>
         <input
@@ -68,7 +74,7 @@ function SettingField({
           value={value == null ? "" : String(value)}
           onChange={(e) => onChange(e.target.value)}
           placeholder={def.placeholder}
-          className="w-full rounded border border-[var(--control-border)] bg-[var(--surface)] px-[var(--space-2)] py-[var(--space-2)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]"
+          className="edit-field-input"
         />
       </div>
     );
@@ -85,11 +91,7 @@ export function BlockSettingsPanel({ block, onSettingsChange, onClose }: BlockSe
       <div className="p-[var(--space-3)] text-sm text-[var(--muted)]">
         No settings for this block type.
         {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="mt-[var(--space-2)] text-[var(--muted)] hover:text-[var(--foreground)] hover:underline"
-          >
+          <button type="button" onClick={onClose} className="edit-text-button">
             Close
           </button>
         )}
@@ -114,11 +116,7 @@ export function BlockSettingsPanel({ block, onSettingsChange, onClose }: BlockSe
         ))}
       </div>
       {onClose && (
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-[var(--space-3)] w-full rounded bg-[color-mix(in_srgb,var(--muted)_14%,var(--surface))] px-[var(--space-2)] py-[var(--space-2)] text-sm text-[var(--foreground)] hover:bg-[color-mix(in_srgb,var(--muted)_22%,var(--surface))]"
-        >
+        <button type="button" onClick={onClose} className="edit-panel-secondary">
           Close
         </button>
       )}

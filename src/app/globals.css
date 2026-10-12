@@ -799,7 +799,7 @@ html[data-theme="ink"] .site-header {
 }
 
 .edit-menu-danger {
-  color: #b91c1c;
+  color: var(--danger);
 }
 
 .edit-menu-icon {
@@ -808,6 +808,32 @@ html[data-theme="ink"] .site-header {
   justify-content: center;
   width: var(--space-5);
   color: var(--muted);
+}
+
+.edit-menu-item-roomy {
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+}
+
+.edit-menu-option-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--space-5);
+  height: var(--space-5);
+  border-radius: var(--space-1);
+  background: color-mix(in srgb, var(--muted) 14%, var(--surface));
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.edit-menu-option-icon-lg {
+  width: var(--space-6);
+  height: var(--space-6);
+  border-radius: var(--space-2);
+  font-size: 0.875rem;
 }
 
 .edit-menu-field {
@@ -826,6 +852,140 @@ html[data-theme="ink"] .site-header {
   background: var(--background);
   color: var(--foreground);
   font-size: 0.875rem;
+}
+
+/* Portaled floating panel (Add block list, settings, layout picker) */
+.edit-portal-panel {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  min-width: 10rem;
+  padding: var(--space-1);
+  border: 1px solid var(--border);
+  border-radius: var(--space-2);
+  background: var(--surface);
+  box-shadow:
+    var(--card-shadow),
+    0 12px 32px rgb(0 0 0 / 0.12);
+}
+
+.edit-portal-panel-padded {
+  padding: var(--space-3);
+}
+
+/* Bridge keeps the pointer path from anchor → panel (matches --space-2 gap) */
+.edit-portal-panel::before {
+  position: absolute;
+  inset: calc(-1 * var(--space-2)) 0 auto 0;
+  height: var(--space-2);
+  content: "";
+}
+
+.edit-portal-panel[data-placement="above"]::before {
+  inset: auto 0 calc(-1 * var(--space-2)) 0;
+}
+
+.edit-add-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--control-border);
+  border-radius: var(--space-2);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.edit-add-trigger:hover,
+.edit-add-trigger:focus-visible {
+  border-color: var(--accent);
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--muted) 10%, var(--surface));
+}
+
+.edit-panel-secondary {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-3);
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--space-1);
+  background: color-mix(in srgb, var(--muted) 14%, var(--surface));
+  color: var(--foreground);
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-align: center;
+}
+
+.edit-panel-secondary:hover,
+.edit-panel-secondary:focus-visible {
+  background: color-mix(in srgb, var(--muted) 22%, var(--surface));
+}
+
+.edit-text-button {
+  display: inline;
+  margin-top: var(--space-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.edit-text-button:hover,
+.edit-text-button:focus-visible {
+  color: var(--foreground);
+  text-decoration: underline;
+}
+
+.edit-field-input,
+.edit-field-select {
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--control-border);
+  border-radius: var(--space-1);
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 0.875rem;
+}
+
+.edit-field-input::placeholder {
+  color: var(--muted);
+}
+
+.edit-field-input:focus,
+.edit-field-select:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.editor-bar-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--space-2);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: border-color 120ms ease;
+}
+
+.editor-bar-button:hover,
+.editor-bar-button:focus-visible {
+  border-color: var(--accent);
 }
 
 /* List item remove: overlays the row end, shown on row hover */

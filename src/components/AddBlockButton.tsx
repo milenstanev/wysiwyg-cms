@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { portalRoot } from "@/lib/portal-root";
-import { usePortalPosition } from "@/hooks/usePortalPosition";
 import { useDropdownA11y } from "@/hooks/useDropdownA11y";
+import {
+  EditAddTrigger,
+  EditMenuItem,
+  EditPortalPanel,
+  EDIT_PORTAL_GAP,
+} from "@/components/edit-chrome";
 
 const BLOCK_OPTIONS = [
   { type: "heading" as const, label: "Heading", icon: "H" },
@@ -34,11 +37,7 @@ export function AddBlockButton({
   const [open, setOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  /** gap: 4px matches `--space-1` */
-  const portalPosition = usePortalPosition(anchorRef, open, {
-    width: variant === "inline" ? 200 : 160,
-    gap: 4,
-  });
+  const roomy = variant === "inline";
 
   const onOpenChangeRef = useRef(onOpenChange);
   useEffect(() => {
@@ -57,37 +56,29 @@ export function AddBlockButton({
     triggerRef.current?.focus();
   };
 
-  const roomy = variant === "inline";
-  const dropdownContent = open && portalPosition && (
-    <div
-      ref={dropdownRef}
-      role="group"
+  const dropdownContent = (
+    <EditPortalPanel
+      open={open}
+      anchorRef={anchorRef}
+      panelRef={dropdownRef}
+      width={roomy ? 200 : 160}
+      gap={EDIT_PORTAL_GAP}
       aria-label={`${label}: choose a block type`}
-      className={`fixed z-[9999] py-[var(--space-1)] bg-[var(--surface)] rounded-lg shadow-lg border border-[var(--border)] ${roomy ? "min-w-[160px]" : "min-w-[140px]"}`}
-      style={portalPosition}
     >
       {BLOCK_OPTIONS.map((opt) => (
-        <button
-          key={opt.type}
-          type="button"
-          onClick={() => handleSelect(opt.type)}
-          className={`w-full text-left text-sm text-[var(--foreground)] hover:bg-[color-mix(in_srgb,var(--muted)_12%,var(--surface))] flex items-center ${
-            roomy
-              ? "gap-[var(--space-3)] px-[var(--space-4)] py-[var(--space-2)]"
-              : "gap-[var(--space-2)] px-[var(--space-3)] py-[var(--space-2)]"
-          }`}
-        >
+        <EditMenuItem key={opt.type} roomy={roomy} onClick={() => handleSelect(opt.type)}>
           <span
-            className={`flex items-center justify-center rounded bg-[color-mix(in_srgb,var(--muted)_14%,var(--surface))] text-[var(--muted)] font-medium ${
-              roomy ? "w-8 h-8 rounded-md" : "w-5 h-5 text-xs"
-            }`}
+            aria-hidden
+            className={
+              roomy ? "edit-menu-option-icon edit-menu-option-icon-lg" : "edit-menu-option-icon"
+            }
           >
             {opt.icon}
           </span>
           {opt.label}
-        </button>
+        </EditMenuItem>
       ))}
-    </div>
+    </EditPortalPanel>
   );
 
   if (variant === "compact") {
@@ -106,7 +97,7 @@ export function AddBlockButton({
             <span aria-hidden>+</span>
           </button>
         </div>
-        {dropdownContent && createPortal(dropdownContent, portalRoot())}
+        {dropdownContent}
       </>
     );
   }
@@ -115,20 +106,16 @@ export function AddBlockButton({
     return (
       <>
         <div ref={anchorRef}>
-          <button
+          <EditMenuItem
             ref={triggerRef}
-            type="button"
             onClick={() => setOpen((o) => !o)}
-            className="edit-menu-item"
             aria-expanded={open}
+            icon="+"
           >
-            <span aria-hidden className="edit-menu-icon">
-              +
-            </span>
             {label}
-          </button>
+          </EditMenuItem>
         </div>
-        {dropdownContent && createPortal(dropdownContent, portalRoot())}
+        {dropdownContent}
       </>
     );
   }
@@ -136,20 +123,15 @@ export function AddBlockButton({
   return (
     <>
       <div ref={anchorRef} className="relative">
-        <button
+        <EditAddTrigger
           ref={triggerRef}
-          type="button"
           onClick={() => setOpen((o) => !o)}
-          className="flex items-center gap-[var(--space-2)] px-[var(--space-3)] py-[var(--space-2)] rounded-lg border border-dashed border-[var(--control-border)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--foreground)] hover:bg-[color-mix(in_srgb,var(--muted)_10%,var(--surface))] transition-colors text-sm"
           aria-expanded={open}
         >
-          <span aria-hidden className="text-[var(--muted)]">
-            +
-          </span>
           {label}
-        </button>
+        </EditAddTrigger>
       </div>
-      {dropdownContent && createPortal(dropdownContent, portalRoot())}
+      {dropdownContent}
     </>
   );
 }

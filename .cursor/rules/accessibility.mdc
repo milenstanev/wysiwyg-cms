@@ -19,8 +19,8 @@ Applies to site pages, edit mode, `/admin`, 404, every theme, and every new comp
 - Everything works with keyboard alone; Tab order follows visual order. First Tab = "Skip to content".
 - Never remove focus indicators. The global `:focus-visible` ring wins over `outline-none`; don't override it.
 - Focus must not be hidden by the sticky header / editor bar (`scroll-padding` handles it — keep it the same in view and edit).
-- Hover/focus popovers (`.edit-popover`): use `useEditPopover` — Escape dismisses, focus returns to the chip, `aria-expanded` is accurate.
-- Portalled dropdowns: use `useDropdownA11y` — focus moves into the panel, Escape / Tab-out / outside click closes, focus returns to the trigger.
+- Hover/focus popovers: use `EditPopover` / `useEditPopover` — Escape dismisses, focus returns to the chip, `aria-expanded` is accurate. Styling: [edit-chrome.mdc](edit-chrome.mdc).
+- Portalled dropdowns: use `EditPortalPanel` / `useDropdownA11y` — focus moves into the panel, Escape / Tab-out / outside click closes, focus returns to the trigger.
 
 ## Names, roles, states
 

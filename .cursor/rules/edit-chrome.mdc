@@ -1,0 +1,36 @@
+---
+description: Reuse edit-chrome components and .edit-* CSS for popovers, menus, and portals
+globs:
+  - src/components/**/*
+  - src/app/globals.css
+  - src/hooks/useEditPopover.ts
+  - src/hooks/useDropdownA11y.ts
+alwaysApply: false
+---
+
+# Edit Chrome (popovers, menus, portals)
+
+Edit-mode overlays must use the shared system — not new Tailwind hover stacks.
+
+## Prefer
+
+- Components in [`src/components/edit-chrome/`](src/components/edit-chrome/): `EditPopover`, `EditMenuItem`, `EditPortalPanel`, `EditAddTrigger`
+- CSS classes in `globals.css`: `.edit-popover`, `.edit-popover-menu`, `.edit-menu-item`, `.edit-chip`, `.edit-portal-panel`, `.edit-add-trigger`, `.edit-panel-secondary`, `.edit-text-button`, `.edit-field-input`, `.editor-bar-button`
+- A11y hooks: `useEditPopover` (hover/focus chip menus), `useDropdownA11y` (portalled panels)
+- Portal gap: `EDIT_PORTAL_GAP` (8px / `--space-2`) so it matches the `.edit-portal-panel` hover bridge
+
+## Hover contract
+
+1. Chip → menu travel uses `.edit-popover-menu::before` (CSS bridge).
+2. Nested portals (Add block list, settings) set `pinned` / `data-open` on the parent `EditPopover` so the menu stays open when the pointer leaves the host.
+3. Portaled panels use `.edit-portal-panel` (includes its own bridge); do not reimplement `fixed z-[9999] … shadow-lg` in Tailwind.
+4. Escape dismisses via `data-dismissed` and must clear nested open state first (`onDismiss`).
+
+## Do not
+
+- Copy `hover:bg-[color-mix(in_srgb,var(--muted)_12%,…)]` (or similar) for menu rows — use `.edit-menu-item` (accent hover)
+- Invent a second popover shell with utility classes
+- Portal to `document.body` — use `portalRoot()` (inside `<main>`)
+- Put edit chrome in document flow (breaks WYSIWYG zero-shift)
+
+Human overview: [`docs/EDIT-CHROME.md`](../../docs/EDIT-CHROME.md).

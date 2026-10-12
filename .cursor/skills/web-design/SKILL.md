@@ -27,6 +27,7 @@ Follow these always-applied / scoped rules; this skill does not restate them:
 | Theme palette harmony | [`.cursor/rules/theme-color-harmony.mdc`](../../rules/theme-color-harmony.mdc) |
 | No fixed height on content | [`.cursor/rules/no-fixed-height.mdc`](../../rules/no-fixed-height.mdc) |
 | Verify edit mode | [`.cursor/rules/test-edit-mode.mdc`](../../rules/test-edit-mode.mdc) |
+| Edit chrome (popovers / menus) | [`.cursor/rules/edit-chrome.mdc`](../../rules/edit-chrome.mdc) · [docs/EDIT-CHROME.md](../../../docs/EDIT-CHROME.md) |
 | Simple CSS selectors | [`.cursor/rules/simple-css-selectors.mdc`](../../rules/simple-css-selectors.mdc) |
 | WCAG 2.2 AA | [`.cursor/rules/accessibility.mdc`](../../rules/accessibility.mdc) |
 
