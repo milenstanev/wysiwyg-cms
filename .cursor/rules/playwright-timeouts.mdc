@@ -1,0 +1,18 @@
+---
+description: Playwright e2e — 3000ms global timeouts; named locator then visibility
+globs: e2e/**/*.ts,playwright.config.ts
+alwaysApply: false
+---
+
+# Playwright e2e (must)
+
+- `expect.timeout` / `use.actionTimeout`: **3000** ms in `playwright.config.ts`
+- Assign every selector to a named `const`, then assert on that variable
+- No `{ timeout: N }` on visibility/text/count expects or clicks (rare documented exceptions only)
+
+```ts
+const bannerTitle = page.getByText("Banner title");
+await expect(bannerTitle).toBeVisible();
+```
+
+Full examples and exceptions: [`.cursor/skills/playwright-timeouts/SKILL.md`](../skills/playwright-timeouts/SKILL.md).

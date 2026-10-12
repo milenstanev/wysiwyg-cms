@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import {
   normalizePage,
   parseBlocksJson,
+  parseColumnWidthsJson,
   parseModulesJson,
   parsePositionBlocksJson,
   parseSeoJson,
@@ -27,6 +28,7 @@ type DbRow = {
   status?: string | null;
   publishedAt?: Date | null;
   seo?: string | null;
+  columnWidths?: string | null;
   updatedAt: Date;
 };
 
@@ -47,6 +49,7 @@ function dbToPage(row: DbRow): Page {
     status: (row.status as PageStatus) ?? undefined,
     publishedAt: row.publishedAt?.toISOString(),
     seo: parseSeoJson(row.seo),
+    columnWidths: parseColumnWidthsJson(row.columnWidths),
     updatedAt: row.updatedAt.toISOString(),
   };
   return normalizePage(raw);
@@ -77,6 +80,10 @@ function pageToRow(input: Page | InitialPage) {
           : new Date()
         : null,
     seo: page.seo && Object.keys(page.seo).length > 0 ? JSON.stringify(page.seo) : null,
+    columnWidths:
+      page.columnWidths && Object.keys(page.columnWidths).length > 0
+        ? JSON.stringify(page.columnWidths)
+        : null,
   };
 }
 

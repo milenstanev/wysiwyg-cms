@@ -31,7 +31,7 @@ export function PageShell({
       {header && (
         <header
           data-page-header
-          className={`site-header sticky top-3 ${CONTAINER_CLASS} w-full mb-[var(--page-header-gap)] flex flex-wrap items-center justify-between gap-[var(--space-3)] ${headerClassName}`}
+          className={`site-header sticky top-[var(--space-3)] ${CONTAINER_CLASS} w-full mb-[var(--page-header-gap)] flex flex-wrap items-center justify-between gap-[var(--space-3)] ${headerClassName}`}
         >
           {header}
         </header>

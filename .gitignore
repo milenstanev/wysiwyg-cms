@@ -52,3 +52,6 @@ next-env.d.ts
 # uploaded media
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# Local Joomla 1.5 research sandbox (not part of the CMS app)
+legacy/

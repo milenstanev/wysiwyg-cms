@@ -13,7 +13,8 @@ test.describe("Layout does not shift between view and edit mode", () => {
     page,
   }, testInfo) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible({ timeout: 10000 });
+    const welcomeHeading = page.getByRole("heading", { name: "Welcome" });
+    await expect(welcomeHeading).toBeVisible();
 
     const article = page.locator("[data-page-renderer]");
     await expect(article).toBeVisible();
@@ -24,10 +25,11 @@ test.describe("Layout does not shift between view and edit mode", () => {
     expect(titleBoxView).toBeTruthy();
     const titleOffsetInArticleView = titleBoxView!.y - articleBoxView!.y;
 
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await expect(page.getByRole("button", { name: /Choose layout/i })).toBeVisible({
-      timeout: 5000,
-    });
+    const editButton = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton).toBeVisible();
+    await editButton.click();
+    const chooseButton = page.getByRole("button", { name: /Choose layout/i });
+    await expect(chooseButton).toBeVisible();
 
     const articleBoxEdit = await article.boundingBox();
     const titleEdit = article.locator(".page-title");
@@ -41,9 +43,12 @@ test.describe("Layout does not shift between view and edit mode", () => {
       "Title offset inside article should be the same (Layout is a trigger, not in article flow)"
     ).toBeLessThanOrEqual(2);
 
-    await page.getByRole("button", { name: /Choose layout/i }).click();
-    await expect(page.getByTestId(TEST_ID.layoutDropdown)).toBeVisible({ timeout: 2000 });
-    await expect(page.getByRole("button", { name: "Single column" })).toBeVisible();
+    await expect(chooseButton).toBeVisible();
+    await chooseButton.click();
+    const layoutDropdown = page.getByTestId(TEST_ID.layoutDropdown);
+    await expect(layoutDropdown).toBeVisible();
+    const singleButton = page.getByRole("button", { name: "Single column" });
+    await expect(singleButton).toBeVisible();
 
     const headerScreenshot = await page.locator("[data-page-header]").screenshot();
     await testInfo.attach("edit-header-with-layout-trigger.png", {
@@ -55,10 +60,10 @@ test.describe("Layout does not shift between view and edit mode", () => {
     page,
   }, testInfo) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible({ timeout: 10000 });
+    await expect(welcomeHeading).toBeVisible();
 
     const grid = page.locator(".block-grid-layout").first();
-    await expect(grid).toBeVisible({ timeout: 3000 });
+    await expect(grid).toBeVisible();
 
     const firstBlock = page.getByTestId(TEST_ID.contentBlock).first();
     await expect(firstBlock).toBeVisible();
@@ -80,10 +85,10 @@ test.describe("Layout does not shift between view and edit mode", () => {
       contentType: "image/png",
     });
 
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await expect(page.getByRole("button", { name: /Choose layout/i })).toBeVisible({
-      timeout: 5000,
-    });
+    const editButton = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton).toBeVisible();
+    await editButton.click();
+    await expect(chooseButton).toBeVisible();
 
     const gridBoxEdit = await grid.boundingBox();
     const blockBoxEdit = await firstBlock.boundingBox();
@@ -117,7 +122,8 @@ test.describe("Layout does not shift between view and edit mode", () => {
     page,
   }, testInfo) => {
     await page.goto("/");
-    await expect(page.getByTestId(TEST_ID.contentBlock).first()).toBeVisible({ timeout: 10000 });
+    const contentBlock = page.getByTestId(TEST_ID.contentBlock).first();
+    await expect(contentBlock).toBeVisible();
 
     const contentArea = page.locator(".layout-content-card").first();
     await expect(contentArea).toBeVisible();
@@ -134,10 +140,10 @@ test.describe("Layout does not shift between view and edit mode", () => {
       contentType: "image/png",
     });
 
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await expect(page.getByRole("button", { name: /Choose layout/i })).toBeVisible({
-      timeout: 5000,
-    });
+    const editButton = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton).toBeVisible();
+    await editButton.click();
+    await expect(chooseButton).toBeVisible();
     await page.mouse.move(0, 0);
     // Capture from the same scroll position: fixed background decoration shows through the card
     await page.evaluate(() => window.scrollTo(0, 0));
