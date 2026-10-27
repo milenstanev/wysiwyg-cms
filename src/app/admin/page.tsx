@@ -1,6 +1,6 @@
 "use client";
-
-import { useEffect, useState, useCallback, useRef } from "react";
+// TODO: this page is to big, to be refactored to smaller components
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import {
   Page,
   ContentBlock,
@@ -21,7 +21,9 @@ import Link from "next/link";
 import { LayoutDropdown } from "@/components/layout/LayoutDropdown";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { ModulesPanel } from "@/components/ModulesPanel";
+import { SelectionFormatToolbar } from "@/components/editor/SelectionFormatToolbar";
 import { slugify } from "@/lib/cms/slug";
+import { pageEditFingerprint } from "@/lib/cms/page-fingerprint";
 import { TEST_ID } from "@/lib/test-ids";
 
 function getBlocksForPosition(p: Page, positionId: PositionId): ContentBlock[] {
@@ -43,10 +45,16 @@ type PageListItem = { id: string; slug: string; title: string; status?: string }
 export default function AdminPage() {
   const [pages, setPages] = useState<PageListItem[]>([]);
   const [page, setPage] = useState<Page | null>(null);
+  const [pageSnapshot, setPageSnapshot] = useState<Page | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [slugDraft, setSlugDraft] = useState("");
+
+  const isDirty = useMemo(() => {
+    if (!page || !pageSnapshot) return false;
+    return pageEditFingerprint(page) !== pageEditFingerprint(pageSnapshot);
+  }, [page, pageSnapshot]);
 
   const fetchPages = useCallback(async () => {
     try {
@@ -71,13 +79,16 @@ export default function AdminPage() {
       if (res.ok) {
         const data = (await res.json()) as Page;
         setPage(data);
+        setPageSnapshot(structuredClone(data));
         setSlugDraft(data.slug);
       } else {
         setPage(null);
+        setPageSnapshot(null);
       }
     } catch {
       if (requestId !== fetchPageRequestRef.current) return;
       setPage(null);
+      setPageSnapshot(null);
     } finally {
       if (requestId === fetchPageRequestRef.current) setLoading(false);
     }
@@ -95,7 +106,20 @@ export default function AdminPage() {
     load();
   }, [fetchPages, fetchPage]);
 
+  useEffect(() => {
+    if (!isDirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [isDirty]);
+
   const handlePageChange = (slug: string) => {
+    if (page && slug !== page.slug && isDirty) {
+      if (!window.confirm("Switch page? Unsaved changes will be lost.")) return;
+    }
     window.history.replaceState(null, "", `/admin?page=${slug}`);
     setTimeout(() => fetchPage(slug), 0);
   };
@@ -260,6 +284,7 @@ export default function AdminPage() {
       if (res.ok) {
         const saved = (await res.json()) as Page;
         setPage(saved);
+        setPageSnapshot(structuredClone(saved));
         setSlugDraft(saved.slug);
         await fetchPages();
         if (saved.slug !== page.slug) {
@@ -498,7 +523,9 @@ export default function AdminPage() {
               ))}
             </select>
           </label>
-          {(page.layout === "two-col" || page.layout === "three-col" || page.layout === "rockettheme") && (
+          {(page.layout === "two-col" ||
+            page.layout === "three-col" ||
+            page.layout === "rockettheme") && (
             <label className="text-xs space-y-[var(--space-1)]">
               <span className="text-[var(--muted)]">Left component</span>
               <select
@@ -578,7 +605,11 @@ export default function AdminPage() {
         />
       </section>
 
-      <main id="main-content" tabIndex={-1} className={`flex-1 py-[var(--space-6)] sm:py-[var(--space-7)] ${CONTAINER_CLASS} w-full`}>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className={`flex-1 py-[var(--space-6)] sm:py-[var(--space-7)] ${CONTAINER_CLASS} w-full`}
+      >
         <PageRenderer
           page={page}
           editable
@@ -593,6 +624,7 @@ export default function AdminPage() {
           onMoveBlock={handleMoveBlock}
           onModulesChange={handleModulesChange}
         />
+        <SelectionFormatToolbar />
       </main>
       <footer>
         <Footer />

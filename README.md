@@ -15,6 +15,7 @@ A decoupled CMS frontend built with Next.js, featuring a WYSIWYG-style admin pan
 - **Separation of concerns** — Page state and persistence live in `usePageEditor`; UI only receives data and callbacks. Same `PageRenderer` and block semantics for both site and admin.
 - **Testability** — Unit tests (Vitest) for lib, hooks, and components; E2E (Playwright) for critical flows. See `src/ARCHITECTURE.md` for the full picture.
 - **What changed recently** — Fonts, zero-shift editing, starter pages, spacing, and WCAG 2.2 AA: [docs/WHAT-WE-DID.md](docs/WHAT-WE-DID.md).
+- **Edit chrome** — Shared popover/menu/portal components and hover contract: [docs/EDIT-CHROME.md](docs/EDIT-CHROME.md).
 
 ## Features
 

@@ -1,10 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  deletePage,
-  getPageBySlug,
-  renamePageSlug,
-  updatePage,
-} from "@/lib/cms/store-db";
+import { deletePage, getPageBySlug, renamePageSlug, updatePage } from "@/lib/cms/store-db";
 import { normalizePage } from "@/lib/cms/normalize-page";
 import { Page } from "@/lib/cms/types";
 import { isValidSlug, RESERVED_SLUGS } from "@/lib/cms/slug";
@@ -32,8 +27,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
     return NextResponse.json({ error: "Slug mismatch or missing id" }, { status: 400 });
   }
 
-  const bodySlug =
-    typeof body.slug === "string" ? body.slug.trim().toLowerCase() : "";
+  const bodySlug = typeof body.slug === "string" ? body.slug.trim().toLowerCase() : "";
   const existing = await getPageBySlug(slugTrim);
   const isRename = bodySlug !== "" && bodySlug !== slugTrim;
 

@@ -9,140 +9,223 @@ import { TEST_ID } from "../src/lib/test-ids";
 test.describe("Block sort and remove", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /Edit this page/i }).click();
-    await expect(page.getByRole("button", { name: /Choose layout/i })).toBeVisible({
-      timeout: 5000,
-    });
+    const editButton = page.getByRole("button", { name: /Edit this page/i });
+    await expect(editButton).toBeVisible();
+    await editButton.click();
+    const chooseLayoutButton = page.getByRole("button", { name: /Choose layout/i });
+    await expect(chooseLayoutButton).toBeVisible();
   });
 
   test("move block up: second block moves above first, order persists after save", async ({
     page,
   }) => {
-    await page.getByRole("button", { name: /Add block \(main\)/i }).click();
-    await page.getByRole("button", { name: "Heading" }).click();
-    await expect(page.getByRole("heading", { name: "New heading" })).toBeVisible({ timeout: 3000 });
+    const addButton = page.getByRole("button", { name: /Add block \(main\)/i });
+    await expect(addButton).toBeVisible();
+    await addButton.click();
+    const headingButton = page.getByRole("button", { name: "Heading" });
+    await expect(headingButton).toBeVisible();
+    await headingButton.click();
+    const newHeading = page.getByRole("heading", { name: "New heading" });
+    await expect(newHeading).toBeVisible();
 
     const firstHeading = page.getByRole("heading", { name: "Hello from the CMS" }).first();
+    await expect(firstHeading).toBeVisible();
     await firstHeading.click({ clickCount: 3 });
     await page.keyboard.type("First block");
-    await expect(page.getByText("First block").first()).toBeVisible();
+    const firstBlockText = page.getByText("First block").first();
+    await expect(firstBlockText).toBeVisible();
 
-    const newHeading = page.getByRole("heading", { name: "New heading" }).first();
-    await newHeading.click({ clickCount: 3 });
+    const newHeadingEditable = page.getByRole("heading", { name: "New heading" }).first();
+    await expect(newHeadingEditable).toBeVisible();
+    await newHeadingEditable.click({ clickCount: 3 });
     await page.keyboard.type("Second block");
-    await expect(page.getByText("Second block").first()).toBeVisible();
+    const secondBlockText = page.getByText("Second block").first();
+    await expect(secondBlockText).toBeVisible();
 
     const blocks = page.getByTestId(TEST_ID.contentBlock);
-    await expect(blocks.first()).toContainText("First block");
-    await expect(blocks.last()).toContainText("Second block");
+    const firstContentBlock = blocks.first();
+    const lastContentBlock = blocks.last();
+    await expect(firstContentBlock).toContainText("First block");
+    await expect(lastContentBlock).toContainText("Second block");
 
-    const secondBlock = page
+    const secondBlockUnit = page
       .getByTestId(TEST_ID.blockEditUnit)
       .filter({ hasText: "Second block" })
       .first();
-    await secondBlock.getByTestId(TEST_ID.blockControlsTrigger).hover();
-    await secondBlock.getByTestId(TEST_ID.moveBlockUp).click();
+    const secondBlockTrigger = secondBlockUnit.getByTestId(TEST_ID.blockControlsTrigger);
+    await expect(secondBlockTrigger).toBeVisible();
+    await secondBlockTrigger.hover();
+    const moveUpButton = secondBlockUnit.getByTestId(TEST_ID.moveBlockUp);
+    await expect(moveUpButton).toBeVisible();
+    await moveUpButton.click();
 
-    await expect(blocks.first()).toContainText("Second block", { timeout: 3000 });
-    await expect(blocks.last()).toContainText("First block");
+    await expect(firstContentBlock).toContainText("Second block");
+    await expect(lastContentBlock).toContainText("First block");
 
-    await page.getByRole("button", { name: /Save/i }).click();
-    await expect(page.getByText("Saved!")).toBeVisible({ timeout: 5000 });
+    const saveButton = page.getByRole("button", { name: /Save/i });
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+    const savedStatus = page.getByRole("status");
+    await expect(savedStatus).toHaveText(/Saved!/i);
     await page.reload();
-    await expect(page.getByText("Second block")).toBeVisible({ timeout: 5000 });
+    await expect(secondBlockText).toBeVisible();
     const blocksAfter = page.getByTestId(TEST_ID.contentBlock);
-    await expect(blocksAfter.first()).toContainText("Second block");
-    await expect(blocksAfter.last()).toContainText("First block");
+    const firstAfter = blocksAfter.first();
+    const lastAfter = blocksAfter.last();
+    await expect(firstAfter).toContainText("Second block");
+    await expect(lastAfter).toContainText("First block");
   });
 
   test("move block down: first block moves below second", async ({ page }) => {
-    await page.getByRole("button", { name: /Add block \(main\)/i }).click();
-    await page.getByRole("button", { name: "Paragraph" }).click();
-    await expect(page.getByText("New paragraph").first()).toBeVisible({ timeout: 3000 });
-    await page.getByRole("button", { name: /Add block \(main\)/i }).click();
-    await page.getByRole("button", { name: "Paragraph" }).click();
-    await expect(page.getByText("New paragraph")).toHaveCount(2, { timeout: 3000 });
+    const addButton = page.getByRole("button", { name: /Add block \(main\)/i });
+    await expect(addButton).toBeVisible();
+    await addButton.click();
+    const paragraphButton = page.getByRole("button", { name: "Paragraph" });
+    await expect(paragraphButton).toBeVisible();
+    await paragraphButton.click();
+    const firstNewParagraph = page.getByText("New paragraph").first();
+    await expect(firstNewParagraph).toBeVisible();
+    await expect(addButton).toBeVisible();
+    await addButton.click();
+    await expect(paragraphButton).toBeVisible();
+    await paragraphButton.click();
+    const newParagraphs = page.getByText("New paragraph");
+    await expect(newParagraphs).toHaveCount(2);
 
     const blocksWithNewParagraph = page
       .getByTestId(TEST_ID.contentBlock)
       .filter({ hasText: "New paragraph" });
-    await blocksWithNewParagraph.first().locator("p").first().fill("Top paragraph");
-    await blocksWithNewParagraph.last().locator("p").first().fill("Bottom paragraph");
+    const topParagraphField = blocksWithNewParagraph.first().locator("p").first();
+    const bottomParagraphField = blocksWithNewParagraph.last().locator("p").first();
+    await expect(topParagraphField).toBeVisible();
+    await topParagraphField.fill("Top paragraph");
+    await expect(bottomParagraphField).toBeVisible();
+    await bottomParagraphField.fill("Bottom paragraph");
 
-    await expect(blocksWithNewParagraph.first()).toContainText("Top paragraph");
-    await expect(blocksWithNewParagraph.last()).toContainText("Bottom paragraph");
+    const topParagraphBlock = blocksWithNewParagraph.first();
+    const bottomParagraphBlock = blocksWithNewParagraph.last();
+    await expect(topParagraphBlock).toContainText("Top paragraph");
+    await expect(bottomParagraphBlock).toContainText("Bottom paragraph");
 
     const topBlock = page.getByTestId(TEST_ID.blockEditUnit).filter({ hasText: "Top paragraph" }).first();
-    await topBlock.getByTestId(TEST_ID.blockControlsTrigger).hover();
-    await topBlock.getByTestId(TEST_ID.moveBlockDown).click();
+    const topBlockTrigger = topBlock.getByTestId(TEST_ID.blockControlsTrigger);
+    await expect(topBlockTrigger).toBeVisible();
+    await topBlockTrigger.hover();
+    const moveDownButton = topBlock.getByTestId(TEST_ID.moveBlockDown);
+    await expect(moveDownButton).toBeVisible();
+    await moveDownButton.click();
 
     const twoParagraphBlocks = page
       .getByTestId(TEST_ID.contentBlock)
       .filter({ hasText: /Top paragraph|Bottom paragraph/ });
-    await expect(twoParagraphBlocks.first()).toContainText("Bottom paragraph", { timeout: 3000 });
-    await expect(twoParagraphBlocks.last()).toContainText("Top paragraph");
+    const firstTwo = twoParagraphBlocks.first();
+    const lastTwo = twoParagraphBlocks.last();
+    await expect(firstTwo).toContainText("Bottom paragraph");
+    await expect(lastTwo).toContainText("Top paragraph");
   });
 
   test("remove block: click remove, block disappears and save persists", async ({ page }) => {
-    await page.getByRole("button", { name: /Add block \(main\)/i }).click();
-    await page.getByRole("button", { name: "Heading" }).click();
-    await expect(page.getByRole("heading", { name: "New heading" }).first()).toBeVisible({
-      timeout: 3000,
-    });
+    const addButton = page.getByRole("button", { name: /Add block \(main\)/i });
+    await expect(addButton).toBeVisible();
+    await addButton.click();
+    const headingButton = page.getByRole("button", { name: "Heading" });
+    await expect(headingButton).toBeVisible();
+    await headingButton.click();
     const newHeading = page.getByRole("heading", { name: "New heading" }).first();
+    await expect(newHeading).toBeVisible();
     await newHeading.click({ clickCount: 3 });
     await page.keyboard.type("To remove");
-    await expect(page.getByText("To remove").first()).toBeVisible();
+    const toRemove = page.getByText("To remove").first();
+    await expect(toRemove).toBeVisible();
 
     const block = page.getByTestId(TEST_ID.blockEditUnit).filter({ hasText: "To remove" }).first();
-    await block.getByTestId(TEST_ID.blockControlsTrigger).hover();
-    await block.getByTestId(TEST_ID.removeBlock).click();
+    const blockTrigger = block.getByTestId(TEST_ID.blockControlsTrigger);
+    await expect(blockTrigger).toBeVisible();
+    await blockTrigger.hover();
+    const removeButton = block.getByTestId(TEST_ID.removeBlock);
+    await expect(removeButton).toBeVisible();
+    await removeButton.click();
 
-    await expect(page.getByText("To remove")).not.toBeVisible({ timeout: 2000 });
-    await page.getByRole("button", { name: /Save/i }).click();
-    await expect(page.getByText("Saved!")).toBeVisible({ timeout: 5000 });
+    const toRemoveGone = page.getByText("To remove");
+    await expect(toRemoveGone).not.toBeVisible();
+    const saveButton = page.getByRole("button", { name: /Save/i });
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+    const savedStatus = page.getByRole("status");
+    await expect(savedStatus).toHaveText(/Saved!/i);
     await page.reload();
-    await expect(page.getByText("To remove")).not.toBeVisible();
+    await expect(toRemoveGone).not.toBeVisible();
   });
 
   test("move up only visible for block that is not first", async ({ page }) => {
-    await page.getByRole("button", { name: /Add block \(main\)/i }).click();
-    await page.getByRole("button", { name: "Paragraph" }).click();
-    await expect(page.getByText("New paragraph").first()).toBeVisible({ timeout: 3000 });
+    const addButton = page.getByRole("button", { name: /Add block \(main\)/i });
+    await expect(addButton).toBeVisible();
+    await addButton.click();
+    const paragraphButton = page.getByRole("button", { name: "Paragraph" });
+    await expect(paragraphButton).toBeVisible();
+    await paragraphButton.click();
+    const newParagraph = page.getByText("New paragraph").first();
+    await expect(newParagraph).toBeVisible();
 
     const blocks = page.locator(".layout-content-card").getByTestId(TEST_ID.blockEditUnit);
-    await blocks.first().getByTestId(TEST_ID.blockControlsTrigger).hover();
-    await expect(blocks.first().getByTestId(TEST_ID.moveBlockUp)).not.toBeVisible();
-    await expect(blocks.first().getByTestId(TEST_ID.moveBlockDown)).toBeVisible();
+    const firstBlock = blocks.first();
+    const lastBlock = blocks.last();
+    const firstTrigger = firstBlock.getByTestId(TEST_ID.blockControlsTrigger);
+    await expect(firstTrigger).toBeVisible();
+    await firstTrigger.hover();
+    const firstMoveUp = firstBlock.getByTestId(TEST_ID.moveBlockUp);
+    const firstMoveDown = firstBlock.getByTestId(TEST_ID.moveBlockDown);
+    await expect(firstMoveUp).not.toBeVisible();
+    await expect(firstMoveDown).toBeVisible();
 
-    await blocks.last().getByTestId(TEST_ID.blockControlsTrigger).hover();
-    await expect(blocks.last().getByTestId(TEST_ID.moveBlockUp)).toBeVisible();
-    await expect(blocks.last().getByTestId(TEST_ID.moveBlockDown)).not.toBeVisible();
+    const lastTrigger = lastBlock.getByTestId(TEST_ID.blockControlsTrigger);
+    await expect(lastTrigger).toBeVisible();
+    await lastTrigger.hover();
+    const lastMoveUp = lastBlock.getByTestId(TEST_ID.moveBlockUp);
+    const lastMoveDown = lastBlock.getByTestId(TEST_ID.moveBlockDown);
+    await expect(lastMoveUp).toBeVisible();
+    await expect(lastMoveDown).not.toBeVisible();
   });
 
   test("toolbar buttons are accessible by role and name (aria-label)", async ({ page }) => {
-    await page.getByRole("button", { name: /Add block \(main\)/i }).click();
-    await page.getByRole("button", { name: "Heading" }).click();
-    await expect(page.getByRole("heading", { name: "New heading" }).first()).toBeVisible({
-      timeout: 3000,
-    });
+    const addButton = page.getByRole("button", { name: /Add block \(main\)/i });
+    await expect(addButton).toBeVisible();
+    await addButton.click();
+    const headingButton = page.getByRole("button", { name: "Heading" });
+    await expect(headingButton).toBeVisible();
+    await headingButton.click();
+    const newHeading = page.getByRole("heading", { name: "New heading" }).first();
+    await expect(newHeading).toBeVisible();
 
     const block = page.getByTestId(TEST_ID.blockEditUnit).filter({ hasText: "New heading" }).first();
-    await block.getByTestId(TEST_ID.blockControlsTrigger).hover();
+    const blockTrigger = block.getByTestId(TEST_ID.blockControlsTrigger);
+    await expect(blockTrigger).toBeVisible();
+    await blockTrigger.hover();
 
-    await expect(block.getByRole("button", { name: "Move up" })).toBeVisible();
-    await expect(block.getByRole("button", { name: "Move down" })).toBeVisible();
-    await expect(block.getByRole("button", { name: "Remove block" })).toBeVisible();
+    const moveUpButton = block.getByRole("button", { name: "Move up" });
+    const moveDownButton = block.getByRole("button", { name: "Move down" });
+    const removeBlockButton = block.getByRole("button", { name: "Remove block" });
+    await expect(moveUpButton).toBeVisible();
+    await expect(moveDownButton).toBeVisible();
+    await expect(removeBlockButton).toBeVisible();
   });
 
   test("block settings button is accessible by role and name", async ({ page }) => {
-    await page.getByRole("button", { name: /Add block \(main\)/i }).click();
-    await page.getByRole("button", { name: "Table" }).click();
-    await expect(page.getByText("Header 1")).toBeVisible({ timeout: 3000 });
+    const addButton = page.getByRole("button", { name: /Add block \(main\)/i });
+    await expect(addButton).toBeVisible();
+    await addButton.click();
+    const tableButton = page.getByRole("button", { name: "Table" });
+    await expect(tableButton).toBeVisible();
+    await tableButton.click();
+    const header1 = page.getByText("Header 1");
+    await expect(header1).toBeVisible();
 
     const tableBlock = page.getByTestId(TEST_ID.blockEditUnit).filter({ hasText: "Header 1" }).first();
-    await tableBlock.getByTestId(TEST_ID.blockControlsTrigger).hover();
+    const tableBlockTrigger = tableBlock.getByTestId(TEST_ID.blockControlsTrigger);
+    await expect(tableBlockTrigger).toBeVisible();
+    await tableBlockTrigger.hover();
 
-    await expect(tableBlock.getByRole("button", { name: "Block settings" })).toBeVisible();
+    const blockSettingsButton = tableBlock.getByRole("button", { name: "Block settings" });
+    await expect(blockSettingsButton).toBeVisible();
   });
 });

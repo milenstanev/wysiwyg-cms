@@ -104,11 +104,14 @@ export function MenuModule({
   }
 
   return (
-    <nav className="flex flex-wrap gap-x-[var(--space-4)] gap-y-[var(--space-2)] text-sm" data-module="menu" aria-label="Module menu">
+    <nav
+      className="flex flex-wrap gap-x-[var(--space-4)] gap-y-[var(--space-2)] text-sm"
+      data-module="menu"
+      aria-label="Module menu"
+    >
       {links.map((link) => {
         const isCurrent =
-          (link.href === "/" && currentSlug === "home") ||
-          link.href === `/${currentSlug}`;
+          (link.href === "/" && currentSlug === "home") || link.href === `/${currentSlug}`;
         return (
           <Link
             key={`${link.href}-${link.label}`}

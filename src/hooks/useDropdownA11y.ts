@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, type RefObject } from "react";
 
-const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
  * Keyboard + pointer behaviour for a trigger that opens a portalled panel (WAI-ARIA disclosure).
@@ -76,7 +77,9 @@ export function useDropdownA11y({
     const onPanelKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;
       const items = [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)];
-      const atEdge = e.shiftKey ? document.activeElement === items[0] : document.activeElement === items.at(-1);
+      const atEdge = e.shiftKey
+        ? document.activeElement === items[0]
+        : document.activeElement === items.at(-1);
       if (!atEdge) return;
       e.preventDefault();
       setOpenRef.current(false);

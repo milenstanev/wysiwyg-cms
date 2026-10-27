@@ -17,16 +17,18 @@ export function LayoutSelector({ value, onChange, variant = "inline" }: LayoutSe
   const isDropdown = variant === "dropdown";
   return (
     <div
-      className={`flex flex-wrap items-center gap-2 ${isDropdown ? "" : "pb-4 border-b border-zinc-200"}`}
+      className={`flex flex-wrap items-center gap-[var(--space-2)] ${isDropdown ? "" : "pb-[var(--space-4)] border-b border-[var(--border)]"}`}
     >
-      <span className="text-sm text-zinc-500">Layout:</span>
+      <span className="text-sm text-[var(--muted)]">Layout:</span>
       {LAYOUT_OPTIONS.map((opt) => (
         <button
           key={opt}
           type="button"
           onClick={() => onChange(opt)}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            value === opt ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+          className={`px-[var(--space-3)] py-[var(--space-2)] rounded-lg text-sm font-medium transition-colors ${
+            value === opt
+              ? "bg-[var(--accent)] text-[var(--on-accent)]"
+              : "bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--accent)] border border-[var(--border)]"
           }`}
         >
           {getLayoutLabel(opt)}

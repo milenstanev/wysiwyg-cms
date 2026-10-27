@@ -18,6 +18,8 @@ export function SidebarCard({
   }
   const layoutClass = side === "left" ? "layout-sidebar-left" : "layout-sidebar-right";
   return (
-    <aside className={`min-w-0 space-y-[var(--space-5)] ${layoutClass} ${className}`}>{children}</aside>
+    <aside className={`min-w-0 space-y-[var(--space-5)] ${layoutClass} ${className}`}>
+      {children}
+    </aside>
   );
 }

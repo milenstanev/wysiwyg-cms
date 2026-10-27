@@ -16,6 +16,7 @@ export interface PageDocument {
   status?: string;
   publishedAt?: Date | null;
   seo?: unknown;
+  columnWidths?: unknown;
   updatedAt: Date;
 }
 
@@ -56,6 +57,7 @@ export class PageRepository implements IPageRepository {
           status: page.status ?? "published",
           publishedAt: page.publishedAt ?? null,
           seo: page.seo,
+          columnWidths: page.columnWidths,
         },
       },
       { upsert: true, new: true }

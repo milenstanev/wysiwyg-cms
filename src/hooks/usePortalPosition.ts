@@ -7,7 +7,7 @@ export interface PortalPositionOptions {
   alignRight?: boolean;
   /** Content width for alignRight; default 220 */
   width?: number;
-  /** Offset below anchor; default 4 */
+  /** Offset below/above anchor; default 8 (`--space-2`, matches `.edit-portal-panel` bridge) */
   gap?: number;
   /** When this changes, position is recomputed (e.g. block id when opening settings for a different block). */
   anchorKey?: string | number;
@@ -34,7 +34,7 @@ export function usePortalPosition(
   isOpen: boolean,
   options: PortalPositionOptions = {}
 ): PortalPosition | null {
-  const { alignRight = false, width = 220, gap = 4, anchorKey } = options;
+  const { alignRight = false, width = 220, gap = 8, anchorKey } = options;
   const [position, setPosition] = useState<PortalPosition | null>(null);
   const raf = useRef<number | null>(null);
 

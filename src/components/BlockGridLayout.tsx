@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
-import { portalRoot } from "@/lib/portal-root";
+import { useState, useRef } from "react";
 import type { ContentBlock } from "@/lib/cms/types";
 import { ContentBlock as ContentBlockComponent } from "./ContentBlock";
 import { AddBlockButton } from "./AddBlockButton";
@@ -10,12 +8,16 @@ import { BlockSettingsPanel } from "./BlockSettingsPanel";
 import { getListItems } from "./blocks/ListBlock";
 import { getTableRows, withEmptyRow } from "./blocks/TableBlock";
 import { BLOCK_SETTINGS, getBlockSettingOrDefault } from "@/lib/cms/block-settings";
-import { usePortalPosition, type PortalPosition } from "@/hooks/usePortalPosition";
-import { useEditPopover } from "@/hooks/useEditPopover";
 import { useDropdownA11y } from "@/hooks/useDropdownA11y";
 import type { PositionId } from "@/lib/cms/types";
 import { MediaPicker } from "./MediaPicker";
 import { TEST_ID } from "@/lib/test-ids";
+import {
+  EditMenuItem,
+  EditPopover,
+  EditPortalPanel,
+  EDIT_PORTAL_GAP,
+} from "@/components/edit-chrome";
 
 type BlockType = "heading" | "text" | "image" | "banner" | "list" | "table" | "showcase";
 
@@ -65,7 +67,6 @@ function BlockControls({
   setSettingsBlockId,
   settingsButtonRef,
   settingsPanelRef,
-  portalPosition,
 }: {
   block: ContentBlock;
   blocks: ContentBlock[];
@@ -78,7 +79,6 @@ function BlockControls({
   setSettingsBlockId: React.Dispatch<React.SetStateAction<string | null>>;
   settingsButtonRef: React.RefObject<HTMLButtonElement | null>;
   settingsPanelRef: React.RefObject<HTMLDivElement | null>;
-  portalPosition: PortalPosition | null;
 }) {
   const [addOpen, setAddOpen] = useState<"above" | "below" | null>(null);
   const hasSettings = onBlockUpdate && (BLOCK_SETTINGS[block.type]?.length ?? 0) > 0;
@@ -94,174 +94,150 @@ function BlockControls({
     triggerRef: settingsButtonRef,
     panelRef: settingsPanelRef,
   });
-  const { rootProps, triggerProps } = useEditPopover({
-    pinned,
-    onDismiss: () => {
-      if (settingsOpen) setSettingsBlockId(null);
-      setAddOpen(null);
-    },
-  });
 
   return (
-    <div
-      className="edit-popover block-controls"
-      data-testid={TEST_ID.blockToolbar}
-      data-open={pinned ? "true" : undefined}
-      {...rootProps}
-    >
-      <button
-        type="button"
-        className="edit-chip"
-        aria-label="Block actions"
-        title="Block actions"
-        data-testid={TEST_ID.blockControlsTrigger}
-        {...triggerProps}
-      >
-        <span aria-hidden>⋯</span>
-      </button>
-      <div
-        className="edit-popover-menu"
-        role="toolbar"
-        aria-label="Block controls"
-        aria-orientation="vertical"
-        data-testid={TEST_ID.blockControlsMenu}
-      >
-        {hasSettings && (
-          <button
-            ref={settingsOpen ? settingsButtonRef : undefined}
-            type="button"
-            onClick={() => setSettingsBlockId((id) => (id === block.id ? null : block.id))}
-            className="edit-menu-item"
-            aria-label="Block settings"
-            aria-expanded={settingsOpen}
-            data-testid={TEST_ID.blockSettings}
-          >
-            <span aria-hidden className="edit-menu-icon">
-              ⚙
-            </span>
-            Settings
-          </button>
-        )}
-        {block.type === "image" && onBlockUpdate && (
-          <MediaPicker
-            value={block.content ?? ""}
-            onChange={(url) => onBlockUpdate(block.id, { content: url })}
-            alt={String(getBlockSettingOrDefault(block, "alt", ""))}
-            onAltChange={(alt) =>
-              onBlockUpdate(block.id, {
-                settings: { ...(block.settings ?? {}), alt },
-              })
-            }
-          />
-        )}
-        {block.type === "list" && onBlockUpdate && (
-          <button
-            type="button"
-            className="edit-menu-item"
-            onClick={() => {
-              const items = [...getListItems(block.items, block.content), "New item"];
-              onBlockUpdate(block.id, { items, content: items.join("\n") });
-            }}
-          >
-            <span aria-hidden className="edit-menu-icon">
-              +
-            </span>
-            Add item
-          </button>
-        )}
-        {block.type === "table" && onBlockUpdate && (
-          <button
-            type="button"
-            className="edit-menu-item"
-            onClick={() =>
-              onBlockUpdate(block.id, { rows: withEmptyRow(getTableRows(block.rows, block.content)) })
-            }
-          >
-            <span aria-hidden className="edit-menu-icon">
-              +
-            </span>
-            Add row
-          </button>
-        )}
-        {onMoveBlock && index > 0 && (
-          <button
-            type="button"
-            onClick={() => onMoveBlock(block.id, "up", positionId)}
-            className="edit-menu-item"
-            aria-label="Move up"
-            data-testid={TEST_ID.moveBlockUp}
-          >
-            <span aria-hidden className="edit-menu-icon">
-              ↑
-            </span>
-            Move up
-          </button>
-        )}
-        {onMoveBlock && index < blocks.length - 1 && (
-          <button
-            type="button"
-            onClick={() => onMoveBlock(block.id, "down", positionId)}
-            className="edit-menu-item"
-            aria-label="Move down"
-            data-testid={TEST_ID.moveBlockDown}
-          >
-            <span aria-hidden className="edit-menu-icon">
-              ↓
-            </span>
-            Move down
-          </button>
-        )}
-        {onAddBlock && (
+    <EditPopover
+      className="block-controls"
+      pinned={pinned}
+      rootTestId={TEST_ID.blockToolbar}
+      onDismiss={() => {
+        if (settingsOpen) setSettingsBlockId(null);
+        setAddOpen(null);
+      }}
+      trigger={{
+        label: "Block actions",
+        testId: TEST_ID.blockControlsTrigger,
+        children: <span aria-hidden>⋯</span>,
+      }}
+      menu={{
+        role: "toolbar",
+        "aria-label": "Block controls",
+        "aria-orientation": "vertical",
+        testId: TEST_ID.blockControlsMenu,
+        children: (
           <>
-            <AddBlockButton
-              variant="menu"
-              label="Add block above"
-              onSelect={(type) => onAddBlock(previousId, type, positionId)}
-              onOpenChange={(open) => setAddOpen((s) => (open ? "above" : s === "above" ? null : s))}
-            />
-            <AddBlockButton
-              variant="menu"
-              label="Add block below"
-              onSelect={(type) => onAddBlock(block.id, type, positionId)}
-              onOpenChange={(open) => setAddOpen((s) => (open ? "below" : s === "below" ? null : s))}
-            />
+            {hasSettings && (
+              <EditMenuItem
+                ref={settingsOpen ? settingsButtonRef : undefined}
+                onClick={() => setSettingsBlockId((id) => (id === block.id ? null : block.id))}
+                aria-label="Block settings"
+                aria-expanded={settingsOpen}
+                data-testid={TEST_ID.blockSettings}
+                icon="⚙"
+              >
+                Settings
+              </EditMenuItem>
+            )}
+            {block.type === "image" && onBlockUpdate && (
+              <MediaPicker
+                value={block.content ?? ""}
+                onChange={(url) => onBlockUpdate(block.id, { content: url })}
+                alt={String(getBlockSettingOrDefault(block, "alt", ""))}
+                onAltChange={(alt) =>
+                  onBlockUpdate(block.id, {
+                    settings: { ...(block.settings ?? {}), alt },
+                  })
+                }
+              />
+            )}
+            {block.type === "list" && onBlockUpdate && (
+              <EditMenuItem
+                icon="+"
+                onClick={() => {
+                  const items = [...getListItems(block.items, block.content), "New item"];
+                  onBlockUpdate(block.id, { items, content: items.join("\n") });
+                }}
+              >
+                Add item
+              </EditMenuItem>
+            )}
+            {block.type === "table" && onBlockUpdate && (
+              <EditMenuItem
+                icon="+"
+                onClick={() =>
+                  onBlockUpdate(block.id, {
+                    rows: withEmptyRow(getTableRows(block.rows, block.content)),
+                  })
+                }
+              >
+                Add row
+              </EditMenuItem>
+            )}
+            {onMoveBlock && index > 0 && (
+              <EditMenuItem
+                icon="↑"
+                onClick={() => onMoveBlock(block.id, "up", positionId)}
+                aria-label="Move up"
+                data-testid={TEST_ID.moveBlockUp}
+              >
+                Move up
+              </EditMenuItem>
+            )}
+            {onMoveBlock && index < blocks.length - 1 && (
+              <EditMenuItem
+                icon="↓"
+                onClick={() => onMoveBlock(block.id, "down", positionId)}
+                aria-label="Move down"
+                data-testid={TEST_ID.moveBlockDown}
+              >
+                Move down
+              </EditMenuItem>
+            )}
+            {onAddBlock && (
+              <>
+                <AddBlockButton
+                  variant="menu"
+                  label="Add block above"
+                  onSelect={(type) => onAddBlock(previousId, type, positionId)}
+                  onOpenChange={(open) =>
+                    setAddOpen((s) => (open ? "above" : s === "above" ? null : s))
+                  }
+                />
+                <AddBlockButton
+                  variant="menu"
+                  label="Add block below"
+                  onSelect={(type) => onAddBlock(block.id, type, positionId)}
+                  onOpenChange={(open) =>
+                    setAddOpen((s) => (open ? "below" : s === "below" ? null : s))
+                  }
+                />
+              </>
+            )}
+            {onRemoveBlock && (
+              <EditMenuItem
+                danger
+                icon="✕"
+                onClick={() => onRemoveBlock(block.id)}
+                aria-label="Remove block"
+                data-testid={TEST_ID.removeBlock}
+              >
+                Remove
+              </EditMenuItem>
+            )}
           </>
-        )}
-        {onRemoveBlock && (
-          <button
-            type="button"
-            onClick={() => onRemoveBlock(block.id)}
-            className="edit-menu-item edit-menu-danger"
-            aria-label="Remove block"
-            data-testid={TEST_ID.removeBlock}
-          >
-            <span aria-hidden className="edit-menu-icon">
-              ✕
-            </span>
-            Remove
-          </button>
-        )}
-      </div>
-      {settingsOpen &&
-        portalPosition &&
-        onBlockUpdate &&
-        createPortal(
-          <div
-            ref={settingsPanelRef}
-            role="group"
-            aria-label="Block settings"
-            className="fixed z-[9999] min-w-[200px] rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-lg"
-            style={portalPosition}
-          >
-            <BlockSettingsPanel
-              block={block}
-              onSettingsChange={(settings) => onBlockUpdate(block.id, { settings })}
-              onClose={() => setSettingsBlockId(null)}
-            />
-          </div>,
-          portalRoot()
-        )}
-    </div>
+        ),
+      }}
+    >
+      {onBlockUpdate && (
+        <EditPortalPanel
+          open={settingsOpen}
+          anchorRef={settingsButtonRef}
+          panelRef={settingsPanelRef}
+          alignRight
+          width={240}
+          gap={EDIT_PORTAL_GAP}
+          anchorKey={block.id}
+          aria-label="Block settings"
+          className="min-w-[200px]"
+        >
+          <BlockSettingsPanel
+            block={block}
+            onSettingsChange={(settings) => onBlockUpdate(block.id, { settings })}
+            onClose={() => setSettingsBlockId(null)}
+          />
+        </EditPortalPanel>
+      )}
+    </EditPopover>
   );
 }
 
@@ -286,28 +262,6 @@ export function BlockGridLayout({
   const [settingsBlockId, setSettingsBlockId] = useState<string | null>(null);
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const settingsPanelRef = useRef<HTMLDivElement>(null);
-  const portalPosition = usePortalPosition(settingsButtonRef, !!settingsBlockId, {
-    alignRight: true,
-    width: 240,
-    gap: 4,
-    anchorKey: settingsBlockId ?? undefined,
-  });
-
-  useEffect(() => {
-    if (!settingsBlockId) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        settingsPanelRef.current &&
-        !settingsPanelRef.current.contains(e.target as Node) &&
-        settingsButtonRef.current &&
-        !settingsButtonRef.current.contains(e.target as Node)
-      ) {
-        setSettingsBlockId(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [settingsBlockId]);
 
   return (
     <div className="block-column" data-testid={editable ? TEST_ID.blockEditColumn : undefined}>
@@ -322,7 +276,10 @@ export function BlockGridLayout({
       )}
 
       {!hasBlocks && (
-        <div className="py-[var(--space-6)] text-center text-sm text-[var(--muted)]" data-empty-blocks>
+        <div
+          className="py-[var(--space-6)] text-center text-sm text-[var(--muted)]"
+          data-empty-blocks
+        >
           No content in this area.
         </div>
       )}
@@ -348,7 +305,6 @@ export function BlockGridLayout({
                   setSettingsBlockId={setSettingsBlockId}
                   settingsButtonRef={settingsButtonRef}
                   settingsPanelRef={settingsPanelRef}
-                  portalPosition={portalPosition}
                 />
               )}
               <div

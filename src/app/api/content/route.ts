@@ -29,6 +29,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
   const title = typeof body.title === "string" ? body.title.trim() : "";
+
   if (!title) return NextResponse.json({ error: "Title is required" }, { status: 400 });
   if (body.slug != null) {
     const slug = String(body.slug).trim().toLowerCase();
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
   if (body.status != null && !PAGE_STATUSES.includes(body.status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
+
   try {
     const page = await createPage({
       title,

@@ -21,6 +21,7 @@ export interface IPage extends Document {
   status?: (typeof statusEnum)[number];
   publishedAt?: Date;
   seo?: unknown;
+  columnWidths?: unknown;
   updatedAt: Date;
 }
 
@@ -41,6 +42,7 @@ const PageSchema = new Schema<IPage>(
     status: { type: String, enum: statusEnum, default: "published" },
     publishedAt: { type: Date },
     seo: { type: Schema.Types.Mixed },
+    columnWidths: { type: Schema.Types.Mixed },
   },
   {
     timestamps: true,

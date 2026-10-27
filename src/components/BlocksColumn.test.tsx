@@ -223,7 +223,9 @@ describe("BlocksColumn", () => {
       expect(toolbar).toBeTruthy();
       expect(content).toBeTruthy();
       expect(content!.contains(toolbar)).toBe(false);
-      expect(toolbar!.compareDocumentPosition(content!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(
+        toolbar!.compareDocumentPosition(content!) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
     }
     expect(screen.getAllByTestId(TEST_ID.blockAddSlot).length).toBeGreaterThan(0);
     for (const slot of screen.getAllByTestId(TEST_ID.blockAddSlot)) {

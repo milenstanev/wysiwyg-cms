@@ -22,15 +22,15 @@ function SettingField({
   if (def.type === "boolean") {
     const checked = value === true || value === "true";
     return (
-      <label htmlFor={id} className="flex items-center gap-2 cursor-pointer">
+      <label htmlFor={id} className="flex items-center gap-[var(--space-2)] cursor-pointer">
         <input
           id={id}
           type="checkbox"
           checked={checked}
           onChange={(e) => onChange(e.target.checked)}
-          className="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500"
+          className="rounded border-[var(--control-border)] text-[var(--accent)] focus:ring-[var(--accent)]"
         />
-        <span className="text-sm text-zinc-700">{def.label}</span>
+        <span className="text-sm text-[var(--foreground)]">{def.label}</span>
       </label>
     );
   }
@@ -38,14 +38,17 @@ function SettingField({
     const str = value == null ? "" : String(value);
     return (
       <div>
-        <label htmlFor={id} className="block text-sm font-medium text-zinc-700 mb-1">
+        <label
+          htmlFor={id}
+          className="block text-sm font-medium text-[var(--foreground)] mb-[var(--space-1)]"
+        >
           {def.label}
         </label>
         <select
           id={id}
           value={str}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
+          className="edit-field-select"
         >
           {Object.entries(def.options).map(([val, label]) => (
             <option key={val} value={val}>
@@ -59,7 +62,10 @@ function SettingField({
   if (def.type === "text") {
     return (
       <div>
-        <label htmlFor={id} className="block text-sm font-medium text-zinc-700 mb-1">
+        <label
+          htmlFor={id}
+          className="block text-sm font-medium text-[var(--foreground)] mb-[var(--space-1)]"
+        >
           {def.label}
         </label>
         <input
@@ -68,7 +74,7 @@ function SettingField({
           value={value == null ? "" : String(value)}
           onChange={(e) => onChange(e.target.value)}
           placeholder={def.placeholder}
-          className="w-full rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 placeholder:text-zinc-500 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
+          className="edit-field-input"
         />
       </div>
     );
@@ -82,10 +88,10 @@ export function BlockSettingsPanel({ block, onSettingsChange, onClose }: BlockSe
 
   if (defs.length === 0) {
     return (
-      <div className="p-3 text-sm text-zinc-500">
+      <div className="p-[var(--space-3)] text-sm text-[var(--muted)]">
         No settings for this block type.
         {onClose && (
-          <button type="button" onClick={onClose} className="mt-2 text-zinc-600 hover:underline">
+          <button type="button" onClick={onClose} className="edit-text-button">
             Close
           </button>
         )}
@@ -98,8 +104,8 @@ export function BlockSettingsPanel({ block, onSettingsChange, onClose }: BlockSe
   };
 
   return (
-    <div className="p-3 min-w-[200px]">
-      <div className="space-y-3">
+    <div className="p-[var(--space-3)] min-w-[200px]">
+      <div className="space-y-[var(--space-3)]">
         {defs.map((def) => (
           <SettingField
             key={def.key}
@@ -110,11 +116,7 @@ export function BlockSettingsPanel({ block, onSettingsChange, onClose }: BlockSe
         ))}
       </div>
       {onClose && (
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-3 w-full rounded bg-zinc-100 px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-200"
-        >
+        <button type="button" onClick={onClose} className="edit-panel-secondary">
           Close
         </button>
       )}

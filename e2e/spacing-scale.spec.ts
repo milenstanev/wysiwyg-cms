@@ -26,7 +26,8 @@ const SCALE_PX = {
 test.describe("Suitable spacings (8pt research)", () => {
   test("CSS 8pt scale tokens resolve to expected pixel steps", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible({ timeout: 10000 });
+    const welcome = page.getByRole("heading", { name: "Welcome" });
+    await expect(welcome).toBeVisible();
 
     const tokens = await page.evaluate((keys) => {
       const styles = getComputedStyle(document.documentElement);
@@ -52,7 +53,8 @@ test.describe("Suitable spacings (8pt research)", () => {
 
   test("layout aliases map onto the 8pt scale", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible({ timeout: 10000 });
+    const welcome = page.getByRole("heading", { name: "Welcome" });
+    await expect(welcome).toBeVisible();
 
     const aliases = await page.evaluate(() => {
       const probe = (expr: string) => {
@@ -105,7 +107,8 @@ test.describe("Suitable spacings (8pt research)", () => {
 
   test("page chrome: title margin and header gap use token rhythm", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible({ timeout: 10000 });
+    const welcome = page.getByRole("heading", { name: "Welcome" });
+    await expect(welcome).toBeVisible();
 
     const chrome = await page.evaluate(() => {
       const header = document.querySelector(".site-header") as HTMLElement | null;
@@ -151,7 +154,8 @@ test.describe("Suitable spacings (8pt research)", () => {
 
   test("block stack gap matches token; blocks are flat inside the region card", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByTestId(TEST_ID.blockStack).first()).toBeVisible({ timeout: 10000 });
+    const firstBlockStack = page.getByTestId(TEST_ID.blockStack).first();
+    await expect(firstBlockStack).toBeVisible();
 
     const spacing = await page.evaluate(() => {
       const stack = document.querySelector(".block-stack") as HTMLElement | null;
@@ -205,8 +209,11 @@ test.describe("Suitable spacings (8pt research)", () => {
       await page.setViewportSize({ width: 1440, height: 1000 });
       await page.goto(mode === "edit" ? "/about?edit=1" : "/about");
       const mainStack = page.locator(".layout-content-card .block-stack");
-      await expect(mainStack).toBeVisible({ timeout: 10000 });
-      if (mode === "edit") await expect(page.getByTestId(TEST_ID.editorBar)).toBeVisible();
+      await expect(mainStack).toBeVisible();
+      if (mode === "edit") {
+        const editorBar = page.getByTestId(TEST_ID.editorBar);
+        await expect(editorBar).toBeVisible();
+      }
 
       const pairs = await mainStack.locator(testIdSelector(TEST_ID.contentBlock)).evaluateAll((els) => {
         const out: { from: string; to: string; gap: number }[] = [];
@@ -232,7 +239,8 @@ test.describe("Suitable spacings (8pt research)", () => {
   test("body prose stays within a readable measure (≤ 75 characters per line)", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto("/blog");
-    await expect(page.locator(".page-title")).toBeVisible({ timeout: 10000 });
+    const pageTitle = page.locator(".page-title");
+    await expect(pageTitle).toBeVisible();
 
     const chars = await page.locator(".layout-content-card .block-body p").evaluateAll((els) =>
       els.map((p) => {

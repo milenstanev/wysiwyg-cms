@@ -12,7 +12,9 @@ export function HtmlModule({ params, editable, onParamsChange }: HtmlModuleProps
   if (editable && onParamsChange) {
     return (
       <div className="space-y-[var(--space-2)]" data-module="html">
-        <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide">Custom HTML</p>
+        <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide">
+          Custom HTML
+        </p>
         <textarea
           value={html}
           onChange={(e) => onParamsChange({ ...params, html: e.target.value })}

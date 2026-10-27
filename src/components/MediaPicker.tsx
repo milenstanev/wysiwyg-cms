@@ -34,7 +34,7 @@ export function MediaPicker({ value, onChange, alt, onAltChange }: MediaPickerPr
   }, []);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   const handleUpload = async (file: File) => {
@@ -100,7 +100,7 @@ export function MediaPicker({ value, onChange, alt, onAltChange }: MediaPickerPr
         />
       </label>
       {error && (
-        <p className="text-xs text-[color-mix(in_srgb,#dc2626_70%,var(--foreground))]" role="alert">
+        <p className="text-xs text-[var(--danger)]" role="alert">
           {error}
         </p>
       )}
@@ -112,7 +112,9 @@ export function MediaPicker({ value, onChange, alt, onAltChange }: MediaPickerPr
               type="button"
               onClick={() => onChange(item.url)}
               className={`w-10 h-10 rounded border overflow-hidden ${
-                value === item.url ? "border-[var(--accent)] ring-1 ring-[var(--accent)]" : "border-[var(--border)]"
+                value === item.url
+                  ? "border-[var(--accent)] ring-1 ring-[var(--accent)]"
+                  : "border-[var(--border)]"
               }`}
               aria-label={`Select ${item.name}`}
               title={item.name}

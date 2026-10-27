@@ -9,6 +9,8 @@ import type {
   PageStatus,
 } from "./types";
 import { LAYOUT_OPTIONS, BLOCK_TYPES, COMPONENT_TYPES, MODULE_IDS, PAGE_STATUSES } from "./types";
+import { ensureColumnWidths } from "./column-widths";
+import { sanitizeContentBlockFields, sanitizeRichHtml } from "./sanitize-html";
 
 const DEFAULT_LAYOUT: PageLayout = "single";
 const DEFAULT_COMPONENT: ComponentType = "content";
@@ -16,16 +18,18 @@ const DEFAULT_STATUS: PageStatus = "published";
 
 function ensureBlockArray(value: unknown): ContentBlock[] {
   if (Array.isArray(value)) {
-    return value.filter(
-      (item): item is ContentBlock =>
-        item != null &&
-        typeof item === "object" &&
-        "id" in item &&
-        "type" in item &&
-        typeof (item as ContentBlock).id === "string" &&
-        typeof (item as ContentBlock).type === "string" &&
-        BLOCK_TYPES.includes((item as ContentBlock).type)
-    );
+    return value
+      .filter(
+        (item): item is ContentBlock =>
+          item != null &&
+          typeof item === "object" &&
+          "id" in item &&
+          "type" in item &&
+          typeof (item as ContentBlock).id === "string" &&
+          typeof (item as ContentBlock).type === "string" &&
+          BLOCK_TYPES.includes((item as ContentBlock).type)
+      )
+      .map((block) => sanitizeContentBlockFields(block));
   }
   return [];
 }
@@ -101,7 +105,7 @@ export function normalizePage(
   return {
     id: page.id,
     slug: page.slug,
-    title: page.title ?? "",
+    title: sanitizeRichHtml(page.title ?? ""),
     layout: ensureLayout(page.layout),
     blocks: ensureBlockArray(page.blocks),
     leftBlocks: ensureBlockArray(page.leftBlocks),
@@ -119,6 +123,7 @@ export function normalizePage(
           ? page.updatedAt
           : undefined,
     seo: ensureSeo(page.seo),
+    columnWidths: ensureColumnWidths(page.columnWidths),
     updatedAt: page.updatedAt,
   };
 }
@@ -165,6 +170,15 @@ export function parseSeoJson(json: string | null | undefined): PageSeo | undefin
   if (json == null || json === "") return undefined;
   try {
     return ensureSeo(JSON.parse(json) as unknown);
+  } catch {
+    return undefined;
+  }
+}
+
+export function parseColumnWidthsJson(json: string | null | undefined) {
+  if (json == null || json === "") return undefined;
+  try {
+    return ensureColumnWidths(JSON.parse(json) as unknown);
   } catch {
     return undefined;
   }

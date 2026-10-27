@@ -7,10 +7,12 @@ import { TEST_ID, testIdSelector } from "../src/lib/test-ids";
 test.describe("Edit controls outside content wrapper", () => {
   test("block toolbar is a sibling outside content-block", async ({ page }) => {
     await page.goto("/?edit=1");
-    await expect(page.getByRole("button", { name: /Save/i })).toBeVisible({ timeout: 10000 });
+    const saveButton = page.getByRole("button", { name: /Save/i });
+    await expect(saveButton).toBeVisible();
 
     const units = page.getByTestId(TEST_ID.blockEditUnit);
-    await expect(units.first()).toBeVisible();
+    const firstUnit = units.first();
+    await expect(firstUnit).toBeVisible();
     const count = await units.count();
     expect(count).toBeGreaterThan(0);
 
@@ -38,12 +40,12 @@ test.describe("Edit controls outside content wrapper", () => {
 
   test("add-block slots are outside content-block", async ({ page }) => {
     await page.goto("/?edit=1");
-    await expect(page.getByTestId(TEST_ID.blockAddSlot).first()).toBeVisible({ timeout: 10000 });
+    const firstAddSlot = page.getByTestId(TEST_ID.blockAddSlot).first();
+    await expect(firstAddSlot).toBeVisible();
 
     const contentSel = testIdSelector(TEST_ID.contentBlock);
-    const nested = await page
-      .getByTestId(TEST_ID.blockAddSlot)
-      .evaluateAll((slots, sel) => slots.filter((s) => s.closest(sel)).length, contentSel);
+    const addSlots = page.getByTestId(TEST_ID.blockAddSlot);
+    const nested = await addSlots.evaluateAll((slots, sel) => slots.filter((s) => s.closest(sel)).length, contentSel);
     expect(nested).toBe(0);
   });
 });

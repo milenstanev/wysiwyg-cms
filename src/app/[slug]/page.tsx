@@ -23,8 +23,10 @@ export async function generateMetadata({
 export default async function PageRoute({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   if (slug === "admin" || slug === "api") notFound();
+
   const page = await getPublishedPageBySlug(slug);
   if (!page) notFound();
+
   const pages = await loadPublishedPages();
   const allPages = pages.map((p) => ({
     id: p.id,

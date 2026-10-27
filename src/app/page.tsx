@@ -19,7 +19,11 @@ export default async function Home() {
   const [page, pages] = await Promise.all([getPublishedPageBySlug("home"), loadPublishedPages()]);
   if (!page) {
     return (
-      <main id="main-content" tabIndex={-1} className="min-h-screen flex items-center justify-center">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="min-h-screen flex items-center justify-center"
+      >
         <h1 className="text-[var(--muted)]">No content found.</h1>
       </main>
     );

@@ -7,10 +7,7 @@ import { LAYOUT_GRID, CONTENT_PADDING_CLASS } from "./constants";
  * Guards the 8pt spacing research: tokens stay on the scale, layout helpers use them.
  */
 describe("spacing tokens (8pt research)", () => {
-  const globals = readFileSync(
-    path.join(process.cwd(), "src/app/globals.css"),
-    "utf-8"
-  );
+  const globals = readFileSync(path.join(process.cwd(), "src/app/globals.css"), "utf-8");
 
   it("defines the full 8pt space-1…9 scale in rem", () => {
     expect(globals).toMatch(/--space-1:\s*0\.25rem/);

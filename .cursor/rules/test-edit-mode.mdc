@@ -26,6 +26,7 @@ View mode and edit mode are different render paths. Fixes that look correct in v
 - Do not leave `overflow: hidden` on grid items / content cards
 - Module chrome (`min-height`, flex centering) must not fight block rows — especially under `.is-editing`
 - Floating Add-block / toolbars must not cover or collapse content
+- Edit popovers / menus / portals use shared edit-chrome (`EditPopover`, `EditMenuItem`, `EditPortalPanel`) — see [edit-chrome.mdc](edit-chrome.mdc)
 
 ## Do not
 

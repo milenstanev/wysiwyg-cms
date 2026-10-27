@@ -22,8 +22,6 @@ describe("ModulePosition", () => {
   it("shows placeholder label when provided and empty", () => {
     render(<ModulePosition name="utility-a" placeholderLabel="Utility A" />);
     expect(screen.getByText("Utility A")).toBeInTheDocument();
-    expect(
-      screen.getByRole("generic", { name: "Module position: utility-a" })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("generic", { name: "Module position: utility-a" })).toBeInTheDocument();
   });
 });

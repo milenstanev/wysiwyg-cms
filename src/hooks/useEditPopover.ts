@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
 
 /**
  * Accessibility state for a CSS hover / focus-within edit popover (`.edit-popover`).
@@ -8,16 +8,32 @@ import { useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
  * - WCAG 1.4.13: Escape dismisses the popover without moving the pointer; focus returns to the chip
  * - the chip re-opens it with Enter / Space / click after a dismiss
  * - `aria-expanded` on the chip mirrors what is actually visible
+ * - nested portals set `pinned` / `data-open` so the menu stays up while the pointer is outside the host
  */
-export function useEditPopover({ pinned = false, onDismiss }: { pinned?: boolean; onDismiss?: () => void } = {}) {
+export function useEditPopover({
+  pinned = false,
+  onDismiss,
+}: { pinned?: boolean; onDismiss?: () => void } = {}) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const onDismissRef = useRef(onDismiss);
+  useEffect(() => {
+    onDismissRef.current = onDismiss;
+  });
+
+  // Opening a nested portal clears Escape-dismiss so data-open can show the menu again
+  useEffect(() => {
+    if (pinned) setDismissed(false);
+  }, [pinned]);
 
   const rootProps = {
     "data-dismissed": dismissed ? "true" : undefined,
-    onPointerEnter: () => setHovered(true),
+    onPointerEnter: () => {
+      setHovered(true);
+      setDismissed(false);
+    },
     onPointerLeave: () => {
       setHovered(false);
       setDismissed(false);
@@ -31,7 +47,8 @@ export function useEditPopover({ pinned = false, onDismiss }: { pinned?: boolean
     onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => {
       if (e.key !== "Escape") return;
       e.stopPropagation();
-      onDismiss?.();
+      // Clear nested portals first so data-open drops; then hide via data-dismissed
+      onDismissRef.current?.();
       setDismissed(true);
       triggerRef.current?.focus();
     },

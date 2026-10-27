@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { LayoutDropdown } from "@/components/layout/LayoutDropdown";
 import { PageShell } from "@/components/layout/PageShell";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { SelectionFormatToolbar } from "@/components/editor/SelectionFormatToolbar";
 import { usePageEditor } from "@/hooks/usePageEditor";
 import type { Page } from "@/lib/cms/types";
 import { TEST_ID } from "@/lib/test-ids";
@@ -25,7 +26,7 @@ export interface EditableSitePageProps {
 }
 
 export function EditableSitePage({ initialPage, allPages, currentSlug }: EditableSitePageProps) {
-  const { page, isEditing, setEditing, saving, message, callbacks, actions } =
+  const { page, isEditing, isDirty, setEditing, saving, message, callbacks, actions } =
     usePageEditor(initialPage);
 
   const navPages = allPages.filter((p) => p.slug !== "home" && p.showInNav !== false);
@@ -69,18 +70,19 @@ export function EditableSitePage({ initialPage, allPages, currentSlug }: Editabl
       </div>
       <div className="flex flex-wrap items-center gap-[var(--space-3)]">
         <ThemeSwitcher />
-        {/* Stays mounted (invisible) while editing so the header keeps its exact size. */}
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className={`rounded-full border border-[var(--foreground)] px-[var(--space-4)] py-[var(--space-2)] text-xs font-semibold uppercase tracking-[0.14em] text-[var(--foreground)] transition-colors hover:bg-[var(--foreground)] hover:text-[var(--surface)] ${isEditing ? "invisible" : ""}`}
-          aria-label="Edit this page"
-          aria-hidden={isEditing || undefined}
-          tabIndex={isEditing ? -1 : undefined}
-          data-testid={TEST_ID.editPageButton}
-        >
-          Edit this page
-        </button>
+        {!isEditing && (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className={`rounded-full border border-[var(--foreground)] px-[var(--space-4)] py-[var(--space-2)] text-xs font-semibold uppercase tracking-[0.14em] text-[var(--foreground)] transition-colors hover:bg-[var(--foreground)] hover:text-[var(--surface)]`}
+            aria-label="Edit this page"
+            aria-hidden={isEditing || undefined}
+            tabIndex={isEditing ? -1 : undefined}
+            data-testid={TEST_ID.editPageButton}
+          >
+            Edit this page
+          </button>
+        )}
       </div>
     </>
   );
@@ -94,12 +96,18 @@ export function EditableSitePage({ initialPage, allPages, currentSlug }: Editabl
         currentSlug={currentSlug}
         {...callbacks}
       />
+      {isEditing && <SelectionFormatToolbar />}
       {/* Always mounted so screen readers announce every change; the visible copy is aria-hidden */}
       <p role="status" className="sr-only">
         {message}
       </p>
       {(isEditing || message) && (
-        <div className="editor-bar" role="region" aria-label="Editor" data-testid={TEST_ID.editorBar}>
+        <div
+          className="editor-bar"
+          role="region"
+          aria-label="Editor"
+          data-testid={TEST_ID.editorBar}
+        >
           {message && (
             <span className="text-sm font-medium text-[var(--foreground)]" aria-hidden>
               {message === "Saved!" ? "✓ " : "⚠ "}
@@ -109,14 +117,19 @@ export function EditableSitePage({ initialPage, allPages, currentSlug }: Editabl
           {isEditing && (
             <>
               {callbacks.onLayoutChange && (
-                <LayoutDropdown value={page.layout ?? "single"} onChange={callbacks.onLayoutChange} />
+                <LayoutDropdown
+                  value={page.layout ?? "single"}
+                  onChange={callbacks.onLayoutChange}
+                />
               )}
               <select
                 value={page.slug}
                 onChange={(e) => {
                   const next = e.target.value;
                   if (next === page.slug) return;
-                  if (!window.confirm("Switch page? Unsaved changes will be lost.")) return;
+                  if (isDirty && !window.confirm("Switch page? Unsaved changes will be lost.")) {
+                    return;
+                  }
                   window.location.assign(next === "home" ? "/?edit=1" : `/${next}?edit=1`);
                 }}
                 className="text-sm bg-[var(--surface)] border border-[var(--border)] rounded px-[var(--space-2)] py-[var(--space-1)] text-[var(--foreground)]"

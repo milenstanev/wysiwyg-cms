@@ -20,10 +20,7 @@ export function ModulesPanel({ layout, modules, onChange }: ModulesPanelProps) {
 
   const addModule = () => {
     const def = MODULE_REGISTRY[moduleId];
-    onChange([
-      ...modules,
-      { positionId, moduleId, params: { ...def.defaultParams } },
-    ]);
+    onChange([...modules, { positionId, moduleId, params: { ...def.defaultParams } }]);
   };
 
   const removeAt = (index: number) => {
@@ -46,7 +43,9 @@ export function ModulesPanel({ layout, modules, onChange }: ModulesPanelProps) {
               className="flex items-center justify-between gap-[var(--space-2)]"
             >
               <span>
-                <span className="font-medium">{MODULE_REGISTRY[m.moduleId]?.label ?? m.moduleId}</span>
+                <span className="font-medium">
+                  {MODULE_REGISTRY[m.moduleId]?.label ?? m.moduleId}
+                </span>
                 <span className="text-[var(--muted)]"> → {m.positionId}</span>
               </span>
               <button
