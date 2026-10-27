@@ -99,7 +99,15 @@ export function applyQuote(): boolean {
 }
 
 export function queryFormatState(
-  cmd: "bold" | "italic" | "underline" | "insertOrderedList" | "insertUnorderedList" | "justifyLeft" | "justifyCenter" | "justifyRight"
+  cmd:
+    | "bold"
+    | "italic"
+    | "underline"
+    | "insertOrderedList"
+    | "insertUnorderedList"
+    | "justifyLeft"
+    | "justifyCenter"
+    | "justifyRight"
 ): boolean {
   try {
     return document.queryCommandState(cmd);
@@ -139,8 +147,7 @@ export function selectionParentTag(): string {
   const ctx = selectionInRichEdit({ allowCollapsed: true });
   if (!ctx) return "";
   const node = ctx.selection.focusNode;
-  let el: HTMLElement | null =
-    node instanceof HTMLElement ? node : node?.parentElement ?? null;
+  let el: HTMLElement | null = node instanceof HTMLElement ? node : (node?.parentElement ?? null);
   while (el && el !== ctx.editable) {
     const tag = el.tagName.toUpperCase();
     if (["P", "H1", "H2", "H3", "H4", "LI", "BLOCKQUOTE", "DIV"].includes(tag)) return tag;
@@ -180,8 +187,7 @@ export function applyStyleOption(option: StyleOption): boolean {
   if (ok && option.className) {
     const sel = window.getSelection();
     const node = sel?.focusNode;
-    let el: HTMLElement | null =
-      node instanceof HTMLElement ? node : node?.parentElement ?? null;
+    let el: HTMLElement | null = node instanceof HTMLElement ? node : (node?.parentElement ?? null);
     while (el && el !== ctx.editable) {
       if (el.tagName.toLowerCase() === option.tag) {
         el.className = option.className;

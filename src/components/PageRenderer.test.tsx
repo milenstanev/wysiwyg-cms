@@ -62,7 +62,9 @@ describe("PageRenderer", () => {
     render(<PageRenderer page={twoColPage} />);
     expect(screen.getByTestId(componentSlotTestId("left"))).toBeInTheDocument();
     expect(screen.getByTestId(componentSlotTestId("main"))).toBeInTheDocument();
-    expect(within(screen.getByTestId(componentSlotTestId("left"))).getByText("Sidebar")).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId(componentSlotTestId("left"))).getByText("Sidebar")
+    ).toBeInTheDocument();
   });
 
   it("renders three-col layout with left, main, right slots", () => {
@@ -70,7 +72,9 @@ describe("PageRenderer", () => {
     expect(screen.getByTestId(componentSlotTestId("left"))).toBeInTheDocument();
     expect(screen.getByTestId(componentSlotTestId("main"))).toBeInTheDocument();
     expect(screen.getByTestId(componentSlotTestId("right"))).toBeInTheDocument();
-    expect(within(screen.getByTestId(componentSlotTestId("right"))).getByText("Right")).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId(componentSlotTestId("right"))).getByText("Right")
+    ).toBeInTheDocument();
   });
 
   it("does not render layout selector in content (it lives in header so content does not move)", () => {
@@ -128,8 +132,8 @@ describe("PageRenderer", () => {
     expect(container.querySelector('[data-module-position="showcase-b"]')).not.toBeInTheDocument();
     expect(container.querySelector('[data-module-position="showcase-c"]')).toBeInTheDocument();
     expect(container.querySelector('[data-module-position="showcase-d"]')).not.toBeInTheDocument();
-    const showcaseRow = [...container.querySelectorAll("[data-template-row]")].find(
-      (el) => el.querySelector('[data-module-position="showcase-a"]')
+    const showcaseRow = [...container.querySelectorAll("[data-template-row]")].find((el) =>
+      el.querySelector('[data-module-position="showcase-a"]')
     );
     expect(showcaseRow).toHaveAttribute("data-visible-count", "2");
     expect(showcaseRow?.className).toMatch(/sm:grid-cols-2/);

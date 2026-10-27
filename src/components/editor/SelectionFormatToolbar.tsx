@@ -4,10 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { portalRoot } from "@/lib/portal-root";
 import { sanitizeRichHtml } from "@/lib/cms/sanitize-html";
-import {
-  loadEditorUiPosition,
-  saveEditorUiPosition,
-} from "@/lib/cms/editor-ui-position";
+import { loadEditorUiPosition, saveEditorUiPosition } from "@/lib/cms/editor-ui-position";
 import {
   applyCreateLink,
   applyFormatCommand,
@@ -139,7 +136,10 @@ export function SelectionFormatToolbar() {
 
     if (closedSession.current) {
       // Stay closed until the user focuses a (possibly new) field after Submit/Cancel
-      if (document.activeElement === ctx.editable || ctx.editable.contains(document.activeElement)) {
+      if (
+        document.activeElement === ctx.editable ||
+        ctx.editable.contains(document.activeElement)
+      ) {
         return;
       }
       closedSession.current = false;
@@ -161,12 +161,14 @@ export function SelectionFormatToolbar() {
 
   useEffect(() => {
     const onSel = () => requestAnimationFrame(refresh);
+
     document.addEventListener("selectionchange", onSel);
     document.addEventListener("mouseup", onSel);
     document.addEventListener("keyup", onSel);
     document.addEventListener("focusin", onSel);
     window.addEventListener("scroll", onSel, true);
     window.addEventListener("resize", onSel);
+
     return () => {
       document.removeEventListener("selectionchange", onSel);
       document.removeEventListener("mouseup", onSel);

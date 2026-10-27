@@ -112,7 +112,9 @@ export function MediaPicker({ value, onChange, alt, onAltChange }: MediaPickerPr
               type="button"
               onClick={() => onChange(item.url)}
               className={`w-10 h-10 rounded border overflow-hidden ${
-                value === item.url ? "border-[var(--accent)] ring-1 ring-[var(--accent)]" : "border-[var(--border)]"
+                value === item.url
+                  ? "border-[var(--accent)] ring-1 ring-[var(--accent)]"
+                  : "border-[var(--border)]"
               }`}
               aria-label={`Select ${item.name}`}
               title={item.name}

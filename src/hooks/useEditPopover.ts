@@ -10,7 +10,10 @@ import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from
  * - `aria-expanded` on the chip mirrors what is actually visible
  * - nested portals set `pinned` / `data-open` so the menu stays up while the pointer is outside the host
  */
-export function useEditPopover({ pinned = false, onDismiss }: { pinned?: boolean; onDismiss?: () => void } = {}) {
+export function useEditPopover({
+  pinned = false,
+  onDismiss,
+}: { pinned?: boolean; onDismiss?: () => void } = {}) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [dismissed, setDismissed] = useState(false);

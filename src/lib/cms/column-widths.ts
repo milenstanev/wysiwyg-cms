@@ -52,9 +52,7 @@ export function resolveColumnWidths(
   return {
     left: clampColumnFr(stored?.left ?? base.left ?? 1),
     main: clampColumnFr(stored?.main ?? base.main ?? 2),
-    ...(layout === "three-col"
-      ? { right: clampColumnFr(stored?.right ?? base.right ?? 1) }
-      : {}),
+    ...(layout === "three-col" ? { right: clampColumnFr(stored?.right ?? base.right ?? 1) } : {}),
   };
 }
 
@@ -72,10 +70,10 @@ export function columnTrackList(
   const tracks = visiblePositions.map((id) => {
     const fr =
       id === "left"
-        ? resolved.left ?? 1
+        ? (resolved.left ?? 1)
         : id === "right"
-          ? resolved.right ?? 1
-          : resolved.main ?? 2;
+          ? (resolved.right ?? 1)
+          : (resolved.main ?? 2);
     return `minmax(0, ${fr}fr)`;
   });
   return tracks.join(" ");

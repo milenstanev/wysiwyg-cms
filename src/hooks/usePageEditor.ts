@@ -231,7 +231,7 @@ export function usePageEditor(
       layout,
       // Keep widths when switching between two-col / three-col; clear otherwise.
       columnWidths: layoutSupportsColumnWidths(layout)
-        ? p.columnWidths ?? defaultColumnWidths(layout)
+        ? (p.columnWidths ?? defaultColumnWidths(layout))
         : undefined,
     }));
   }, []);

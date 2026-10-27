@@ -210,12 +210,14 @@ export function plainTextFromHtml(html: string): string {
 }
 
 /** Sanitize rich string fields on a content block (persist path). */
-export function sanitizeContentBlockFields<T extends {
-  content?: string;
-  title?: string;
-  items?: string[];
-  rows?: string[][];
-}>(block: T): T {
+export function sanitizeContentBlockFields<
+  T extends {
+    content?: string;
+    title?: string;
+    items?: string[];
+    rows?: string[][];
+  },
+>(block: T): T {
   const next: T = { ...block };
   if (typeof next.content === "string") next.content = sanitizeRichHtml(next.content);
   if (typeof next.title === "string") next.title = sanitizeRichHtml(next.title);

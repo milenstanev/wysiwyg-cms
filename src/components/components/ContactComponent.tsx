@@ -24,9 +24,7 @@ export function ContactComponent({ editable }: ContactComponentProps) {
 
   return (
     <div data-component="contact" className="space-y-[var(--space-3)] max-w-md">
-      {editable && (
-        <p className="text-xs text-[var(--muted)]">Contact form (mailto on submit)</p>
-      )}
+      {editable && <p className="text-xs text-[var(--muted)]">Contact form (mailto on submit)</p>}
       {sent && !editable ? (
         <p className="text-sm text-[var(--foreground)]" role="status">
           Opening your email client…

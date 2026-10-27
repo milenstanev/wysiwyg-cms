@@ -13,10 +13,7 @@ import {
 } from "@/lib/cms/layout-templates";
 import { getBlocksForPosition, positionHasContent } from "@/lib/cms/page-blocks";
 import { EmptySectionsMenu } from "./EmptySectionsMenu";
-import {
-  MODULE_REGISTRY,
-  getModulesForPosition,
-} from "@/lib/cms/modules";
+import { MODULE_REGISTRY, getModulesForPosition } from "@/lib/cms/modules";
 import type { PageModuleAssignment, ModuleId } from "@/lib/cms/types";
 import { layoutSupportsColumnWidths } from "@/lib/cms/column-widths";
 

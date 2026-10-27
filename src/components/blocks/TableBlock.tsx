@@ -74,7 +74,9 @@ export function TableBlock({ rows = [], content, settings, editable, onEdit }: T
     <div className={wrapperClass}>
       <table className="w-full text-sm">
         {caption && (
-          <caption className="text-left text-sm text-[var(--muted)] px-[var(--space-2)] py-[var(--space-1)]">{caption}</caption>
+          <caption className="text-left text-sm text-[var(--muted)] px-[var(--space-2)] py-[var(--space-1)]">
+            {caption}
+          </caption>
         )}
         {tableHeader.length > 0 && (
           <thead>

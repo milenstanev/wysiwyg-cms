@@ -70,18 +70,19 @@ export function EditableSitePage({ initialPage, allPages, currentSlug }: Editabl
       </div>
       <div className="flex flex-wrap items-center gap-[var(--space-3)]">
         <ThemeSwitcher />
-        {/* Stays mounted (invisible) while editing so the header keeps its exact size. */}
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className={`rounded-full border border-[var(--foreground)] px-[var(--space-4)] py-[var(--space-2)] text-xs font-semibold uppercase tracking-[0.14em] text-[var(--foreground)] transition-colors hover:bg-[var(--foreground)] hover:text-[var(--surface)] ${isEditing ? "invisible" : ""}`}
-          aria-label="Edit this page"
-          aria-hidden={isEditing || undefined}
-          tabIndex={isEditing ? -1 : undefined}
-          data-testid={TEST_ID.editPageButton}
-        >
-          Edit this page
-        </button>
+        {!isEditing && (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className={`rounded-full border border-[var(--foreground)] px-[var(--space-4)] py-[var(--space-2)] text-xs font-semibold uppercase tracking-[0.14em] text-[var(--foreground)] transition-colors hover:bg-[var(--foreground)] hover:text-[var(--surface)]`}
+            aria-label="Edit this page"
+            aria-hidden={isEditing || undefined}
+            tabIndex={isEditing ? -1 : undefined}
+            data-testid={TEST_ID.editPageButton}
+          >
+            Edit this page
+          </button>
+        )}
       </div>
     </>
   );
@@ -101,7 +102,12 @@ export function EditableSitePage({ initialPage, allPages, currentSlug }: Editabl
         {message}
       </p>
       {(isEditing || message) && (
-        <div className="editor-bar" role="region" aria-label="Editor" data-testid={TEST_ID.editorBar}>
+        <div
+          className="editor-bar"
+          role="region"
+          aria-label="Editor"
+          data-testid={TEST_ID.editorBar}
+        >
           {message && (
             <span className="text-sm font-medium text-[var(--foreground)]" aria-hidden>
               {message === "Saved!" ? "✓ " : "⚠ "}
@@ -111,17 +117,17 @@ export function EditableSitePage({ initialPage, allPages, currentSlug }: Editabl
           {isEditing && (
             <>
               {callbacks.onLayoutChange && (
-                <LayoutDropdown value={page.layout ?? "single"} onChange={callbacks.onLayoutChange} />
+                <LayoutDropdown
+                  value={page.layout ?? "single"}
+                  onChange={callbacks.onLayoutChange}
+                />
               )}
               <select
                 value={page.slug}
                 onChange={(e) => {
                   const next = e.target.value;
                   if (next === page.slug) return;
-                  if (
-                    isDirty &&
-                    !window.confirm("Switch page? Unsaved changes will be lost.")
-                  ) {
+                  if (isDirty && !window.confirm("Switch page? Unsaved changes will be lost.")) {
                     return;
                   }
                   window.location.assign(next === "home" ? "/?edit=1" : `/${next}?edit=1`);

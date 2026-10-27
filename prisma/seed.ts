@@ -1,7 +1,7 @@
 import "dotenv/config";
-import { prisma } from "../src/lib/db";
-import { INITIAL_PAGES } from "../src/lib/cms/initial-pages";
-import { insertMissingInitialPages, resetToInitialPages } from "../src/lib/cms/store-db";
+import { prisma } from "@/lib/db";
+import { INITIAL_PAGES } from "@/lib/cms/initial-pages";
+import { insertMissingInitialPages, resetToInitialPages } from "@/lib/cms/store-db";
 
 /**
  * Writes the initial state (`src/lib/cms/initial-pages.ts`) into the database.

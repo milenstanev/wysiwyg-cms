@@ -10,29 +10,27 @@ type EditMenuItemProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   roomy?: boolean;
 };
 
-export const EditMenuItem = forwardRef<HTMLButtonElement, EditMenuItemProps>(
-  function EditMenuItem(
-    { icon, danger = false, roomy = false, className = "", children, type = "button", ...rest },
-    ref
-  ) {
-    const classes = [
-      "edit-menu-item",
-      roomy ? "edit-menu-item-roomy" : "",
-      danger ? "edit-menu-danger" : "",
-      className,
-    ]
-      .filter(Boolean)
-      .join(" ");
+export const EditMenuItem = forwardRef<HTMLButtonElement, EditMenuItemProps>(function EditMenuItem(
+  { icon, danger = false, roomy = false, className = "", children, type = "button", ...rest },
+  ref
+) {
+  const classes = [
+    "edit-menu-item",
+    roomy ? "edit-menu-item-roomy" : "",
+    danger ? "edit-menu-danger" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-    return (
-      <button ref={ref} type={type} className={classes} {...rest}>
-        {icon != null && (
-          <span aria-hidden className="edit-menu-icon">
-            {icon}
-          </span>
-        )}
-        {children}
-      </button>
-    );
-  }
-);
+  return (
+    <button ref={ref} type={type} className={classes} {...rest}>
+      {icon != null && (
+        <span aria-hidden className="edit-menu-icon">
+          {icon}
+        </span>
+      )}
+      {children}
+    </button>
+  );
+});

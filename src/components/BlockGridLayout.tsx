@@ -276,7 +276,10 @@ export function BlockGridLayout({
       )}
 
       {!hasBlocks && (
-        <div className="py-[var(--space-6)] text-center text-sm text-[var(--muted)]" data-empty-blocks>
+        <div
+          className="py-[var(--space-6)] text-center text-sm text-[var(--muted)]"
+          data-empty-blocks
+        >
           No content in this area.
         </div>
       )}

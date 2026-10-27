@@ -19,9 +19,7 @@ export function ListComponent({ pages = [], editable }: ListComponentProps) {
 
   return (
     <div data-component="list" className="space-y-[var(--space-3)]">
-      {editable && (
-        <p className="text-xs text-[var(--muted)]">Page list (published pages)</p>
-      )}
+      {editable && <p className="text-xs text-[var(--muted)]">Page list (published pages)</p>}
       {items.length === 0 ? (
         <p className="text-sm text-[var(--muted)]">No pages to list.</p>
       ) : (

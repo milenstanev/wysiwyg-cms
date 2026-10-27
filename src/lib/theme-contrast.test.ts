@@ -14,7 +14,8 @@ function themeTokens(theme: string): Record<string, string> {
   const out: Record<string, string> = {};
   const block = new RegExp(`\\[data-theme="${theme}"\\]\\s*\\{([^}]*)\\}`, "g");
   for (const [, body] of css.matchAll(block)) {
-    for (const [, key, value] of body.matchAll(/(--[\w-]+):\s*(#[0-9a-f]{6})\b/gi)) out[key] = value;
+    for (const [, key, value] of body.matchAll(/(--[\w-]+):\s*(#[0-9a-f]{6})\b/gi))
+      out[key] = value;
   }
   return out;
 }
@@ -49,7 +50,11 @@ describe("theme contrast (WCAG 2.2 AA)", () => {
     it(`${theme}: every text/background token pair is ≥ 4.5:1`, () => {
       const tokens = themeTokens(theme);
       const failures = PAIRS.filter(([fg, bg]) => tokens[fg] && tokens[bg])
-        .map(([fg, bg, min]) => ({ pair: `${fg} on ${bg}`, ratio: contrast(tokens[fg], tokens[bg]), min }))
+        .map(([fg, bg, min]) => ({
+          pair: `${fg} on ${bg}`,
+          ratio: contrast(tokens[fg], tokens[bg]),
+          min,
+        }))
         .filter((r) => r.ratio < r.min)
         .map((r) => `${r.pair} = ${r.ratio.toFixed(2)}:1 (needs ${r.min}:1)`);
       expect(Object.keys(tokens).length, `${theme} defines hex tokens`).toBeGreaterThan(5);

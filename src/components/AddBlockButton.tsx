@@ -123,11 +123,7 @@ export function AddBlockButton({
   return (
     <>
       <div ref={anchorRef} className="relative">
-        <EditAddTrigger
-          ref={triggerRef}
-          onClick={() => setOpen((o) => !o)}
-          aria-expanded={open}
-        >
+        <EditAddTrigger ref={triggerRef} onClick={() => setOpen((o) => !o)} aria-expanded={open}>
           {label}
         </EditAddTrigger>
       </div>

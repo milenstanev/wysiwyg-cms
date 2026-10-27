@@ -1,5 +1,5 @@
 "use client";
-
+// TODO: this page is to big, to be refactored to smaller components
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import {
   Page,
@@ -523,7 +523,9 @@ export default function AdminPage() {
               ))}
             </select>
           </label>
-          {(page.layout === "two-col" || page.layout === "three-col" || page.layout === "rockettheme") && (
+          {(page.layout === "two-col" ||
+            page.layout === "three-col" ||
+            page.layout === "rockettheme") && (
             <label className="text-xs space-y-[var(--space-1)]">
               <span className="text-[var(--muted)]">Left component</span>
               <select
@@ -603,7 +605,11 @@ export default function AdminPage() {
         />
       </section>
 
-      <main id="main-content" tabIndex={-1} className={`flex-1 py-[var(--space-6)] sm:py-[var(--space-7)] ${CONTAINER_CLASS} w-full`}>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className={`flex-1 py-[var(--space-6)] sm:py-[var(--space-7)] ${CONTAINER_CLASS} w-full`}
+      >
         <PageRenderer
           page={page}
           editable

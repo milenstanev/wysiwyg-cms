@@ -138,7 +138,10 @@ export function ColumnResizeHandles({
                 onChangeRef.current({
                   ...current,
                   [boundary.leftKey]: COLUMN_FR_MIN,
-                  [boundary.rightKey]: Math.min(COLUMN_FR_MAX, Math.max(COLUMN_FR_MIN, pair - COLUMN_FR_MIN)),
+                  [boundary.rightKey]: Math.min(
+                    COLUMN_FR_MAX,
+                    Math.max(COLUMN_FR_MIN, pair - COLUMN_FR_MIN)
+                  ),
                 });
                 return;
               } else if (e.key === "End") {
@@ -149,7 +152,10 @@ export function ColumnResizeHandles({
                   (current[boundary.rightKey] ?? COLUMN_FR_MIN);
                 onChangeRef.current({
                   ...current,
-                  [boundary.leftKey]: Math.min(COLUMN_FR_MAX, Math.max(COLUMN_FR_MIN, pair - COLUMN_FR_MIN)),
+                  [boundary.leftKey]: Math.min(
+                    COLUMN_FR_MAX,
+                    Math.max(COLUMN_FR_MIN, pair - COLUMN_FR_MIN)
+                  ),
                   [boundary.rightKey]: COLUMN_FR_MIN,
                 });
                 return;

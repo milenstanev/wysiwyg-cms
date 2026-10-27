@@ -19,13 +19,13 @@ export async function loadSiteSettings(): Promise<SiteSettings> {
     const raw = await fs.readFile(SETTINGS_FILE, "utf-8");
     const parsed = JSON.parse(raw) as Partial<SiteSettings>;
     return {
-      siteName: typeof parsed.siteName === "string" ? parsed.siteName : DEFAULT_SITE_SETTINGS.siteName,
+      siteName:
+        typeof parsed.siteName === "string" ? parsed.siteName : DEFAULT_SITE_SETTINGS.siteName,
       description:
         typeof parsed.description === "string"
           ? parsed.description
           : DEFAULT_SITE_SETTINGS.description,
-      defaultOgImage:
-        typeof parsed.defaultOgImage === "string" ? parsed.defaultOgImage : undefined,
+      defaultOgImage: typeof parsed.defaultOgImage === "string" ? parsed.defaultOgImage : undefined,
     };
   } catch {
     return { ...DEFAULT_SITE_SETTINGS };

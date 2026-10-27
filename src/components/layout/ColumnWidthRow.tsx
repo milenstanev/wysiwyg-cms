@@ -43,9 +43,7 @@ export function ColumnWidthRow({
       ? columnTrackList(layout, resolveColumnWidths(layout, columnWidths), visiblePositions)
       : undefined;
 
-  const style = tracks
-    ? ({ ["--layout-cols" as string]: tracks } as CSSProperties)
-    : undefined;
+  const style = tracks ? ({ ["--layout-cols" as string]: tracks } as CSSProperties) : undefined;
 
   const showHandles =
     editable && supports && !!onColumnWidthsChange && visibleCount >= 2 && !!tracks;
